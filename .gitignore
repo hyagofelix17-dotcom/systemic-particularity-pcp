@@ -18,3 +18,6 @@ $RECYCLE.BIN/
 # Development environment (Antigravity / Gemini agent runtime)
 .agents/
 skills-lock.json
+
+# Vercel
+.vercel
