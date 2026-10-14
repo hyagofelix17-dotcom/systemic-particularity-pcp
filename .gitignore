@@ -9,6 +9,7 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 *.bak
+*_backup.html
 *~
 
 # IDE
