@@ -14,3 +14,7 @@ $RECYCLE.BIN/
 # IDE
 .vscode/
 .idea/
+
+# Development environment (Antigravity / Gemini agent runtime)
+.agents/
+skills-lock.json
