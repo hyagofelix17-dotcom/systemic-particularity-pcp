@@ -9,6 +9,8 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js">
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='%231d5fd1'%3E%3Cpath d='M22,12 L26,12 L27.2,16.2 A15,15 0 0,1 31.8,18.1 L36,16.5 L38.8,19.3 L37.2,23.5 A15,15 0 0,1 39.1,28.2 L43.3,29.4 L43.3,33.4 L39.1,34.6 A15,15 0 0,1 37.2,39.3 L38.8,43.5 L36,46.3 L31.8,44.7 A15,15 0 0,1 27.2,46.6 L26,50.8 L22,50.8 L20.8,46.6 A15,15 0 0,1 16.2,44.7 L12,46.3 L9.2,43.5 L10.8,39.3 A15,15 0 0,1 8.9,34.6 L4.7,33.4 L4.7,29.4 L8.9,28.2 A15,15 0 0,1 10.8,23.5 L9.2,19.3 L12,16.5 L16.2,18.1 A15,15 0 0,1 20.8,16.2 Z M24,24 A7.5,7.5 0 1,0 24,39 A7.5,7.5 0 1,0 24,24 Z'/%3E%3C/g%3E%3Cg fill='%230f766e'%3E%3Cpath d='M44,4 L47.5,4 L48.4,7.6 A11,11 0 0,1 52.1,9.1 L55.5,7.8 L57.8,10.1 L56.5,13.5 A11,11 0 0,1 58,17.2 L61.6,18.1 L61.6,21.6 L58,22.5 A11,11 0 0,1 56.5,26.2 L57.8,29.6 L55.5,31.9 L52.1,30.6 A11,11 0 0,1 48.4,32.1 L47.5,35.7 L44,35.7 L43.1,32.1 A11,11 0 0,1 39.4,30.6 L36,31.9 L33.7,29.6 L35,26.2 A11,11 0 0,1 33.5,22.5 L29.9,21.6 L29.9,18.1 L33.5,17.2 A11,11 0 0,1 35,13.5 L33.7,10.1 L36,7.8 L39.4,9.1 A11,11 0 0,1 43.1,7.6 Z M45.7,14 A5.8,5.8 0 1,0 45.7,25.7 A5.8,5.8 0 1,0 45.7,14 Z'/%3E%3C/g%3E%3C/svg%3E">
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--tx:#1b2430;--mu:#677084;--bd:#dde1e8;--ac:#1d5fd1;--hl:#ffe58a;--c1:#c2410c;--c2:#1d5fd1;--c3:#0f766e;--c4:#7c3aed;--danger:#dc2626}
@@ -164,7 +166,7 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
 .stock-qty.neg{color:#dc2626}
 /* Specific styling for MP Table (balanced column widths & compact spacing - 4 columns) */
 .mp-view-card{max-width:1240px;margin:0 auto 16px auto}
-.mp-table-wrap{max-width:1240px;margin:0 auto}
+.mp-table-wrap{max-width:1240px;margin:0 auto;overflow-x:auto;width:100%}
 .mp-footer-wrap{max-width:1240px;margin:10px auto 0 auto}
 .mp-table{table-layout:fixed;width:100%}
 .mp-table th.col-code, .mp-table td.col-code{width:16%;min-width:130px;max-width:165px;text-align:center;padding:5px 6px}
@@ -718,19 +720,1023 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
   background: #1d4ed8;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVIDADE EXCLUSIVA PARA CELULAR E TABLETS PEQUENOS (<= 768px)
+   ATENÇÃO: Este bloco aplica-se APENAS a telas móveis.
+   NÃO afeta de forma alguma o layout em telas de Computador (>= 769px).
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Prevenção de rolagem horizontal descontrolada em toda a página */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    font-size: 14px;
+  }
+
+  /* Header compacto e adaptado */
+  header {
+    padding: 10px 12px 6px !important;
+    gap: 8px !important;
+  }
+
+  .header-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  h1, .header-title {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    word-break: break-word;
+  }
+
+  h1 svg, .header-title svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .header-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+
+  #live-clock {
+    font-size: 11px !important;
+    padding-right: 6px !important;
+    margin-right: 2px !important;
+  }
+
+  .header-actions .btn {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* Barra de abas: transforma em carrossel horizontal nativo com rolagem por toque */
+  .tab-nav {
+    display: flex !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    padding-bottom: 2px !important;
+    border-bottom: 2px solid var(--bd) !important;
+  }
+
+  .tab-nav::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .tab-nav button {
+    flex: 0 0 auto !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Controles de busca e chips da aba Particularidades */
+  #consulta-controls {
+    gap: 8px !important;
+    margin-top: 6px !important;
+  }
+
+  #q {
+    padding: 9px 12px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+  }
+
+  .chips {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .chip {
+    flex: 0 0 auto !important;
+    padding: 4px 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  #cnt {
+    display: none !important;
+  }
+
+  .sub-chips {
+    padding: 6px 10px !important;
+    gap: 5px !important;
+  }
+
+  /* Conteúdo Principal */
+  main {
+    padding: 12px 10px 60px !important;
+    max-width: 100vw !important;
+  }
+
+  main.wide-layout {
+    max-width: 100vw !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Cards de Particularidades */
+  .card {
+    padding: 12px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .card-actions {
+    position: static !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin-bottom: 6px !important;
+    gap: 6px !important;
+  }
+
+  .ttl {
+    padding-right: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .code {
+    font-size: 12px !important;
+    padding: 2px 6px !important;
+  }
+
+  .code-wrapper {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  .act {
+    padding: 8px 10px !important;
+    font-size: 12.5px !important;
+  }
+
+  .hint {
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Consulta de Estoque, MP e IBC */
+  .stock-top-card, .mp-view-card {
+    padding: 10px 12px !important;
+    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+  }
+
+  .stock-header-meta {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .stock-header-meta > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .stock-header-meta .btn {
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Indicadores em grade de 2 colunas */
+  .stock-stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .stock-stat-box {
+    min-width: unset !important;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .stock-stat-val {
+    font-size: 15px !important;
+  }
+
+  .stock-stat-lbl {
+    font-size: 10px !important;
+  }
+
+  /* Barra de filtros de estoque */
+  .stock-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .stock-search {
+    width: 100% !important;
+    min-width: unset !important;
+    box-sizing: border-box !important;
+  }
+
+  .stock-select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .stock-filter-chips {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    padding-bottom: 2px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .stock-filter-chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .stock-fchip {
+    flex: 0 0 auto !important;
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .stock-zoom-ctrl {
+    margin-left: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: space-between !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Tabelas */
+  .stock-table-wrap, .mp-table-wrap {
+    overflow-x: auto !important;
+    width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+  }
+
+  .stock-table th, .stock-table td {
+    padding: 6px 6px !important;
+    font-size: 11px !important;
+  }
+
+  .stock-col-input {
+    font-size: 10.5px !important;
+    height: 24px !important;
+  }
+
+  .stock-excel-filter-trigger {
+    height: 24px !important;
+    padding: 2px 5px !important;
+  }
+
+  .stock-pager {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Aba de Notas / Processo */
+  .notes-app {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: unset !important;
+  }
+
+  .notes-sidebar {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    max-height: 210px !important;
+    border-right: none !important;
+    border-bottom: 2px solid var(--bd) !important;
+  }
+
+  .notes-main {
+    min-height: 380px !important;
+  }
+
+  .notes-toolbar {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+
+  .notes-toolbar button {
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+  }
+
+  .notes-editor-body {
+    padding: 12px 14px !important;
+    font-size: 13.5px !important;
+  }
+
+  /* Balanço de Massa */
+  .balanco-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .balanco-stat {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  .balanco-stat-icon {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 16px !important;
+  }
+
+  .balanco-stat-val {
+    font-size: 16px !important;
+  }
+
+  .balanco-card-header {
+    padding: 10px 12px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .balanco-card-body {
+    padding: 12px !important;
+  }
+
+  .balanco-dz {
+    padding: 22px 12px !important;
+  }
+
+  .balanco-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .balanco-actions .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .balanco-guide-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Central de Lembretes */
+  .rem-header-card, .rem-list-card {
+    padding: 14px 14px !important;
+  }
+
+  .rem-stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .rem-stat-card {
+    min-width: unset !important;
+    padding: 10px 12px !important;
+  }
+
+  .rem-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .rem-item-main {
+    width: 100% !important;
+  }
+
+  .rem-item-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    border-top: 1px solid var(--bd) !important;
+    padding-top: 8px !important;
+  }
+
+  /* Mapeamento de Processo */
+  .map-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .map-search, .map-sel {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .step-item {
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  .step-actions {
+    align-self: flex-end !important;
+  }
+
+  /* Codificação de Produtos */
+  .mask-diagram {
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    padding-bottom: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .mask-text {
+    font-size: 22px !important;
+  }
+
+  .mask-top, .mask-bottom {
+    font-size: 11px !important;
+    height: 36px !important;
+  }
+
+  /* Modais e Elementos Fixos */
+  #modal, #modal-map, #modal-map-section, #modal-paste-stock, #modal-paste-mp, #modal-edit-mp, #modal-ibc-item, #modal-view-pdf, #modal-paste-ibc {
+    padding: 10px !important;
+  }
+
+  .modal-content {
+    padding: 16px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 10px !important;
+  }
+
+  #pinned-mp-container {
+    right: 10px !important;
+    left: 10px !important;
+    bottom: 70px !important;
+    width: auto !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  .pinned-mp-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .minimized .modal-content {
+    right: 10px !important;
+    left: 10px !important;
+    bottom: 70px !important;
+    width: auto !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  .excel-filter-popover {
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  #toast {
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 16px !important;
+    justify-content: center !important;
+  }
+}
+
+/* ══════════════════════════════════════
+   VISUALIZAÇÃO DE DADOS & DASHBOARDS
+══════════════════════════════════════ */
+#view-dashboard { display: none; }
+#view-dashboard.active { display: block; }
+
+.dash-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+.dash-header-card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.dash-header-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.dash-title-group h2 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-title-group p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mu);
+}
+
+.dash-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  color: var(--tx);
+}
+
+.dash-badge.blue {
+  background: rgba(29, 95, 209, 0.08);
+  border-color: rgba(29, 95, 209, 0.25);
+  color: var(--ac);
+}
+
+.dash-badge.green {
+  background: rgba(15, 118, 110, 0.08);
+  border-color: rgba(15, 118, 110, 0.25);
+  color: var(--c3);
+}
+
+.dash-badge.amber {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.25);
+  color: #d97706;
+}
+
+.dash-badge.purple {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: var(--c4);
+}
+
+.dash-controls-bar {
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dash-ctrl-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mu);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.dash-select, .dash-input {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--tx);
+  font-weight: 500;
+}
+
+.dash-btn-toggle-group {
+  display: inline-flex;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.dash-btn-toggle {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--mu);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dash-btn-toggle:hover:not(.active) {
+  color: var(--tx);
+  background: rgba(0,0,0,0.03);
+}
+
+.dash-btn-toggle.active {
+  background: var(--ac);
+  color: #fff;
+}
+
+/* KPI Grid */
+.dash-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.dash-kpi-card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.dash-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--kpi-c, var(--ac));
+}
+
+.dash-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.dash-kpi-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mu);
+}
+
+.dash-kpi-icon {
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.dash-kpi-val {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--tx);
+  line-height: 1.2;
+}
+
+.dash-kpi-sub {
+  font-size: 11.5px;
+  color: var(--mu);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Charts Grid */
+.dash-charts-row {
+  display: grid;
+  grid-template-columns: 2fr 1.1fr;
+  gap: 16px;
+}
+
+@media(max-width: 1080px) {
+  .dash-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dash-chart-card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.dash-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.dash-chart-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.dash-canvas-container {
+  position: relative;
+  width: 100%;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* AI Insights Card */
+.dash-ai-card {
+  background: linear-gradient(135deg, rgba(29, 95, 209, 0.04) 0%, rgba(124, 58, 237, 0.07) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  border-radius: 12px;
+  padding: 18px 20px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.04);
+}
+
+.dash-ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dash-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #1d5fd1 0%, #7c3aed 100%);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+}
+
+.dash-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.dash-ai-box {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-ai-box-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-ai-box-text {
+  font-size: 12px;
+  color: var(--tx);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Table Card */
+.dash-table-card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.dash-table-wrap {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dash-table th {
+  background: var(--bg);
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mu);
+  border-bottom: 2px solid var(--bd);
+  white-space: nowrap;
+}
+
+.dash-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bd);
+  vertical-align: middle;
+}
+
+.dash-table tr:hover td {
+  background: rgba(29, 95, 209, 0.03);
+}
+
+.dash-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.dash-rank-1 { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.dash-rank-2 { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.dash-rank-3 { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+.dash-rank-other { background: var(--bg); color: var(--mu); border: 1px solid var(--bd); }
+
+.dash-progress-wrap {
+  width: 100%;
+  min-width: 80px;
+  background: var(--bg);
+  height: 7px;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dash-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.dash-code-tag {
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--tx);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--bd);
+  cursor: pointer;
+}
+
+.dash-code-tag:hover {
+  border-color: var(--ac);
+  color: var(--ac);
+}
+
+/* Native SVG Bar Chart Fallback */
+.svg-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.svg-bar-label {
+  width: 220px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--tx);
+}
+
+.svg-bar-track {
+  flex: 1;
+  background: var(--bg);
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--bd);
+}
+
+.svg-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 40px;
+}
+
+.svg-bar-val {
+  width: 110px;
+  flex-shrink: 0;
+  text-align: right;
+  font-weight: 700;
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--tx);
+}
+
+@media print {
+  header, .tab-nav, .dash-controls-bar, .card-actions, #btn-novo-item { display: none !important; }
+  main.wide-layout { max-width: 100% !important; padding: 0 !important; }
+  .dash-container { gap: 10px !important; }
+  .dash-chart-card, .dash-table-card, .dash-ai-card { break-inside: avoid; }
+}
+
 </style>
 </head>
 <body>
 <header>
   <div class="header-top">
-    <h1 style="display:flex;align-items:center;gap:8px">
+    <h1 class="header-title" style="display:flex;align-items:center;gap:8px">
       <svg width="24" height="24" viewBox="0 0 64 64" style="flex-shrink:0">
         <g fill="#1d5fd1"><path d="M22,12 L26,12 L27.2,16.2 A15,15 0 0,1 31.8,18.1 L36,16.5 L38.8,19.3 L37.2,23.5 A15,15 0 0,1 39.1,28.2 L43.3,29.4 L43.3,33.4 L39.1,34.6 A15,15 0 0,1 37.2,39.3 L38.8,43.5 L36,46.3 L31.8,44.7 A15,15 0 0,1 27.2,46.6 L26,50.8 L22,50.8 L20.8,46.6 A15,15 0 0,1 16.2,44.7 L12,46.3 L9.2,43.5 L10.8,39.3 A15,15 0 0,1 8.9,34.6 L4.7,33.4 L4.7,29.4 L8.9,28.2 A15,15 0 0,1 10.8,23.5 L9.2,19.3 L12,16.5 L16.2,18.1 A15,15 0 0,1 20.8,16.2 Z M24,24 A7.5,7.5 0 1,0 24,39 A7.5,7.5 0 1,0 24,24 Z"/></g>
         <g fill="#0f766e"><path d="M44,4 L47.5,4 L48.4,7.6 A11,11 0 0,1 52.1,9.1 L55.5,7.8 L57.8,10.1 L56.5,13.5 A11,11 0 0,1 58,17.2 L61.6,18.1 L61.6,21.6 L58,22.5 A11,11 0 0,1 56.5,26.2 L57.8,29.6 L55.5,31.9 L52.1,30.6 A11,11 0 0,1 48.4,32.1 L47.5,35.7 L44,35.7 L43.1,32.1 A11,11 0 0,1 39.4,30.6 L36,31.9 L33.7,29.6 L35,26.2 A11,11 0 0,1 33.5,22.5 L29.9,21.6 L29.9,18.1 L33.5,17.2 A11,11 0 0,1 35,13.5 L33.7,10.1 L36,7.8 L39.4,9.1 A11,11 0 0,1 43.1,7.6 Z M45.7,14 A5.8,5.8 0 1,0 45.7,25.7 A5.8,5.8 0 1,0 45.7,14 Z"/></g>
       </svg>
       Systemic Particularity - Production and Materials Planning and Control
     </h1>
-        <div style="display:flex;gap:10px;align-items:center;">
+    <div class="header-actions" style="display:flex;gap:10px;align-items:center;">
         <div id="live-clock" style="font-size:13px; color:var(--mu); font-weight:600; padding-right:10px; margin-right:5px; border-right:1px solid var(--bd);"></div>
         <button class="btn outline" onclick="exportHTML()" title="Baixar o arquivo HTML atualizado">📥 Salvar no PC</button>
         <button class="btn" id="btn-novo-item" onclick="openModal()">+ Novo Item</button>
@@ -744,6 +1750,7 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
     <button id="tab-ibc" onclick="switchTab('ibc')">🛢️ Identificação de IBC'S</button>
     <button id="tab-codificacao" onclick="switchTab('codificacao')">🏷️ Codificação de Produtos</button>
     <button id="tab-mapeamento" onclick="switchTab('mapeamento')">🗺️ Mapeamento de Processo - PCP</button>
+    <button id="tab-dashboard" onclick="switchTab('dashboard')">📊 Visualização de Dados</button>
     <button id="tab-lembrete" onclick="switchTab('lembrete')">&#x1F514; Lembrete</button>
   </div>
   <div id="consulta-controls">
@@ -1387,6 +2394,9 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
 <!-- ══ VIEW: BALANÇO DE MASSA ══ -->
   <div id="view-balanco"></div>
 
+  <!-- ══ VIEW: VISUALIZAÇÃO DE DADOS & DASHBOARDS ══ -->
+  <div id="view-dashboard" style="display:none"></div>
+
   <!-- VIEW: LEMBRETE -->
   <div id="view-lembrete" style="display:none"></div>
 </main>
@@ -1908,7 +2918,8 @@ chips.onclick=e=>{
   }
 };
 
-const esc=s=>s?s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])):'';
+function esc(s) { return s ? String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
+window.esc = esc;
 function hl(s,terms){
   if(!s) return '';
   let r=esc(s);if(!terms.length)return r;
@@ -2435,6 +3446,22 @@ let STOCK_DATA = null;
 try {
   const savedStock = localStorage.getItem('pcp_stock_report');
   STOCK_DATA = savedStock ? JSON.parse(savedStock) : (typeof defaultStockData !== 'undefined' ? defaultStockData : null);
+  if (STOCK_DATA && Array.isArray(STOCK_DATA.headers)) {
+    const hList = STOCK_DATA.headers;
+    const hasSaldoAtual = hList.find(h => /^saldo\s*atual/i.test(h.trim()));
+    const hasSldAtu = hList.find(h => /^sld\.?\s*atu/i.test(h.trim()));
+    const hasValor = hList.find(h => /^(valor|vlr|val)\b/i.test(h.trim()) || /valor\s*total/i.test(h.trim()));
+    if (hasSaldoAtual && hasSldAtu) {
+      STOCK_DATA.qtyCol = hasSaldoAtual;
+      STOCK_DATA.valCol = hasSldAtu;
+    } else if (hasSldAtu && hasValor) {
+      STOCK_DATA.qtyCol = hasSldAtu;
+      STOCK_DATA.valCol = hasValor;
+    } else if (hasSaldoAtual) {
+      STOCK_DATA.qtyCol = hasSaldoAtual;
+      STOCK_DATA.valCol = hList.find(h => /valor|custo\s*total|vlr/i.test(h)) || (hList.length >= 7 && hList[6] ? hList[6] : null);
+    }
+  }
 } catch(e) {
   STOCK_DATA = null;
 }
@@ -2507,6 +3534,7 @@ function clearStockData() {
   STOCK_DATA = null;
   localStorage.removeItem('pcp_stock_report');
   renderStockView();
+  if (typeof renderDashboardView === 'function') renderDashboardView();
   showToast('Relatório de estoque removido.');
 }
 
@@ -2642,10 +3670,42 @@ function processStockRawMatrix(matrix, fileName, dateStr) {
 
   const codeCol = headers.find(h => /c[oó]d|material|produto|item/i.test(h)) || headers[0];
   const descCol = headers.find(h => /desc|nome|denomin/i.test(h)) || (headers[1] || headers[0]);
-  const qtyCol = headers.find(h => /saldo|quant|qtd|estoque|atual|f[ií]sico/i.test(h)) || null;
-  const costCol = headers.find(h => /c\.?\s*unit|custo\s*unit|vl\.?\s*unit|valor\s*unit/i.test(h)) || headers.find(h => /^custo/i.test(h)) || null;
+  
+  // Detecção Inteligente e Pareada:
+  // Coluna 5: Quantidade física em KG ("Saldo Atual")
+  // Coluna 7: Valor Total em R$ ("SLD.ATU")
+  const hasSaldoAtual = headers.find(h => /^saldo\s*atual/i.test(h.trim()));
+  const hasSldAtu = headers.find(h => /^sld\.?\s*atu/i.test(h.trim()));
+  const hasValor = headers.find(h => /^(valor|vlr|val)\b/i.test(h.trim()) || /valor\s*total/i.test(h.trim()));
+
+  let qtyCol = null;
+  let valCol = null;
+
+  if (hasSaldoAtual && hasSldAtu) {
+    qtyCol = hasSaldoAtual;
+    valCol = hasSldAtu;
+  } else if (hasSldAtu && hasValor) {
+    qtyCol = hasSldAtu;
+    valCol = hasValor;
+  } else if (hasSaldoAtual) {
+    qtyCol = hasSaldoAtual;
+    valCol = headers.find(h => /valor|custo\s*total|vlr/i.test(h)) || (headers.length >= 7 && headers[6] ? headers[6] : null);
+  } else {
+    qtyCol = headers.find(h => /quant|qtd|estoque|atual|f[ií]sico/i.test(h)) || (headers.length >= 5 && headers[4] ? headers[4] : null);
+    valCol = hasSldAtu || headers.find(h => /valor|custo\s*total|vlr/i.test(h)) || (headers.length >= 7 && headers[6] ? headers[6] : null);
+  }
+
+  if (!qtyCol && headers.length >= 5) qtyCol = headers[4];
+  if (!valCol && headers.length >= 7) valCol = headers[6];
+
+  const costCol = headers.find(h => /c\.?\s*unit|custo\s*unit|vl\.?\s*unit|valor\s*unit|custo\s*m[eé]dio|b2_cm1/i.test(h)) || headers.find(h => /^custo/i.test(h)) || null;
   const locCol = headers.find(h => /local|almox|dep[oó]sito|armaz[eê]m|tanque/i.test(h)) || null;
-  const unCol = headers.find(h => /un|um|unid|medida/i.test(h)) || null;
+  let unCol = headers.find(h => /^(um|un|unid|unidade|medida|b1_um)$/i.test(h.trim()) && !/custo|cost|unit\b|unit[aá]rio|valor|pre[çc]o/i.test(h)) ||
+    headers.find(h => /\b(unidade|medida)\b/i.test(h) && !/custo|cost|unit\b|valor/i.test(h)) ||
+    null;
+  if (unCol && costCol && unCol === costCol) {
+    unCol = null;
+  }
 
   STOCK_DATA = {
     fileName: fileName || 'Relatório de Estoque',
@@ -2655,6 +3715,7 @@ function processStockRawMatrix(matrix, fileName, dateStr) {
     codeCol,
     descCol,
     qtyCol,
+    valCol,
     costCol,
     locCol,
     unCol
@@ -2668,8 +3729,11 @@ function processStockRawMatrix(matrix, fileName, dateStr) {
   stockFilterState.colFilters = {};
   stockFilterState.colMultiFilters = {};
   renderStockView();
+  if (typeof renderDashboardView === 'function') {
+    renderDashboardView();
+  }
   // Sincroniza automaticamente a coluna Sistema da Lista de MP
-    if (typeof syncMpSistemaWithStock === 'function') {
+  if (typeof syncMpSistemaWithStock === 'function') {
     syncMpSistemaWithStock(false);
   }
   const totalItensAtualizados = (rows && rows.length) ? rows.length.toLocaleString('pt-BR') : '0';
@@ -2691,7 +3755,8 @@ function renderStockView(focusedCol, cursorPosition) {
   const container = document.getElementById('view-estoque');
   if (!container) return;
 
-  if (!STOCK_DATA || !STOCK_DATA.rows || !STOCK_DATA.rows.length) {
+  try {
+    if (!STOCK_DATA || !STOCK_DATA.rows || !STOCK_DATA.rows.length) {
     container.innerHTML = `
       <div class="stock-dropzone" id="stock-drop-area" onclick="triggerStockFileInput()">
         <div class="stock-dz-icon">📊</div>
@@ -2716,17 +3781,39 @@ function renderStockView(focusedCol, cursorPosition) {
   });
   const allLocations = Array.from(allLocationsSet).sort();
 
-  // Dynamic quantity column detection (with fallback to headers for existing saved reports)
-  const qtyCol = STOCK_DATA.qtyCol || (STOCK_DATA.headers && (
-    STOCK_DATA.headers.find(h => /saldo|quant|qtd|estoque|atual|f[ií]sico/i.test(h))
-  )) || null;
-  if (!STOCK_DATA.qtyCol && qtyCol) STOCK_DATA.qtyCol = qtyCol;
+  // Dynamic column detection with paired resolution:
+  // Saldo Atual = Quantidade física (coluna 5); SLD.ATU = Valor Total em R$ (coluna 7)
+  const headers = STOCK_DATA.headers || [];
+  const hasSaldoAtual = headers.find(h => /^saldo\s*atual/i.test(h.trim()));
+  const hasSldAtu = headers.find(h => /^sld\.?\s*atu/i.test(h.trim()));
+  const hasValor = headers.find(h => /^(valor|vlr|val)\b/i.test(h.trim()) || /valor\s*total/i.test(h.trim()));
+
+  let qtyCol = null;
+  let valCol = null;
+
+  if (hasSaldoAtual && hasSldAtu) {
+    qtyCol = hasSaldoAtual;
+    valCol = hasSldAtu;
+  } else if (hasSldAtu && hasValor) {
+    qtyCol = hasSldAtu;
+    valCol = hasValor;
+  } else if (hasSaldoAtual) {
+    qtyCol = hasSaldoAtual;
+    valCol = headers.find(h => /valor|custo\s*total|vlr/i.test(h)) || (headers.length >= 7 && headers[6] ? headers[6] : null);
+  } else {
+    qtyCol = STOCK_DATA.qtyCol || headers.find(h => /quant|qtd|estoque|atual|f[ií]sico/i.test(h)) || (headers.length >= 5 && headers[4] ? headers[4] : null);
+    valCol = (STOCK_DATA && STOCK_DATA.valCol) || hasSldAtu || headers.find(h => /valor|custo\s*total|vlr/i.test(h)) || (headers.length >= 7 && headers[6] ? headers[6] : null);
+  }
+
+  if (!qtyCol && headers.length >= 5) qtyCol = headers[4];
+  if (!valCol && headers.length >= 7) valCol = headers[6];
+
+  STOCK_DATA.qtyCol = qtyCol;
+  STOCK_DATA.valCol = valCol;
 
   // Dynamic cost column detection (with fallback to headers for existing saved reports)
-  const costCol = STOCK_DATA.costCol || (STOCK_DATA.headers && (
-    STOCK_DATA.headers.find(h => /c\.?\s*unit|custo\s*unit|vl\.?\s*unit|valor\s*unit/i.test(h)) ||
-    STOCK_DATA.headers.find(h => /^custo/i.test(h))
-  )) || null;
+  const costCol = STOCK_DATA.costCol || (headers.find(h => /c\.?\s*unit|custo\s*unit|vl\.?\s*unit|valor\s*unit/i.test(h)) ||
+    headers.find(h => /^custo/i.test(h))) || null;
 
   // Active filters detection
   const term = norm(stockFilterState.q);
@@ -2811,7 +3898,16 @@ function renderStockView(focusedCol, cursorPosition) {
         countZero++;
       }
     }
-    if (costCol) {
+    const currentValCol = (STOCK_DATA && STOCK_DATA.valCol) || valCol;
+    if (currentValCol && r[currentValCol] !== undefined) {
+      const vNum = parseStockNumber(r[currentValCol]);
+      if (!isNaN(vNum) && vNum > 0) {
+        filteredTotalCost += vNum;
+      } else if (costCol) {
+        const cNum = parseStockNumber(r[costCol]);
+        if (!isNaN(cNum)) filteredTotalCost += (rowQty * cNum);
+      }
+    } else if (costCol) {
       const cNum = parseStockNumber(r[costCol]);
       if (!isNaN(cNum)) {
         filteredTotalCost += (rowQty * cNum);
@@ -2825,13 +3921,14 @@ function renderStockView(focusedCol, cursorPosition) {
   // Sorting
   if (stockFilterState.sortCol) {
     const col = stockFilterState.sortCol;
-    const isQty = col === STOCK_DATA.qtyCol;
+    const isQty = col === STOCK_DATA.qtyCol || /^saldo(\s*atual)?$/i.test(col.trim());
+    const isVal = col === STOCK_DATA.valCol || /^sld\.?\s*atu/i.test(col.trim());
     const isCost = col === costCol;
     const dir = stockFilterState.sortDir === 'asc' ? 1 : -1;
     filtered.sort((a, b) => {
       const vA = a[col];
       const vB = b[col];
-      if (isQty || isCost) {
+      if (isQty || isVal || isCost) {
         const nA = parseStockNumber(vA) || 0;
         const nB = parseStockNumber(vB) || 0;
         return (nA - nB) * dir;
@@ -2974,8 +4071,13 @@ function renderStockView(focusedCol, cursorPosition) {
                 const val = row[h] || '';
                 const isCode = h === STOCK_DATA.codeCol;
                 const isDesc = h === STOCK_DATA.descCol;
-                const isQty = h === (STOCK_DATA.qtyCol || qtyCol);
                 const isCost = h === costCol;
+
+                // Coluna 5: Saldo Atual (Quantidade física em KG - estritamente SEM R$)
+                const isQty = (h === qtyCol) || (!/^sld\.?\s*atu/i.test(h.trim()) && (/^saldo\s*atual/i.test(h.trim()) || /quant|qtd|f[ií]sico/i.test(h)));
+
+                // Coluna 7: SLD.ATU (Valor Total em R$)
+                const isSldAtu = !isQty && (h === valCol || /^sld\.?\s*atu/i.test(h.trim()));
                 
                 if (isCode) {
                   return `<td style="white-space:nowrap">
@@ -2995,10 +4097,18 @@ function renderStockView(focusedCol, cursorPosition) {
                   </td>`;
                 }
 
-                                if (isQty) {
+                // Coluna 5: Saldo Atual (Quantidade física em KG - SEMPRE sem R$)
+                if (isQty) {
                   const num = parseStockNumber(val);
-                  const displayVal = !isNaN(num) ? num.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : (val || '-');
+                  const displayVal = !isNaN(num) ? num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : (val || '-');
                   return `<td class="stock-col-qty" style="text-align:right"><span style="color:#000000; font-weight:600;">${displayVal}</span></td>`;
+                }
+
+                // Coluna 7: SLD.ATU (Valor Total em R$)
+                if (isSldAtu) {
+                  const num = parseStockNumber(val);
+                  const displayVal = !isNaN(num) ? 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (val || '-');
+                  return `<td class="stock-col-qty" style="text-align:right"><strong style="color:#0f766e">${displayVal}</strong></td>`;
                 }
 
                 if (isCost) {
@@ -3006,10 +4116,10 @@ function renderStockView(focusedCol, cursorPosition) {
                   return `<td style="text-align:right"><span style="font-weight:600;color:#92400e">${formatStockCost(num, 4)}</span></td>`;
                 }
 
-                                                const isValor = /custo|valor|preço|preco|vlr|sld|atu|saldo/i.test(h);
+                const isValor = !isQty && !isSldAtu && !isCost && /custo|valor|preço|preco|vlr/i.test(h);
                 if (isValor) {
                   const num = (typeof parseStockNumber === 'function') ? parseStockNumber(val) : parseFloat(val);
-                  const displayVal = !isNaN(num) ? 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : (val || '-');
+                  const displayVal = !isNaN(num) ? 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : (val || '-');
                   return `<td style="text-align: right; white-space: nowrap;">${esc(displayVal)}</td>`;
                 }
                 return `<td>${esc(val)}</td>`;
@@ -3053,6 +4163,16 @@ function renderStockView(focusedCol, cursorPosition) {
       inp.focus();
       if (typeof cursorPosition === 'number') inp.setSelectionRange(cursorPosition, cursorPosition);
     }
+  }
+} catch (err) {
+    console.error('Erro ao renderizar Consulta de Saldo de Estoque:', err);
+    container.innerHTML = `
+      <div style="padding:24px;background:#fef2f2;border:1px solid #f87171;border-radius:8px;color:#991b1b;margin:16px;">
+        <h3 style="margin-top:0">⚠️ Ocorreu um erro ao carregar os dados de estoque</h3>
+        <p>${esc(err.message || String(err))}</p>
+        <button class="btn" onclick="triggerStockFileInput()">📂 Reimportar Relatório Excel</button>
+      </div>
+    `;
   }
 }
 
@@ -4685,8 +5805,13 @@ function processIbcPastedData() {
 
 function openAttachedPdfModal() {
   if (!IBC_DATA || !IBC_DATA.pdfDataUrl) {
-    alert('Nenhum arquivo PDF está anexado no momento. Use o botão "Anexar PDF" para carregar um documento.');
-    return;
+    if (typeof defaultIbcData !== 'undefined' && defaultIbcData && defaultIbcData.pdfDataUrl) {
+      if (!IBC_DATA) IBC_DATA = JSON.parse(JSON.stringify(defaultIbcData));
+      else IBC_DATA.pdfDataUrl = defaultIbcData.pdfDataUrl;
+    } else {
+      alert('Nenhum arquivo PDF está anexado no momento. Use o botão "Anexar PDF" para carregar um documento.');
+      return;
+    }
   }
   const m = document.getElementById('modal-view-pdf');
   const frame = document.getElementById('pdf-preview-frame');
@@ -5866,18 +6991,21 @@ function switchTab(tab) {
   const isIbc = tab === 'ibc';
   const isBalanco = tab === 'balanco';
   const isCodificacao = tab === 'codificacao';
+  const isDashboard = tab === 'dashboard';
   const isLembrete = tab === 'lembrete';
   document.getElementById('tab-consulta').classList.toggle('active', isConsulta);
   document.getElementById('tab-mapeamento').classList.toggle('active', isMapeamento);
   document.getElementById('tab-estoque').classList.toggle('active', isEstoque);
   const tabMpEl = document.getElementById('tab-mp');
   if (tabMpEl) tabMpEl.classList.toggle('active', isMp);
-    const tabIbcEl = document.getElementById('tab-ibc');
+  const tabIbcEl = document.getElementById('tab-ibc');
   if (tabIbcEl) tabIbcEl.classList.toggle('active', isIbc);
   const tabBalancoEl = document.getElementById('tab-balanco');
   if (tabBalancoEl) tabBalancoEl.classList.toggle('active', isBalanco);
   const tabCodEl = document.getElementById('tab-codificacao');
   if (tabCodEl) tabCodEl.classList.toggle('active', isCodificacao);
+  const tabDashEl = document.getElementById('tab-dashboard');
+  if (tabDashEl) tabDashEl.classList.toggle('active', isDashboard);
   const tabLembreteEl = document.getElementById('tab-lembrete');
   if (tabLembreteEl) tabLembreteEl.classList.toggle('active', isLembrete);
   document.getElementById('view-consulta').style.display = isConsulta ? 'block' : 'none';
@@ -5889,22 +7017,26 @@ function switchTab(tab) {
   if (viewIbcEl) viewIbcEl.style.display = isIbc ? 'block' : 'none';
   const viewBalancoEl = document.getElementById('view-balanco');
   if (viewBalancoEl) viewBalancoEl.style.display = isBalanco ? 'block' : 'none';
-    const viewCodEl = document.getElementById('view-codificacao');
+  const viewCodEl = document.getElementById('view-codificacao');
   if (viewCodEl) viewCodEl.style.display = isCodificacao ? 'block' : 'none';
+  const viewDashEl = document.getElementById('view-dashboard');
+  if (viewDashEl) viewDashEl.style.display = isDashboard ? 'block' : 'none';
   const viewLembreteEl = document.getElementById('view-lembrete');
   if (viewLembreteEl) viewLembreteEl.style.display = isLembrete ? 'block' : 'none';
-    document.getElementById('consulta-controls').style.display = isConsulta ? 'flex' : 'none';
+  document.getElementById('consulta-controls').style.display = isConsulta ? 'flex' : 'none';
   document.getElementById('btn-novo-item').style.display = isConsulta ? 'inline-flex' : 'none';
   
   const mainEl = document.querySelector('main');
-  if (mainEl) mainEl.classList.toggle('wide-layout', isEstoque || isMp || isIbc || isBalanco || isCodificacao || isLembrete || (isConsulta && flt === 'notas'));
+  if (mainEl) mainEl.classList.toggle('wide-layout', isEstoque || isMp || isIbc || isBalanco || isCodificacao || isDashboard || isLembrete || (isConsulta && flt === 'notas'));
 
   if (isConsulta) {
     if(typeof mkChips === 'function') mkChips(); if(typeof run === 'function') run();
   } else if (isMapeamento) {
     if(typeof mapRender === 'function') mapRender();
   } else if (isEstoque) {
-    if(typeof renderStockView === 'function') renderStockView();
+    if (typeof renderStockView === 'function') {
+      try { renderStockView(); } catch(err) { console.error('Erro em switchTab(estoque):', err); }
+    }
   } else if (isMp) {
     if(typeof renderMpView === 'function') renderMpView();
   } else if (isIbc) {
@@ -5913,6 +7045,8 @@ function switchTab(tab) {
     if(typeof renderBalancoView === 'function') renderBalancoView();
   } else if (isCodificacao) {
     if(typeof renderCodificacaoView === 'function') renderCodificacaoView();
+  } else if (isDashboard) {
+    if(typeof renderDashboardView === 'function') renderDashboardView();
   } else if (isLembrete) {
     if(typeof renderLembreteView === 'function') renderLembreteView();
   }
@@ -6382,6 +7516,9 @@ function renderCodificacaoView() {
 
 </script>
 <script>
+  if (typeof esc === 'undefined') {
+    window.esc = function(s) { return s ? String(s).replace(/[&<>]/g, function(m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]); }) : ''; };
+  }
   const _oldRenderIbcView = renderIbcView;
   renderIbcView = function(focusedCol, cursorPosition) {
     _oldRenderIbcView(focusedCol, cursorPosition);
@@ -7086,6 +8223,1188 @@ function testReminderAlert(id) {
   const rem = remindersList.find(r => r.id === id);
   if (!rem) return;
   showReminderModalAlert(rem, rem.earlyMinutes > 0);
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📊 MÓDULO: VISUALIZAÇÃO DE DADOS & DASHBOARDS EXECUTIVOS (AI PCP)
+// ══════════════════════════════════════════════════════════════
+
+let dashFilterState = {
+  armazem: '01',          // Padrão: armazém 01
+  codigoPrefix: '01',     // Padrão: código inicial 01....
+  topN: 10,               // Padrão: top 10 itens
+  chartType: 'bar-h',     // 'bar-h' (barras horizontais), 'bar-v' (colunas verticais)
+  cardViewMode: 'table',  // Padrão: 'table' (layout igual ao da aba consulta de saldo de estoque)
+  groupByCode: true,      // Agrupar e somar lotes do mesmo código de produto
+  search: ''
+};
+
+let dashChartInstance = null;
+let dashDonutInstance = null;
+
+function formatSaldoKg(n, unit = 'KG') {
+  if (typeof n !== 'number' || isNaN(n)) return '0,00 ' + unit;
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + unit;
+}
+
+function formatCustoUnitDash(n) {
+  if (typeof n !== 'number' || isNaN(n) || n === 0) return '-';
+  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+
+function formatCurrencyDash(n) {
+  if (typeof n !== 'number' || isNaN(n) || n === 0) return 'R$ 0,00';
+  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatNumDash(n) {
+  if (typeof n !== 'number' || isNaN(n)) return '0,00';
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function getDashboardDataset() {
+  let rows = [];
+  let headers = [];
+  let fileName = 'Relatório de Saldo de Estoque';
+  let dateStr = '';
+
+  if (typeof STOCK_DATA !== 'undefined' && STOCK_DATA && Array.isArray(STOCK_DATA.rows) && STOCK_DATA.rows.length > 0) {
+    if (STOCK_DATA.unCol && /custo|cost|unit|valor/i.test(STOCK_DATA.unCol)) {
+      if (!STOCK_DATA.costCol) STOCK_DATA.costCol = STOCK_DATA.unCol;
+      STOCK_DATA.unCol = null;
+    }
+    rows = STOCK_DATA.rows;
+    headers = STOCK_DATA.headers || [];
+    fileName = STOCK_DATA.fileName || fileName;
+    dateStr = STOCK_DATA.importedAt || '';
+  } else {
+    try {
+      const saved = localStorage.getItem('pcp_stock_report');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.rows) && parsed.rows.length > 0) {
+          if (parsed.unCol && /custo|cost|unit|valor/i.test(parsed.unCol)) {
+            if (!parsed.costCol) parsed.costCol = parsed.unCol;
+            parsed.unCol = null;
+          }
+          rows = parsed.rows;
+          headers = parsed.headers || [];
+          fileName = parsed.fileName || fileName;
+          dateStr = parsed.importedAt || '';
+        }
+      }
+    } catch(e) {}
+  }
+
+  return { rows, headers, fileName, dateStr };
+}
+
+function detectDashColumns(headers, sampleRow) {
+  const rowKeys = sampleRow ? Object.keys(sampleRow) : [];
+  const colList = (headers && headers.length) ? headers : rowKeys;
+
+  // 1. Código do Produto
+  const codeCol = (typeof STOCK_DATA !== 'undefined' && STOCK_DATA && STOCK_DATA.codeCol) ||
+    colList.find(h => /^(c[oó]d|material|produto|item|b1_cod)\b/i.test(h.trim())) ||
+    colList.find(h => /c[oó]d|produto|item/i.test(h)) ||
+    colList[0];
+
+  // 2. Armazém / Local
+  const locCol = (typeof STOCK_DATA !== 'undefined' && STOCK_DATA && STOCK_DATA.locCol) ||
+    colList.find(h => /^(armaz[eê]m|local|almox|dep[oó]sito|deposito|b2_local)\b/i.test(h.trim())) ||
+    colList.find(h => /armaz[eê]m|local|almox|dep[oó]sito/i.test(h)) ||
+    null;
+
+  // 3 & 4. Detecção Inteligente de Saldo Atual (Quantidade em KG) e SLD.ATU (Valor Total em R$)
+  let sldValorCol = null;
+  let sldQtyCol = null;
+
+  const hasSaldoAtual = colList.find(h => /^saldo\s*atual/i.test(h.trim()));
+  const hasSldAtu = colList.find(h => /^sld\.?\s*atu/i.test(h.trim()));
+  const hasValor = colList.find(h => /^(valor|vlr|val)\b/i.test(h.trim()) || /valor\s*total/i.test(h.trim()));
+
+  if (hasSaldoAtual && hasSldAtu) {
+    // Caso padrão do ERP do usuário:
+    // Saldo Atual = Quantidade física (coluna 5)
+    // SLD.ATU = Valor Total em R$ (coluna 7)
+    sldQtyCol = hasSaldoAtual;
+    sldValorCol = hasSldAtu;
+  } else if (hasSldAtu && hasValor) {
+    // Caso com SLD.ATU como quantidade e VALOR como reais:
+    sldQtyCol = hasSldAtu;
+    sldValorCol = hasValor;
+  } else if (hasSaldoAtual) {
+    sldQtyCol = hasSaldoAtual;
+    sldValorCol = colList.find(h => /valor|custo\s*total|vlr/i.test(h)) || hasSaldoAtual;
+  } else {
+    sldValorCol = hasSldAtu || colList.find(h => /valor|saldo/i.test(h)) || null;
+    sldQtyCol = colList.find(h => /saldo|quant|qtd|f[ií]sico/i.test(h)) || sldValorCol;
+  }
+
+  // 5. Descrição do Produto
+  const descCol = (typeof STOCK_DATA !== 'undefined' && STOCK_DATA && STOCK_DATA.descCol) ||
+    colList.find(h => /^(desc|nome|denomin|b1_desc)\b/i.test(h.trim())) ||
+    colList.find(h => /desc|nome|denomin/i.test(h)) ||
+    (colList[1] || colList[0]);
+
+  // 6. Custo Unitário (R$/KG)
+  let costCol = colList.find(h => /c\.?\s*unit|custo\s*unit|vl\.?\s*unit|valor\s*unit|custo\s*m[eé]dio|b2_cm1/i.test(h.trim())) ||
+    colList.find(h => /^custo/i.test(h.trim())) ||
+    ((typeof STOCK_DATA !== 'undefined' && STOCK_DATA && STOCK_DATA.costCol && !/^(um|un|unid)$/i.test(STOCK_DATA.costCol.trim())) ? STOCK_DATA.costCol : null) ||
+    null;
+
+  // 7. Unidade de Medida (estritamente não-custo)
+  let unCol = colList.find(h => /^(um|un|unid|unidade|medida|b1_um)$/i.test(h.trim()) && !/custo|cost|unit\b|unit[aá]rio|valor/i.test(h)) ||
+    ((typeof STOCK_DATA !== 'undefined' && STOCK_DATA && STOCK_DATA.unCol && !/custo|cost|unit|valor/i.test(STOCK_DATA.unCol)) ? STOCK_DATA.unCol : null);
+
+  if (unCol && costCol && unCol === costCol) {
+    unCol = null;
+  }
+
+  // Se costCol não foi achado pelo nome do cabeçalho, mas houver coluna com 'unit'/'custo':
+  if (!costCol && sampleRow) {
+    for (const k of colList) {
+      if (/unit|custo|c\.?unit/i.test(k)) {
+        costCol = k;
+        break;
+      }
+    }
+  }
+
+  const finalQtyCol = sldQtyCol || sldValorCol;
+  const finalValCol = sldValorCol || sldQtyCol;
+
+  return { codeCol, locCol, sldQtyCol: finalQtyCol, sldValorCol: finalValCol, descCol, unCol, costCol };
+}
+
+function matchArmazem(val, targetLoc) {
+  if (!targetLoc || targetLoc === 'ALL') return true;
+  if (val === undefined || val === null) return false;
+  const s = String(val).trim();
+  const tgt = String(targetLoc).trim();
+  if (tgt === '01') {
+    return s === '01' || s === '1' || s === '01.' || /^0?1\b/.test(s) || s.startsWith('01 -') || s.startsWith('01-') || s.toLowerCase() === 'armazem 01' || s.toLowerCase() === 'armazém 01';
+  }
+  return s === tgt || s.toLowerCase() === tgt.toLowerCase();
+}
+
+function matchCodigoPrefix(val, prefix) {
+  if (!prefix) return true;
+  if (!val) return false;
+  const s = String(val).trim();
+  const p = String(prefix).trim();
+  return s.startsWith(p) || s.replace(/[\.\-\/\s]/g, '').startsWith(p.replace(/[\.\-\/\s]/g, ''));
+}
+
+function processDashboardData(rows, cols, filters) {
+  const { codeCol, locCol, sldQtyCol, sldValorCol, descCol } = cols;
+  let { unCol, costCol } = cols;
+  if (!rows || !rows.length || (!sldQtyCol && !sldValorCol)) return null;
+
+  // Se unCol estiver apontando para uma coluna com valores numéricos de custo (ex: 1.5501, 7.4947):
+  if (!costCol && unCol && rows.length > 0) {
+    const sVal = String(rows[0][unCol] || '').trim().replace(',', '.');
+    if (!isNaN(Number(sVal)) && Number(sVal) > 0) {
+      costCol = unCol;
+      unCol = null;
+    }
+  }
+
+  const uniqueArmazens = new Set();
+  rows.forEach(r => {
+    if (locCol && r[locCol]) {
+      const locVal = String(r[locCol]).trim();
+      if (locVal) uniqueArmazens.add(locVal);
+    }
+  });
+
+  let armazemTotalQty = 0;
+  let armazemTotalValor = 0;
+  let armazemAllItemCount = 0;
+  const groupedMap = new Map();
+
+  rows.forEach(r => {
+    const rawLoc = locCol ? r[locCol] : '';
+    const rawCode = String(r[codeCol] || '').trim();
+    const rawDesc = r[descCol] || '';
+
+    // Unidade de Medida limpa (se for vazia ou numérica, padroniza KG para insumos de MP)
+    let rawUn = 'KG';
+    if (unCol && r[unCol]) {
+      const uStr = String(r[unCol]).trim();
+      if (uStr && isNaN(Number(uStr.replace(',', '.')))) {
+        rawUn = uStr;
+      }
+    }
+
+    // Coluna 5: Saldo Atual (Quantidade física em KG)
+    const rawQtyVal = (sldQtyCol && r[sldQtyCol] !== undefined) ? r[sldQtyCol] : '';
+    let numQty = (typeof parseStockNumber === 'function') ? parseStockNumber(rawQtyVal) : parseFloat(rawQtyVal);
+
+    // Coluna 6: Custo Unitário
+    let numCost = 0;
+    if (costCol && r[costCol] !== undefined && r[costCol] !== null) {
+      numCost = (typeof parseStockNumber === 'function') ? parseStockNumber(r[costCol]) : parseFloat(r[costCol]);
+      if (isNaN(numCost)) numCost = 0;
+    }
+
+    // Coluna 7: SLD.ATU (Saldo Total em R$)
+    const rawValVal = (sldValorCol && r[sldValorCol] !== undefined) ? r[sldValorCol] : '';
+    let numVal = (typeof parseStockNumber === 'function') ? parseStockNumber(rawValVal) : parseFloat(rawValVal);
+
+    // Validação cruzada caso uma das colunas não venha preenchida
+    if (isNaN(numVal) || numVal === 0) {
+      if (numCost > 0 && !isNaN(numQty)) {
+        numVal = numQty * numCost;
+      } else if (!isNaN(numQty)) {
+        numVal = numQty;
+      } else {
+        numVal = 0;
+      }
+    }
+
+    if (isNaN(numQty)) {
+      numQty = (numCost > 0 && numVal > 0) ? numVal / numCost : 0;
+    }
+
+    // Checagem de Armazém
+    if (locCol && !matchArmazem(rawLoc, filters.armazem)) return;
+
+    // Checagem de Código Inicial (ex: 01...)
+    if (!matchCodigoPrefix(rawCode, filters.codigoPrefix)) return;
+
+    if (numVal > 0 || numQty > 0) {
+      armazemTotalQty += numQty;
+      armazemTotalValor += numVal;
+      armazemAllItemCount++;
+
+      if (filters.groupByCode) {
+        if (!groupedMap.has(rawCode)) {
+          groupedMap.set(rawCode, {
+            code: rawCode,
+            desc: String(rawDesc).trim(),
+            un: rawUn,
+            armazem: String(rawLoc || filters.armazem || '01').trim(),
+            saldoKg: 0,
+            saldo: 0,
+            custoUnit: numCost,
+            saldoValor: 0,
+            lotCount: 0
+          });
+        }
+        const item = groupedMap.get(rawCode);
+        item.saldoKg += numQty;
+        item.saldo = item.saldoKg;
+        if (numCost > 0 && (!item.custoUnit || item.custoUnit === 0)) {
+          item.custoUnit = numCost;
+        }
+        item.saldoValor += numVal;
+        item.lotCount++;
+      } else {
+        const key = rawCode + '_' + (groupedMap.size + 1);
+        groupedMap.set(key, {
+          code: rawCode,
+          desc: String(rawDesc).trim(),
+          un: rawUn,
+          armazem: String(rawLoc || filters.armazem || '01').trim(),
+          saldoKg: numQty,
+          saldo: numQty,
+          custoUnit: numCost,
+          saldoValor: numVal,
+          lotCount: 1
+        });
+      }
+    }
+  });
+
+  const allItems = Array.from(groupedMap.values());
+  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU)
+  allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
+
+  let filteredList = allItems;
+  if (filters.search) {
+    const q = norm(filters.search);
+    filteredList = allItems.filter(item => norm(item.code + ' ' + item.desc).includes(q));
+  }
+
+  const topN = Math.max(1, parseInt(filters.topN, 10) || 10);
+  const topItems = filteredList.slice(0, topN);
+
+  const topSum = topItems.reduce((acc, curr) => acc + curr.saldoKg, 0);
+  const topValorSum = topItems.reduce((acc, curr) => acc + (curr.saldoValor || 0), 0);
+  const topSharePct = armazemTotalValor > 0 ? (topValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (topSum / armazemTotalQty) * 100 : 0);
+  const top1 = topItems[0] || null;
+  const avgSaldo = topItems.length > 0 ? (topSum / topItems.length) : 0;
+  const avgValor = topItems.length > 0 ? (topValorSum / topItems.length) : 0;
+  const top3Sum = topItems.slice(0, 3).reduce((acc, curr) => acc + curr.saldoKg, 0);
+  const top3ValorSum = topItems.slice(0, 3).reduce((acc, curr) => acc + (curr.saldoValor || 0), 0);
+  const top3SharePct = armazemTotalValor > 0 ? (top3ValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (top3Sum / armazemTotalQty) * 100 : 0);
+
+  return {
+    allItems,
+    topItems,
+    uniqueArmazens: Array.from(uniqueArmazens).sort(),
+    armazemTotalQty,
+    armazemTotalValor,
+    armazemAllItemCount: allItems.length,
+    topSum,
+    topValorSum,
+    topSharePct,
+    top1,
+    avgSaldo,
+    avgValor,
+    top3SharePct,
+    cols
+  };
+}
+
+function generateAiDashboardInsights(data) {
+  const { topItems, armazemTotalQty, armazemTotalValor, armazemAllItemCount, topSum, topValorSum, topSharePct, top1, avgSaldo, avgValor, top3SharePct } = data;
+  if (!topItems.length || !top1) return '';
+
+  const top3Codes = topItems.slice(0, 3).map(i => `<code>${i.code}</code>`).join(', ');
+  const top1ShareOfTop = topValorSum > 0 ? (((top1.saldoValor || 0) / topValorSum) * 100).toFixed(1) : (topSum > 0 ? ((top1.saldoKg / topSum) * 100).toFixed(1) : '0');
+  const lastItem = topItems[topItems.length - 1];
+  const ratio1ToLast = lastItem && (lastItem.saldoValor || lastItem.saldoKg) > 0 ? ((top1.saldoValor || top1.saldoKg) / (lastItem.saldoValor || lastItem.saldoKg)).toFixed(1) : '1';
+
+  let concentrationTone = '';
+  if (top3SharePct >= 60) {
+    concentrationTone = `<span style="color:#dc2626;font-weight:700">Hiperconcentração Crítica</span>: Os 3 primeiros itens (${top3Codes}) detêm <strong>${top3SharePct.toFixed(1)}%</strong> de todo o valor em estoque deste armazém. Qualquer divergência nestes 3 insumos impacta diretamente o fechamento financeiro e o Balanço de Massa.`;
+  } else if (top3SharePct >= 40) {
+    concentrationTone = `<span style="color:#d97706;font-weight:700">Concentração Estratégica (Pareto)</span>: Os 3 maiores insumos representam <strong>${top3SharePct.toFixed(1)}%</strong> do valor do Armazém 01, constituindo a Curva A essencial da operação.`;
+  } else {
+    concentrationTone = `<span style="color:#059669;font-weight:700">Distribuição Equilibrada</span>: O estoque está distribuído entre múltiplos insumos sem dependência financeira extrema de um único SKU.`;
+  }
+
+  return `
+    <div class="dash-ai-card">
+      <div class="dash-ai-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="dash-ai-badge">🤖 Especialista AI em PCP & Visualização</span>
+          <span style="font-size:13px;font-weight:700;color:var(--tx)">Diagnóstico Operacional & Inteligência de Estoque</span>
+        </div>
+        <span style="font-size:11.5px;color:var(--mu);font-weight:600">Armazém 01 • Código 01... • Top Itens por Valor (SLD.ATU)</span>
+      </div>
+
+      <div class="dash-ai-grid">
+        <div class="dash-ai-box">
+          <div class="dash-ai-box-title">
+            <span>⚖️</span> Curva ABC & Concentração Financeira
+          </div>
+          <p class="dash-ai-box-text">
+            ${concentrationTone} O grupo dos Top ${topItems.length} itens concentra <strong>${topSharePct.toFixed(1)}%</strong> do valor total estocado no Armazém 01 (${formatCurrencyDash(topValorSum)}).
+          </p>
+        </div>
+
+        <div class="dash-ai-box">
+          <div class="dash-ai-box-title">
+            <span>👑</span> SKU Protagonista do Armazém 01
+          </div>
+          <p class="dash-ai-box-text">
+            O insumo <strong>${top1.code}</strong> (<em>${top1.desc}</em>) lidera o ranking detendo <strong>${formatCurrencyDash(top1.saldoValor)}</strong> com saldo físico de <strong>${formatSaldoKg(top1.saldoKg, top1.un || 'KG')}</strong>, correspondendo a <strong>${top1ShareOfTop}%</strong> de todo o grupo dos Top ${topItems.length}.
+          </p>
+        </div>
+
+        <div class="dash-ai-box">
+          <div class="dash-ai-box-title">
+            <span>📈</span> Dispersão & Amplitude de Giro
+          </div>
+          <p class="dash-ai-box-text">
+            A proporção de valor entre o 1º colocado (<strong>${top1.code}</strong>) e o ${topItems.length}º colocado (<strong>${lastItem.code}</strong>) é de <strong>${ratio1ToLast}x</strong>. A média de valor no grupo Top é de <strong>${formatCurrencyDash(avgValor)}</strong> (média de saldo: ${formatSaldoKg(avgSaldo, 'KG')}).
+          </p>
+        </div>
+
+        <div class="dash-ai-box">
+          <div class="dash-ai-box-title">
+            <span>💡</span> Recomendações Táticas para o PCP
+          </div>
+          <p class="dash-ai-box-text">
+            1. <strong>Inventário Cíclico:</strong> Realizar contagem física semanal prioritária nos itens de maior valor em estoque.<br>
+            2. <strong>Controle de O.P:</strong> Monitorar apontamentos e transferências para evitar divergências em ordens de produção.<br>
+            3. <strong>Embalagens & Bloqueios:</strong> Consultar na aba <em>Identificação de IBC'S</em> e <em>Particularidades</em> o status de liberação dessas matérias-primas.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboardView() {
+  const container = document.getElementById('view-dashboard');
+  if (!container) return;
+
+  const dataset = getDashboardDataset();
+
+  // Caso nenhum relatório tenha sido carregado ainda
+  if (!dataset.rows || !dataset.rows.length) {
+    container.innerHTML = `
+      <div class="dash-container">
+        <div class="dash-header-card">
+          <div class="dash-title-group">
+            <h2>📊 Visualização de Dados & Dashboard Executivo - PCP</h2>
+            <p>Inteligência de materiais, ranking de itens no Armazém 01 e análise da coluna SLD.ATU</p>
+          </div>
+        </div>
+
+        <div class="stock-dropzone" style="background:var(--card);border:2px dashed var(--bd);border-radius:12px;padding:40px 20px;text-align:center;">
+          <div style="font-size:44px;margin-bottom:12px">📊</div>
+          <div style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:8px">Nenhum Relatório de Estoque Carregado no Momento</div>
+          <div style="font-size:13.5px;color:var(--mu);max-width:560px;margin:0 auto 20px;line-height:1.5">
+            Para gerar o gráfico dos <strong>Top 10 itens no Armazém 01</strong> com código inicial <strong>01....</strong> ordenados pelo maior valor de <strong>SLD.ATU</strong>, importe sua planilha do ERP ou carregue a demonstração pronta:
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn" onclick="triggerStockFileInput()">📂 Importar Planilha Excel / CSV</button>
+            <button class="btn outline" onclick="openStockPasteModal()">📋 Colar Dados do Excel (Ctrl+V)</button>
+            <button class="btn" style="background:#0f766e" onclick="dashLoadDemoData()">✨ Carregar Dados de Demonstração (Top 10 Armazém 01)</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const cols = detectDashColumns(dataset.headers, dataset.rows[0]);
+  const processed = processDashboardData(dataset.rows, cols, dashFilterState);
+
+  if (!processed || !processed.topItems.length) {
+    container.innerHTML = `
+      <div class="dash-container">
+        <div class="dash-header-card">
+          <div class="dash-title-group">
+            <h2>📊 Visualização de Dados - PCP</h2>
+            <p>Nenhum item localizado no Armazém <strong>${dashFilterState.armazem}</strong> com código inicial <strong>${dashFilterState.codigoPrefix}</strong>.</p>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+            <button class="btn outline" onclick="dashResetFilters()">↺ Redefinir Filtros Padrão</button>
+            <button class="btn" onclick="dashLoadDemoData()">✨ Carregar Base de Demonstração</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Opções para o select de armazéns
+  let armazemOptions = `<option value="01" ${dashFilterState.armazem === '01' ? 'selected' : ''}>01 (Almoxarifado Principal / Matéria-Prima)</option>`;
+  processed.uniqueArmazens.forEach(loc => {
+    if (loc !== '01') {
+      armazemOptions += `<option value="${loc}" ${dashFilterState.armazem === loc ? 'selected' : ''}>Armazém ${loc}</option>`;
+    }
+  });
+  armazemOptions += `<option value="ALL" ${dashFilterState.armazem === 'ALL' ? 'selected' : ''}>Todos os Armazéns</option>`;
+
+  // Gera as linhas da tabela
+  const tableRowsHtml = processed.topItems.map((item, idx) => {
+    const rankNum = idx + 1;
+    let rankBadgeClass = 'dash-rank-other';
+    let medal = `${rankNum}º`;
+    if (rankNum === 1) { rankBadgeClass = 'dash-rank-1'; medal = '🥇 1º'; }
+    else if (rankNum === 2) { rankBadgeClass = 'dash-rank-2'; medal = '🥈 2º'; }
+    else if (rankNum === 3) { rankBadgeClass = 'dash-rank-3'; medal = '🥉 3º'; }
+
+    const sldKg = item.saldoKg || item.saldo || 0;
+    const itemValor = item.saldoValor > 0 ? item.saldoValor : (item.custoUnit > 0 ? item.custoUnit * sldKg : sldKg);
+    const top1Valor = processed.top1 ? (processed.top1.saldoValor > 0 ? processed.top1.saldoValor : (processed.top1.custoUnit > 0 ? processed.top1.custoUnit * (processed.top1.saldoKg || 1) : 1)) : 1;
+    const pctTop1 = top1Valor > 0 ? (itemValor / top1Valor) * 100 : 0;
+
+    let barColor = '#3b82f6';
+    if (rankNum === 1) barColor = 'linear-gradient(90deg, #f59e0b, #d97706)';
+    else if (rankNum === 2) barColor = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+    else if (rankNum === 3) barColor = 'linear-gradient(90deg, #f97316, #c2410c)';
+    else barColor = 'linear-gradient(90deg, #06b6d4, #0284c7)';
+
+    const sldKgFormatted = formatNumDash(sldKg);
+    const unStr = esc(item.un || 'KG');
+    const custoUnitStr = item.custoUnit > 0 ? formatCustoUnitDash(item.custoUnit) : '-';
+    const totalValorStr = item.saldoValor > 0 ? formatCurrencyDash(item.saldoValor) : (item.custoUnit > 0 && sldKg > 0 ? formatCurrencyDash(item.custoUnit * sldKg) : '-');
+
+    return `
+      <tr>
+        <td style="text-align:center;width:36px">
+          <span class="dash-rank-badge ${rankBadgeClass}">${medal}</span>
+        </td>
+        <td style="white-space:nowrap">
+          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            <span class="code" title="Clique para copiar" style="cursor:pointer;white-space:nowrap" onclick="copyText('${esc(item.code)}')">${esc(item.code)}</span>
+            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.code)}')" title="Copiar código">📋</button>
+          </div>
+        </td>
+        <td>
+          <div style="display:inline-flex;align-items:center;gap:4px">
+            <strong style="color:var(--tx)">${esc(item.desc)}</strong>
+            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.desc)}')" title="Copiar descrição">📋</button>
+          </div>
+          ${item.lotCount > 1 ? `<div style="font-size:10.5px;color:var(--mu);margin-top:2px;">Consolidado de ${item.lotCount} apontamentos</div>` : ''}
+        </td>
+        <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap">${esc(item.armazem)}</td>
+        <td class="stock-col-qty" style="text-align:right;white-space:nowrap">
+          <span style="color:#000000; font-weight:800; font-size:13px">${sldKgFormatted}</span>
+          <span style="display:inline-block;background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px">${unStr}</span>
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <span style="font-weight:600;color:#92400e;font-size:12.5px">${custoUnitStr}</span>
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <strong style="color:#0f766e;font-size:13px">${totalValorStr}</strong>
+        </td>
+        <td style="width:120px">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
+              <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:5px;"></div>
+            </div>
+            <span style="font-size:10.5px;font-weight:700;color:var(--mu);min-width:32px;text-align:right">${pctTop1.toFixed(0)}%</span>
+          </div>
+        </td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn outline" style="padding:2px 6px;font-size:10px;line-height:1.2" onclick="dashJumpToStock('${item.code}')" title="Ver detalhes deste produto na aba de Estoque">
+            🔍 Estoque
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="dash-container">
+      <!-- Cabeçalho Executivo -->
+      <div class="dash-header-card">
+        <div class="dash-header-meta">
+          <div class="dash-title-group">
+            <h2>📊 Visualização de Dados & Dashboard Executivo (AI PCP)</h2>
+            <p>Painel estratégico de materiais: Top itens no Armazém 01 por saldo atual (coluna SLD.ATU)</p>
+          </div>
+          <div class="dash-badges-row">
+            <span class="dash-badge blue">🏢 Armazém: ${dashFilterState.armazem === 'ALL' ? 'Todos' : dashFilterState.armazem}</span>
+            <span class="dash-badge green">🏷️ Prefixo Cód: ${dashFilterState.codigoPrefix || 'Todos'}...</span>
+            <span class="dash-badge amber">📊 Valor: ${cols.sldValorCol || 'SLD.ATU'} • Saldo: ${cols.sldQtyCol || 'Saldo Atual'}</span>
+            <span class="dash-badge purple">📁 Base: ${esc(dataset.fileName)}</span>
+          </div>
+        </div>
+
+        <!-- Barra de Controles e Filtros -->
+        <div class="dash-controls-bar">
+          <div class="dash-ctrl-group">
+            <span class="dash-ctrl-label">Armazém:</span>
+            <select class="dash-select" id="dash-sel-armazem" onchange="dashSetArmazem(this.value)">
+              ${armazemOptions}
+            </select>
+
+            <span class="dash-ctrl-label" style="margin-left:8px;">Prefixo do Código:</span>
+            <input type="text" class="dash-input" style="width:80px;" id="dash-inp-prefix" value="${dashFilterState.codigoPrefix}" onchange="dashSetPrefix(this.value)" placeholder="ex: 01">
+
+            <span class="dash-ctrl-label" style="margin-left:8px;">Exibir:</span>
+            <div class="dash-btn-toggle-group">
+              <button class="dash-btn-toggle ${dashFilterState.topN === 5 ? 'active' : ''}" onclick="dashSetTopN(5)">Top 5</button>
+              <button class="dash-btn-toggle ${dashFilterState.topN === 10 ? 'active' : ''}" onclick="dashSetTopN(10)">Top 10</button>
+              <button class="dash-btn-toggle ${dashFilterState.topN === 15 ? 'active' : ''}" onclick="dashSetTopN(15)">Top 15</button>
+              <button class="dash-btn-toggle ${dashFilterState.topN === 20 ? 'active' : ''}" onclick="dashSetTopN(20)">Top 20</button>
+            </div>
+          </div>
+
+          <div class="dash-ctrl-group">
+            <span class="dash-ctrl-label">Formato do Gráfico:</span>
+            <div class="dash-btn-toggle-group">
+              <button class="dash-btn-toggle ${dashFilterState.chartType === 'bar-h' ? 'active' : ''}" onclick="dashSetChartType('bar-h')" title="Barras Horizontais">Horizontal</button>
+              <button class="dash-btn-toggle ${dashFilterState.chartType === 'bar-v' ? 'active' : ''}" onclick="dashSetChartType('bar-v')" title="Colunas Verticais">Vertical</button>
+            </div>
+
+            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--tx);font-weight:600;margin-left:8px;">
+              <input type="checkbox" ${dashFilterState.groupByCode ? 'checked' : ''} onchange="dashSetGroupByCode(this.checked)">
+              Consolidar Lotes
+            </label>
+
+            <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashExportChart()" title="Baixar imagem do gráfico em PNG">
+              📷 Exportar Gráfico
+            </button>
+            <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashPrintReport()" title="Imprimir relatório executivo">
+              🖨️ Imprimir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid de Indicadores Estratégicos (KPIs) -->
+      <div class="dash-kpis-grid">
+        <div class="dash-kpi-card" style="--kpi-c:#3b82f6">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Itens Analisados (Armazém ${dashFilterState.armazem})</span>
+            <span class="dash-kpi-icon">📦</span>
+          </div>
+          <div class="dash-kpi-val">${processed.armazemAllItemCount.toLocaleString('pt-BR')} SKUs</div>
+          <div class="dash-kpi-sub">Insumos com código iniciando em "${dashFilterState.codigoPrefix}"</div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#10b981">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Valor Total em Estoque (SLD.ATU)</span>
+            <span class="dash-kpi-icon">💰</span>
+          </div>
+          <div class="dash-kpi-val">${formatCurrencyDash(processed.armazemTotalValor)}</div>
+          <div class="dash-kpi-sub">Saldo Físico Total: <strong>${formatSaldoKg(processed.armazemTotalQty, 'KG')}</strong> no Armazém ${dashFilterState.armazem}</div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#f59e0b">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Valor nos Top ${processed.topItems.length}</span>
+            <span class="dash-kpi-icon">🏆</span>
+          </div>
+          <div class="dash-kpi-val">${formatCurrencyDash(processed.topValorSum)}</div>
+          <div class="dash-kpi-sub" style="color:#d97706;font-weight:700">
+            ${processed.topSharePct.toFixed(1)}% do valor do armazém • ${formatSaldoKg(processed.topSum, 'KG')}
+          </div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#7c3aed">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Item Líder em Valor (#1)</span>
+            <span class="dash-kpi-icon">👑</span>
+          </div>
+          <div class="dash-kpi-val" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${processed.top1 ? esc(processed.top1.code) : ''}">
+            ${processed.top1 ? esc(processed.top1.code) : '-'}
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#7c3aed;margin:3px 0 2px 0;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;" title="${processed.top1 ? esc(processed.top1.desc) : ''}">
+            ${processed.top1 ? esc(processed.top1.desc) : ''}
+          </div>
+          <div class="dash-kpi-sub">
+            ${processed.top1 ? `Valor: <strong>${formatCurrencyDash(processed.top1.saldoValor)}</strong> • Saldo: ${formatSaldoKg(processed.top1.saldoKg, processed.top1.un || 'KG')}` : '-'}
+          </div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#06b6d4">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Média dos Top ${processed.topItems.length}</span>
+            <span class="dash-kpi-icon">📊</span>
+          </div>
+          <div class="dash-kpi-val">${formatCurrencyDash(processed.avgValor)}</div>
+          <div class="dash-kpi-sub">Média em valor • Média saldo: ${formatSaldoKg(processed.avgSaldo, 'KG')}</div>
+        </div>
+      </div>
+
+      <!-- Linha com Ranking Principal (Layout Consulta de Saldo de Estoque) e Gráfico de Rosca/Concentração -->
+      <div class="dash-charts-row">
+        <!-- Card Ranking Top N Itens com Maior SLD.ATU (Layout igual à aba Consulta de Saldo de Estoque) -->
+        <div class="dash-chart-card">
+          <div class="dash-chart-header">
+            <h3 class="dash-chart-title">
+              <span>📊</span>
+              Ranking Top ${processed.topItems.length} Itens com Maior SLD.ATU (Armazém ${dashFilterState.armazem})
+            </h3>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="dash-btn-toggle-group">
+                <button class="dash-btn-toggle ${dashFilterState.cardViewMode === 'table' ? 'active' : ''}" onclick="dashSetCardViewMode('table')" title="Layout idêntico à aba Consulta de Saldo de Estoque">📋 Tabela</button>
+                <button class="dash-btn-toggle ${dashFilterState.cardViewMode === 'chart' ? 'active' : ''}" onclick="dashSetCardViewMode('chart')" title="Alternar para Gráfico de Barras">📊 Gráfico</button>
+              </div>
+            </div>
+          </div>
+
+          ${dashFilterState.cardViewMode === 'table' ? `
+            <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:430px;overflow-y:auto;border:1px solid var(--bd);">
+              <table class="stock-table">
+                <thead>
+                  <tr>
+                    <th style="text-align:center;width:38px">Rank</th>
+                    <th>Código</th>
+                    <th>Descrição do Produto</th>
+                    <th style="text-align:center">Armazém</th>
+                    <th class="stock-col-qty" style="text-align:right;min-width:130px">Saldo Atual</th>
+                    <th style="text-align:right;min-width:105px">Custo Unit. (R$)</th>
+                    <th style="text-align:right;min-width:125px">Saldo Total (R$)</th>
+                    <th style="min-width:110px">Proporção</th>
+                    <th style="text-align:center;width:70px">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRowsHtml}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="dash-canvas-container" id="dashMainChartContainer">
+              <canvas id="dashMainCanvas"></canvas>
+            </div>
+          `}
+        </div>
+
+        <!-- Card Gráfico de Rosca / Concentração -->
+        <div class="dash-chart-card">
+          <div class="dash-chart-header">
+            <h3 class="dash-chart-title">
+              <span>🍩</span>
+              Curva de Concentração (Top ${processed.topItems.length} vs Restante)
+            </h3>
+            <span style="font-size:12px;color:var(--mu);font-weight:600">
+              ${processed.topSharePct.toFixed(1)}% concentrado
+            </span>
+          </div>
+          <div class="dash-canvas-container" id="dashDonutChartContainer" style="min-height:380px;">
+            <canvas id="dashDonutCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnóstico Inteligente AI Insights -->
+      ${generateAiDashboardInsights(processed)}
+
+      ${dashFilterState.cardViewMode === 'chart' ? `
+        <!-- Tabela Detalhada de Classificação (Exibida quando em modo Gráfico) -->
+        <div class="dash-table-card">
+          <div class="dash-chart-header">
+            <h3 class="dash-chart-title">
+              <span>📋</span>
+              Detalhamento e Ranking Executivo dos Top ${processed.topItems.length} Itens
+            </h3>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="search" placeholder="🔍 Filtrar nesta tabela..." class="dash-input" style="width:200px;" value="${esc(dashFilterState.search)}" oninput="dashOnSearch(this.value)">
+              <span style="font-size:12px;color:var(--mu);">${processed.topItems.length} itens listados</span>
+            </div>
+          </div>
+
+          <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;border:1px solid var(--bd);">
+            <table class="stock-table">
+              <thead>
+                <tr>
+                  <th style="text-align:center;width:38px">Rank</th>
+                  <th>Código</th>
+                  <th>Descrição do Produto</th>
+                  <th style="text-align:center">Armazém</th>
+                  <th class="stock-col-qty" style="text-align:right;min-width:130px">Saldo Atual</th>
+                  <th style="text-align:right;min-width:105px">Custo Unit. (R$)</th>
+                  <th style="text-align:right;min-width:125px">Saldo Total (R$)</th>
+                  <th style="min-width:110px">Proporção</th>
+                  <th style="text-align:center;width:70px">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  // Renderiza os gráficos via Chart.js ou Native SVG Fallback
+  setTimeout(() => {
+    renderDashCharts(processed);
+  }, 50);
+}
+
+function renderDashCharts(data) {
+  const mainCanvas = document.getElementById('dashMainCanvas');
+  const donutCanvas = document.getElementById('dashDonutCanvas');
+  const mainContainer = document.getElementById('dashMainChartContainer');
+  const donutContainer = document.getElementById('dashDonutChartContainer');
+
+  // Se Chart.js estiver disponível via CDN
+  if (typeof Chart !== 'undefined') {
+    try {
+      if (mainCanvas) renderChartJsMain(mainCanvas, data);
+      if (donutCanvas) renderChartJsDonut(donutCanvas, data);
+      return;
+    } catch(err) {
+      console.warn('Chart.js falhou, acionando renderizador nativo SVG:', err);
+    }
+  }
+
+  // Fallback 100% Offline e Nativo (SVG Vectorial de Alta Definição)
+  if (mainContainer || donutContainer) {
+    renderNativeSvgCharts(data, mainContainer, donutContainer);
+  }
+}
+
+function renderChartJsMain(canvas, data) {
+  if (dashChartInstance) {
+    dashChartInstance.destroy();
+    dashChartInstance = null;
+  }
+
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor = isDark ? '#e8ebf0' : '#1b2430';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+  const labels = data.topItems.map(i => {
+    const shortDesc = i.desc.length > 28 ? i.desc.slice(0, 28) + '…' : i.desc;
+    return `${i.code} - ${shortDesc}`;
+  });
+
+  const values = data.topItems.map(i => i.saldoValor > 0 ? i.saldoValor : (i.saldoKg * (i.custoUnit || 1)));
+
+  // Paleta de cores vibrantes com destaques para 1º, 2º e 3º colocados
+  const backgroundColors = data.topItems.map((_, idx) => {
+    if (idx === 0) return '#f59e0b'; // Ouro #1
+    if (idx === 1) return '#3b82f6'; // Azul Real #2
+    if (idx === 2) return '#f97316'; // Bronze #3
+    const palette = ['#06b6d4', '#6366f1', '#8b5cf6', '#ec4899', '#14b8a6', '#84cc16', '#64748b', '#0ea5e9'];
+    return palette[(idx - 3) % palette.length];
+  });
+
+  const isHorizontal = dashFilterState.chartType === 'bar-h';
+
+  dashChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Valor Total em Estoque (R$ - SLD.ATU)',
+        data: values,
+        backgroundColor: backgroundColors,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'
+      }]
+    },
+    options: {
+      indexAxis: isHorizontal ? 'y' : 'x',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : '#0f172a',
+          titleColor: '#fff',
+          bodyColor: '#e2e8f0',
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          callbacks: {
+            title: function(items) {
+              const idx = items[0].dataIndex;
+              const item = data.topItems[idx];
+              return `#${idx + 1} - ${item.code}`;
+            },
+            label: function(item) {
+              const idx = item.dataIndex;
+              const it = data.topItems[idx];
+              const sldKg = it.saldoKg || it.saldo || 0;
+              const totalVal = it.saldoValor > 0 ? it.saldoValor : (it.custoUnit > 0 ? sldKg * it.custoUnit : 0);
+              const pct = data.armazemTotalValor > 0 ? ((totalVal / data.armazemTotalValor) * 100).toFixed(1) : '0';
+              const lines = [
+                `Produto: ${it.desc}`,
+                `Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)}`,
+                `Saldo Atual (Quantidade): ${formatSaldoKg(sldKg, it.un || 'KG')}`
+              ];
+              if (it.custoUnit > 0) {
+                lines.push(`Custo Unitário: ${formatCustoUnitDash(it.custoUnit)}`);
+              }
+              lines.push(`Participação no Armazém ${dashFilterState.armazem}: ${pct}%`);
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            font: { family: 'system-ui, sans-serif', size: 11 },
+            callback: function(val) {
+              if (isHorizontal) {
+                const n = Number(val);
+                if (isNaN(n)) return val;
+                if (Math.abs(n) >= 1000000) return 'R$ ' + (n / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
+                if (Math.abs(n) >= 1000) return 'R$ ' + (n / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k';
+                return 'R$ ' + n.toLocaleString('pt-BR');
+              }
+              return this.getLabelForValue ? this.getLabelForValue(val) : val;
+            }
+          }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            font: { family: 'system-ui, sans-serif', size: 11 },
+            callback: function(val) {
+              if (!isHorizontal) {
+                const n = Number(val);
+                if (isNaN(n)) return val;
+                if (Math.abs(n) >= 1000000) return 'R$ ' + (n / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
+                if (Math.abs(n) >= 1000) return 'R$ ' + (n / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k';
+                return 'R$ ' + n.toLocaleString('pt-BR');
+              }
+              return this.getLabelForValue ? this.getLabelForValue(val) : val;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderChartJsDonut(canvas, data) {
+  if (dashDonutInstance) {
+    dashDonutInstance.destroy();
+    dashDonutInstance = null;
+  }
+
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor = isDark ? '#e8ebf0' : '#1b2430';
+
+  // O usuário solicitou: apagar as informações de código/posição e incluir SOMENTE a descrição do produto
+  const labels = data.topItems.map(i => {
+    const desc = (i.desc || i.code || '').trim();
+    return desc.length > 38 ? desc.slice(0, 38) + '…' : desc;
+  });
+  const values = data.topItems.map(i => i.saldoValor > 0 ? i.saldoValor : (i.saldoKg * (i.custoUnit || 1)));
+
+  // Calcula fatia restante do armazém em valor
+  const remaining = Math.max(0, data.armazemTotalValor - data.topValorSum);
+  if (remaining > 0) {
+    labels.push('Demais Itens do Armazém');
+    values.push(remaining);
+  }
+
+  const backgroundColors = data.topItems.map((_, idx) => {
+    if (idx === 0) return '#f59e0b';
+    if (idx === 1) return '#3b82f6';
+    if (idx === 2) return '#f97316';
+    const palette = ['#06b6d4', '#6366f1', '#8b5cf6', '#ec4899', '#14b8a6', '#84cc16'];
+    return palette[(idx - 3) % palette.length];
+  });
+  if (remaining > 0) backgroundColors.push(isDark ? '#334155' : '#cbd5e1');
+
+  dashDonutInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors,
+        borderWidth: 2,
+        borderColor: isDark ? '#1b212b' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: textColor,
+            boxWidth: 12,
+            font: { size: 10.5, weight: '500' },
+            padding: 8
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : '#0f172a',
+          titleColor: '#fff',
+          bodyColor: '#e2e8f0',
+          padding: 10,
+          callbacks: {
+            title: function(items) {
+              const idx = items[0].dataIndex;
+              if (idx < data.topItems.length) {
+                return data.topItems[idx].desc || data.topItems[idx].code;
+              }
+              return 'Demais Itens do Armazém';
+            },
+            label: function(ctx) {
+              const val = ctx.parsed;
+              const total = data.armazemTotalValor || data.armazemTotalQty;
+              const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
+              const idx = ctx.dataIndex;
+              const it = (idx < data.topItems.length) ? data.topItems[idx] : null;
+              if (it) {
+                const sldKg = it.saldoKg || it.saldo || 0;
+                const totalVal = it.saldoValor > 0 ? it.saldoValor : (it.custoUnit > 0 ? sldKg * it.custoUnit : val);
+                return [
+                  ` Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)} (${pct}%)`,
+                  ` Saldo Atual: ${formatSaldoKg(sldKg, it.un || 'KG')}`
+                ];
+              }
+              return ` Valor Total: ${formatCurrencyDash(val)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderNativeSvgCharts(data, mainContainer, donutContainer) {
+  // Renderizador puro HTML/SVG caso o Chart.js esteja inacessível
+  if (mainContainer) {
+    const maxVal = data.top1 ? (data.top1.saldoValor > 0 ? data.top1.saldoValor : (data.top1.saldoKg * (data.top1.custoUnit || 1))) : 1;
+    let barsHtml = data.topItems.map((item, idx) => {
+      const sldKg = item.saldoKg || item.saldo || 0;
+      const sldVal = item.saldoValor > 0 ? item.saldoValor : (item.custoUnit > 0 ? sldKg * item.custoUnit : sldKg);
+      const pct = maxVal > 0 ? (sldVal / maxVal) * 100 : 0;
+      let barColor = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+      if (idx === 0) barColor = 'linear-gradient(90deg, #f59e0b, #d97706)';
+      else if (idx === 1) barColor = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+      else if (idx === 2) barColor = 'linear-gradient(90deg, #f97316, #c2410c)';
+
+      return `
+        <div class="svg-bar-row">
+          <div class="svg-bar-label" title="${esc(item.code)} - ${esc(item.desc)}">
+            <strong>#${idx + 1}</strong> ${esc(item.code)} - ${esc(item.desc)}
+          </div>
+          <div class="svg-bar-track">
+            <div class="svg-bar-fill" style="width:${Math.max(4, pct)}%;background:${barColor};">
+              ${pct > 25 ? formatCurrencyDash(sldVal) : ''}
+            </div>
+          </div>
+          <div class="svg-bar-val">
+            <strong style="color:#0f766e">${formatCurrencyDash(sldVal)}</strong>
+            <span style="font-size:11px;color:var(--mu);margin-left:4px">(${formatSaldoKg(sldKg, item.un || 'KG')})</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    mainContainer.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px;padding:10px 0;">${barsHtml}</div>`;
+  }
+
+  if (donutContainer) {
+    donutContainer.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:20px;">
+        <div style="font-size:36px;font-weight:800;color:var(--ac)">${data.topSharePct.toFixed(1)}%</div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx);text-align:center">
+          Concentração de Valor dos Top ${data.topItems.length} no Armazém ${dashFilterState.armazem}
+        </div>
+        <div style="font-size:12px;color:var(--mu);text-align:center">
+          Valor Top ${data.topItems.length}: <strong>${formatCurrencyDash(data.topValorSum)}</strong><br>
+          Valor Total Armazém: <strong>${formatCurrencyDash(data.armazemTotalValor)}</strong>
+        </div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;width:100%;font-size:11px;max-width:320px;">
+          ${data.topItems.map(i => `<div style="display:flex;align-items:center;justify-content:space-between;color:var(--tx);gap:8px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">• ${esc(i.desc || i.code)}</span><strong style="white-space:nowrap;color:#0f766e">${formatCurrencyDash(i.saldoValor || (i.saldoKg * (i.custoUnit || 1)))}</strong></div>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Funções de Interação e Filtros
+function dashSetTopN(n) {
+  dashFilterState.topN = n;
+  renderDashboardView();
+}
+
+function dashSetChartType(type) {
+  dashFilterState.chartType = type;
+  renderDashboardView();
+}
+
+function dashSetCardViewMode(mode) {
+  dashFilterState.cardViewMode = mode;
+  renderDashboardView();
+}
+
+function dashSetArmazem(loc) {
+  dashFilterState.armazem = loc;
+  renderDashboardView();
+}
+
+function dashSetPrefix(prefix) {
+  dashFilterState.codigoPrefix = prefix.trim();
+  renderDashboardView();
+}
+
+function dashSetGroupByCode(val) {
+  dashFilterState.groupByCode = Boolean(val);
+  renderDashboardView();
+}
+
+function dashOnSearch(term) {
+  dashFilterState.search = term;
+  renderDashboardView();
+}
+
+function dashResetFilters() {
+  dashFilterState.armazem = '01';
+  dashFilterState.codigoPrefix = '01';
+  dashFilterState.topN = 10;
+  dashFilterState.search = '';
+  renderDashboardView();
+}
+
+function dashJumpToStock(code) {
+  switchTab('estoque');
+  const qInput = document.getElementById('stock-q');
+  if (qInput) {
+    qInput.value = code;
+    stockFilterState.q = code;
+    stockFilterState.page = 1;
+    renderStockView();
+  }
+}
+
+function dashCopyCode(code) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => {
+      showToast(`Código ${code} copiado para a área de transferência!`);
+    }).catch(() => {
+      showToast(`Código: ${code}`);
+    });
+  } else {
+    showToast(`Código: ${code}`);
+  }
+}
+
+function dashExportChart() {
+  const canvas = document.getElementById('dashMainCanvas');
+  if (canvas && typeof canvas.toDataURL === 'function') {
+    try {
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Top_10_Armazem_01_SLD_ATU_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Gráfico exportado com sucesso em PNG!');
+      return;
+    } catch(e) {}
+  }
+  window.print();
+}
+
+function dashPrintReport() {
+  window.print();
+}
+
+function dashLoadDemoData() {
+  const demoItems = [
+    { "Código": "01.124.00.2.001", "Descrição": "BAYHYDUR XP 2547 - GR (MP)", "Armazém": "01", "Saldo Atual": "18.300,00", "UM": "KG", "C.UNIT": "65,4000", "SLD.ATU": "1.196.820,00" },
+    { "Código": "01.019.00.1.001", "Descrição": "ACIDO ACRILICO GLACIAL - GR (MP)", "Armazém": "01", "Saldo Atual": "142.300,00", "UM": "KG", "C.UNIT": "7,4947", "SLD.ATU": "1.066.495,81" },
+    { "Código": "01.069.00.2.004", "Descrição": "ACRILATO DE BUTILA - GR (MP)", "Armazém": "01", "Saldo Atual": "118.750,00", "UM": "KG", "C.UNIT": "8,1250", "SLD.ATU": "964.843,75" },
+    { "Código": "01.034.00.1.011", "Descrição": "CMC - FINNFIX 5 - GR (MP)", "Armazém": "01", "Saldo Atual": "54.100,00", "UM": "KG", "C.UNIT": "17,0557", "SLD.ATU": "922.713,37" },
+    { "Código": "01.091.00.0.004", "Descrição": "IPEL BP 575 - GR (MP)", "Armazém": "01", "Saldo Atual": "31.200,00", "UM": "KG", "C.UNIT": "28,6000", "SLD.ATU": "892.320,00" },
+    { "Código": "01.069.00.2.112", "Descrição": "CATIONIC NE CFLOC 805 - GR (MP)", "Armazém": "01", "Saldo Atual": "39.500,00", "UM": "KG", "C.UNIT": "22,5000", "SLD.ATU": "888.750,00" },
+    { "Código": "01.042.00.0.001", "Descrição": "HEDP - GR (MP)", "Armazém": "01", "Saldo Atual": "82.600,00", "UM": "KG", "C.UNIT": "9,3000", "SLD.ATU": "768.180,00" },
+    { "Código": "01.069.00.5.024", "Descrição": "ULTRAFILM 260 LV - GR (MP)", "Armazém": "01", "Saldo Atual": "47.850,00", "UM": "KG", "C.UNIT": "14,2000", "SLD.ATU": "679.470,00" },
+    { "Código": "01.116.00.0.015", "Descrição": "WHITELUM FS - GR (MP)", "Armazém": "01", "Saldo Atual": "24.600,00", "UM": "KG", "C.UNIT": "19,8000", "SLD.ATU": "487.080,00" },
+    { "Código": "01.066.00.0.001", "Descrição": "UREIA TECNICA/INDUSTRIAL - SC 25 KG (MP)", "Armazém": "01", "Saldo Atual": "184.500,00", "UM": "KG", "C.UNIT": "2,4500", "SLD.ATU": "452.025,00" },
+    { "Código": "01.095.00.2.001", "Descrição": "METABISSULFITO DE SODIO - GR (MP)", "Armazém": "01", "Saldo Atual": "96.400,00", "UM": "KG", "C.UNIT": "3,8500", "SLD.ATU": "371.140,00" },
+    { "Código": "01.127.00.2.002", "Descrição": "ANIDRIDO MALEICO - GR (MP)", "Armazém": "01", "Saldo Atual": "15.900,00", "UM": "KG", "C.UNIT": "12,1000", "SLD.ATU": "192.390,00" },
+    { "Código": "01.126.00.0.001", "Descrição": "ATMP - GR (MP)", "Armazém": "01", "Saldo Atual": "9.800,00", "UM": "KG", "C.UNIT": "16,3000", "SLD.ATU": "159.740,00" },
+    { "Código": "01.069.00.0.023", "Descrição": "BENTONITA POLENITA EXTRA - GR (MP)", "Armazém": "01", "Saldo Atual": "68.200,00", "UM": "KG", "C.UNIT": "1,8500", "SLD.ATU": "126.170,00" },
+    { "Código": "01.121.00.0.001", "Descrição": "AL TP-325 ELFUSA - GR (MP)", "Armazém": "01", "Saldo Atual": "12.400,00", "UM": "KG", "C.UNIT": "8,7500", "SLD.ATU": "108.500,00" }
+  ];
+
+  STOCK_DATA = {
+    fileName: 'Demonstração - Saldo de Estoque PCP (Armazém 01)',
+    importedAt: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    headers: ["Código", "Descrição", "Armazém", "Saldo Atual", "UM", "C.UNIT", "SLD.ATU"],
+    rows: demoItems,
+    codeCol: "Código",
+    descCol: "Descrição",
+    qtyCol: "Saldo Atual",
+    valCol: "SLD.ATU",
+    locCol: "Armazém",
+    unCol: "UM",
+    costCol: "C.UNIT"
+  };
+
+  localStorage.setItem('pcp_stock_report', JSON.stringify(STOCK_DATA));
+  if (typeof renderStockView === 'function') renderStockView();
+  renderDashboardView();
+  showToast('Base de demonstração com Top 10 carregada com sucesso!');
 }
 
 </script>

@@ -51,6 +51,13 @@ Catálogo visual estruturado em cards categorizados:
 ### 8. 🗺️ Mapeamento de Processo
 - Visualização e consulta do fluxo completo das etapas produtivas e administrativas do PCP.
 
+### 9. 📊 Visualização de Dados (AI Dashboards & Inteligência Visual)
+- **Top 10 Itens no Armazém 01 por SLD.ATU:** Ranking visual dos maiores volumes de estoque considerando matérias-primas e insumos com código inicial `01....`.
+- **Gráficos Executivos:** Gráfico de barras horizontais/verticais interativo com gradientes modernos e gráfico Donut de curva de concentração (Pareto / Curva ABC).
+- **🤖 Diagnóstico Inteligente AI Insights:** Análise heurística automatizada em tempo real com identificação de SKU líder, grau de dispersão e recomendações táticas para o PCP.
+- **Tabela com Ação Rápida:** Ranking com medalhas (🥇, 🥈, 🥉), barras visuais de proporção, percentuais de representatividade e atalho direto para consulta detalhada no estoque.
+- **Exportação e Impressão:** Download do gráfico em imagem PNG de alta resolução e modo de impressão executivo.
+
 ---
 
 ## 🔒 Privacidade & Arquitetura Local-First (Segurança de Dados)
