@@ -8405,6 +8405,57 @@ function matchCodigoPrefix(val, prefix) {
   return s.startsWith(p) || s.replace(/[\.\-\/\s]/g, '').startsWith(p.replace(/[\.\-\/\s]/g, ''));
 }
 
+function dashLookupMpTag(code, desc) {
+  const norm = s => String(s || '').trim().toUpperCase().replace(/[\.\-\/\s]/g, '');
+  const cleanCode = norm(code);
+
+  let mpRows = [];
+  if (typeof MP_DATA !== 'undefined' && MP_DATA && Array.isArray(MP_DATA.rows) && MP_DATA.rows.length) {
+    mpRows = MP_DATA.rows;
+  } else if (typeof defaultMpData !== 'undefined' && defaultMpData && Array.isArray(defaultMpData.rows)) {
+    mpRows = defaultMpData.rows;
+  } else {
+    try {
+      const saved = localStorage.getItem('pcp_mp_report');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.rows)) mpRows = parsed.rows;
+      }
+    } catch(e){}
+  }
+
+  if (!mpRows.length) return '';
+
+  if (cleanCode) {
+    const found = mpRows.find(r => {
+      const c = norm(r['Código'] || r['Codigo'] || (typeof MP_DATA !== 'undefined' && MP_DATA && MP_DATA.codeCol ? r[MP_DATA.codeCol] : ''));
+      return c === cleanCode;
+    });
+    if (found) {
+      const val = found['Descr. Interna'] || found['Descr Interna'] || (typeof MP_DATA !== 'undefined' && MP_DATA && MP_DATA.descIntCol ? found[MP_DATA.descIntCol] : '');
+      if (val && String(val).trim().toUpperCase() !== 'NA' && String(val).trim() !== '-') {
+        return String(val).trim();
+      }
+    }
+  }
+
+  if (desc) {
+    const cleanDesc = norm(desc);
+    const found = mpRows.find(r => {
+      const d = norm(r['Descr. Externa'] || r['Descricao Externa'] || (typeof MP_DATA !== 'undefined' && MP_DATA && MP_DATA.descExtCol ? r[MP_DATA.descExtCol] : ''));
+      return d && (d === cleanDesc || cleanDesc.includes(d) || d.includes(cleanDesc));
+    });
+    if (found) {
+      const val = found['Descr. Interna'] || found['Descr Interna'] || (typeof MP_DATA !== 'undefined' && MP_DATA && MP_DATA.descIntCol ? found[MP_DATA.descIntCol] : '');
+      if (val && String(val).trim().toUpperCase() !== 'NA' && String(val).trim() !== '-') {
+        return String(val).trim();
+      }
+    }
+  }
+
+  return '';
+}
+
 function processDashboardData(rows, cols, filters) {
   const { codeCol, locCol, sldQtyCol, sldValorCol, descCol } = cols;
   let { unCol, costCol } = cols;
@@ -8489,9 +8540,11 @@ function processDashboardData(rows, cols, filters) {
 
       if (filters.groupByCode) {
         if (!groupedMap.has(rawCode)) {
+          const mpTag = dashLookupMpTag(rawCode, rawDesc);
           groupedMap.set(rawCode, {
             code: rawCode,
             desc: String(rawDesc).trim(),
+            mpTag: mpTag,
             un: rawUn,
             armazem: String(rawLoc || filters.armazem || '01').trim(),
             saldoKg: 0,
@@ -8502,6 +8555,9 @@ function processDashboardData(rows, cols, filters) {
           });
         }
         const item = groupedMap.get(rawCode);
+        if (!item.mpTag) {
+          item.mpTag = dashLookupMpTag(rawCode, rawDesc);
+        }
         item.saldoKg += numQty;
         item.saldo = item.saldoKg;
         if (numCost > 0 && (!item.custoUnit || item.custoUnit === 0)) {
@@ -8510,10 +8566,12 @@ function processDashboardData(rows, cols, filters) {
         item.saldoValor += numVal;
         item.lotCount++;
       } else {
+        const mpTag = dashLookupMpTag(rawCode, rawDesc);
         const key = rawCode + '_' + (groupedMap.size + 1);
         groupedMap.set(key, {
           code: rawCode,
           desc: String(rawDesc).trim(),
+          mpTag: mpTag,
           un: rawUn,
           armazem: String(rawLoc || filters.armazem || '01').trim(),
           saldoKg: numQty,
@@ -8610,7 +8668,7 @@ function generateAiDashboardInsights(data) {
             <span>👑</span> SKU Protagonista do Armazém 01
           </div>
           <p class="dash-ai-box-text">
-            O insumo <strong>${top1.code}</strong> (<em>${top1.desc}</em>) lidera o ranking detendo <strong>${formatCurrencyDash(top1.saldoValor)}</strong> com saldo físico de <strong>${formatSaldoKg(top1.saldoKg, top1.un || 'KG')}</strong>, correspondendo a <strong>${top1ShareOfTop}%</strong> de todo o grupo dos Top ${topItems.length}.
+            O insumo <strong>${top1.code}</strong> (${top1.mpTag ? `<strong>${esc(top1.mpTag)}</strong> - ` : ''}<em>${top1.desc}</em>) lidera o ranking detendo <strong>${formatCurrencyDash(top1.saldoValor)}</strong> com saldo físico de <strong>${formatSaldoKg(top1.saldoKg, top1.un || 'KG')}</strong>, correspondendo a <strong>${top1ShareOfTop}%</strong> de todo o grupo dos Top ${topItems.length}.
           </p>
         </div>
 
@@ -8739,7 +8797,8 @@ function renderDashboardView() {
           </div>
         </td>
         <td>
-          <div style="display:inline-flex;align-items:center;gap:4px">
+          <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;margin-right:2px;flex-shrink:0" title="Matéria-Prima: ${esc(item.mpTag)}">${esc(item.mpTag)}</span>` : ''}
             <strong style="color:var(--tx)">${esc(item.desc)}</strong>
             <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.desc)}')" title="Copiar descrição">📋</button>
           </div>
@@ -8872,7 +8931,7 @@ function renderDashboardView() {
             ${processed.top1 ? esc(processed.top1.code) : '-'}
           </div>
           <div style="font-size:12px;font-weight:700;color:#7c3aed;margin:3px 0 2px 0;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;" title="${processed.top1 ? esc(processed.top1.desc) : ''}">
-            ${processed.top1 ? esc(processed.top1.desc) : ''}
+            ${processed.top1 ? `${processed.top1.mpTag ? `<span class="mp-desc-int-tag" style="font-size:10px;padding:1px 5px;margin-right:4px;vertical-align:middle">${esc(processed.top1.mpTag)}</span> ` : ''}${esc(processed.top1.desc)}` : ''}
           </div>
           <div class="dash-kpi-sub">
             ${processed.top1 ? `Valor: <strong>${formatCurrencyDash(processed.top1.saldoValor)}</strong> • Saldo: ${formatSaldoKg(processed.top1.saldoKg, processed.top1.un || 'KG')}` : '-'}
@@ -9089,7 +9148,7 @@ function renderChartJsMain(canvas, data) {
               const totalVal = it.saldoValor > 0 ? it.saldoValor : (it.custoUnit > 0 ? sldKg * it.custoUnit : 0);
               const pct = data.armazemTotalValor > 0 ? ((totalVal / data.armazemTotalValor) * 100).toFixed(1) : '0';
               const lines = [
-                `Produto: ${it.desc}`,
+                `Produto: ${it.mpTag ? `[${it.mpTag}] ` : ''}${it.desc}`,
                 `Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)}`,
                 `Saldo Atual (Quantidade): ${formatSaldoKg(sldKg, it.un || 'KG')}`
               ];
@@ -9208,7 +9267,8 @@ function renderChartJsDonut(canvas, data) {
             title: function(items) {
               const idx = items[0].dataIndex;
               if (idx < data.topItems.length) {
-                return data.topItems[idx].desc || data.topItems[idx].code;
+                const it = data.topItems[idx];
+                return (it.mpTag ? `[${it.mpTag}] ` : '') + (it.desc || it.code);
               }
               return 'Demais Itens do Armazém';
             },
@@ -9281,7 +9341,7 @@ function renderNativeSvgCharts(data, mainContainer, donutContainer) {
           Valor Total Armazém: <strong>${formatCurrencyDash(data.armazemTotalValor)}</strong>
         </div>
         <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;width:100%;font-size:11px;max-width:320px;">
-          ${data.topItems.map(i => `<div style="display:flex;align-items:center;justify-content:space-between;color:var(--tx);gap:8px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">• ${esc(i.desc || i.code)}</span><strong style="white-space:nowrap;color:#0f766e">${formatCurrencyDash(i.saldoValor || (i.saldoKg * (i.custoUnit || 1)))}</strong></div>`).join('')}
+          ${data.topItems.map(i => `<div style="display:flex;align-items:center;justify-content:space-between;color:var(--tx);gap:8px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">• ${i.mpTag ? `[${esc(i.mpTag)}] ` : ''}${esc(i.desc || i.code)}</span><strong style="white-space:nowrap;color:#0f766e">${formatCurrencyDash(i.saldoValor || (i.saldoKg * (i.custoUnit || 1)))}</strong></div>`).join('')}
         </div>
       </div>
     `;
