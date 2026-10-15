@@ -1458,9 +1458,18 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
 /* Charts Grid */
 .dash-charts-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 440px;
+  gap: 14px;
   align-items: stretch;
+}
+
+.dash-chart-card .stock-table th,
+.dash-chart-card .stock-table td {
+  padding: 4px 5px !important;
+  font-size: 11px;
+}
+.dash-chart-card .stock-table th {
+  padding: 5px 5px !important;
 }
 
 @media(max-width: 1080px) {
@@ -8798,12 +8807,14 @@ function renderDashboardView() {
           </div>
         </td>
         <td>
-          <div style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">
+          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
             <strong style="color:var(--tx)">${esc(item.desc)}</strong>
             <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.desc)}')" title="Copiar descrição">📋</button>
-            ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;flex-shrink:0;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : ''}
           </div>
-          ${item.lotCount > 1 ? `<div style="font-size:10.5px;color:var(--mu);margin-top:2px;">Consolidado de ${item.lotCount} apontamentos</div>` : ''}
+          ${item.lotCount > 1 ? `<div style="font-size:10px;color:var(--mu);margin-top:2px;">Consolidado de ${item.lotCount} apontamentos</div>` : ''}
+        </td>
+        <td style="text-align:center;white-space:nowrap">
+          ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:11px">-</span>'}
         </td>
         <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap">${esc(item.armazem)}</td>
         <td class="stock-col-qty" style="text-align:right;white-space:nowrap">
@@ -8971,15 +8982,16 @@ function renderDashboardView() {
               <table class="stock-table" style="width:100%;">
                 <thead>
                   <tr>
-                    <th style="text-align:center;width:38px;white-space:nowrap">Rank</th>
+                    <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
                     <th style="white-space:nowrap">Código</th>
                     <th style="white-space:nowrap">Descrição do Produto</th>
-                    <th style="text-align:center;white-space:nowrap;width:55px">Armazém</th>
+                    <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
+                    <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
                     <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
                     <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
                     <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
-                    <th style="min-width:85px;width:95px;white-space:nowrap">Proporção</th>
-                    <th style="text-align:center;white-space:nowrap;width:65px">Ação</th>
+                    <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
+                    <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -9005,7 +9017,7 @@ function renderDashboardView() {
               ${processed.topSharePct.toFixed(1)}% concentrado
             </span>
           </div>
-          <div class="dash-canvas-container" id="dashDonutChartContainer" style="min-height:380px;">
+          <div class="dash-canvas-container" id="dashDonutChartContainer" style="min-height:430px;">
             <canvas id="dashDonutCanvas"></canvas>
           </div>
         </div>
@@ -9032,15 +9044,16 @@ function renderDashboardView() {
             <table class="stock-table" style="width:100%;">
               <thead>
                 <tr>
-                  <th style="text-align:center;width:38px;white-space:nowrap">Rank</th>
+                  <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
                   <th style="white-space:nowrap">Código</th>
                   <th style="white-space:nowrap">Descrição do Produto</th>
-                  <th style="text-align:center;white-space:nowrap;width:55px">Armazém</th>
+                  <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
+                  <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
                   <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
                   <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
                   <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
-                  <th style="min-width:85px;width:95px;white-space:nowrap">Proporção</th>
-                  <th style="text-align:center;white-space:nowrap;width:65px">Ação</th>
+                  <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
+                  <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
                 </tr>
               </thead>
               <tbody>
