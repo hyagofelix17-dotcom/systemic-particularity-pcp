@@ -4035,24 +4035,24 @@ function renderStockView(focusedCol, cursorPosition) {
         <thead>
           <tr>
             ${STOCK_DATA.headers.map(h => {
-              const isQty = h === (STOCK_DATA.qtyCol || qtyCol);
+              const isQtyHeader = !/reserva|sld\.?\s*atu/i.test(h.trim()) && (h === (STOCK_DATA.qtyCol || qtyCol) || /^saldo\s*atual/i.test(h.trim()));
               const isSorted = stockFilterState.sortCol === h;
               const arrow = isSorted ? (stockFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
               const multiVals = stockFilterState.colMultiFilters && stockFilterState.colMultiFilters[h];
               const hasMulti = Array.isArray(multiVals);
               const multiBadge = hasMulti ? `<span style="display:inline-block;background:#1d5fd1;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${multiVals.length} valor(es) selecionados no checklist">✓ ${multiVals.length}</span>` : '';
-              return `<th class="${isQty ? 'stock-col-qty' : ''}" onclick="handleStockSort('${esc(h)}')" title="Clique para ordenar por ${esc(h)}"><span>${esc(h)}${arrow}${multiBadge}</span></th>`;
+              return `<th class="${isQtyHeader ? 'stock-col-qty' : ''}" onclick="handleStockSort('${esc(h)}')" title="Clique para ordenar por ${esc(h)}"><span>${esc(h)}${arrow}${multiBadge}</span></th>`;
             }).join('')}
           </tr>
           <tr class="stock-filter-row">
             ${STOCK_DATA.headers.map(h => {
-              const isQty = h === (STOCK_DATA.qtyCol || qtyCol);
+              const isQtyHeader = !/reserva|sld\.?\s*atu/i.test(h.trim()) && (h === (STOCK_DATA.qtyCol || qtyCol) || /^saldo\s*atual/i.test(h.trim()));
               const curVal = (stockFilterState.colFilters && stockFilterState.colFilters[h]) || '';
               const multiVals = stockFilterState.colMultiFilters && stockFilterState.colMultiFilters[h];
               const hasMulti = Array.isArray(multiVals);
               const multiCount = hasMulti ? multiVals.length : 0;
               const placeholder = hasMulti ? `(${multiCount} sel.)` : 'Filtrar...';
-              return `<th class="${isQty ? 'stock-col-qty' : ''}">
+              return `<th class="${isQtyHeader ? 'stock-col-qty' : ''}">
                 <div class="stock-th-filter">
                   <input type="text" class="stock-col-input ${(curVal||hasMulti)?'active':''}" placeholder="${placeholder}" value="${esc(curVal)}" data-col="${esc(h)}" oninput="handleStockColFilter(this, event)">
                   <button type="button" class="stock-excel-filter-trigger ${hasMulti?'active':''}" onclick="openExcelFilterPopover('${esc(h)}', this, event)" title="Abrir checklist de seleção múltipla estilo Excel">
@@ -4073,11 +4073,13 @@ function renderStockView(focusedCol, cursorPosition) {
                 const isDesc = h === STOCK_DATA.descCol;
                 const isCost = h === costCol;
 
+                const isReserva = /reserva/i.test(h.trim());
+
                 // Coluna 5: Saldo Atual (Quantidade física em KG - estritamente SEM R$)
-                const isQty = (h === qtyCol) || (!/^sld\.?\s*atu/i.test(h.trim()) && (/^saldo\s*atual/i.test(h.trim()) || /quant|qtd|f[ií]sico/i.test(h)));
+                const isQty = !isReserva && ((h === qtyCol) || (!/^sld\.?\s*atu/i.test(h.trim()) && (/^saldo\s*atual/i.test(h.trim()) || /quant|qtd|f[ií]sico/i.test(h))));
 
                 // Coluna 7: SLD.ATU (Valor Total em R$)
-                const isSldAtu = !isQty && (h === valCol || /^sld\.?\s*atu/i.test(h.trim()));
+                const isSldAtu = !isQty && !isReserva && (h === valCol || /^sld\.?\s*atu/i.test(h.trim()));
                 
                 if (isCode) {
                   return `<td style="white-space:nowrap">
@@ -4097,6 +4099,20 @@ function renderStockView(focusedCol, cursorPosition) {
                   </td>`;
                 }
 
+                // Coluna QTD. RESERVA: estritamente SEM verde, SEM negrito, fonte preta, sem R$
+                if (isReserva) {
+                  const num = parseStockNumber(val);
+                  const displayVal = !isNaN(num) ? num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : (val || '-');
+                  return `<td style="text-align:right; color:#000000; font-weight:normal;">${displayVal}</td>`;
+                }
+
+                // Coluna 7: SLD.ATU: estritamente SEM verde, SEM negrito, fonte preta, COM R$
+                if (isSldAtu) {
+                  const num = parseStockNumber(val);
+                  const displayVal = !isNaN(num) ? 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (val || '-');
+                  return `<td style="text-align:right; color:#000000; font-weight:normal;">${displayVal}</td>`;
+                }
+
                 // Coluna 5: Saldo Atual (Quantidade física em KG - SEMPRE sem R$)
                 if (isQty) {
                   const num = parseStockNumber(val);
@@ -4104,19 +4120,12 @@ function renderStockView(focusedCol, cursorPosition) {
                   return `<td class="stock-col-qty" style="text-align:right"><span style="color:#000000; font-weight:600;">${displayVal}</span></td>`;
                 }
 
-                // Coluna 7: SLD.ATU (Valor Total em R$)
-                if (isSldAtu) {
-                  const num = parseStockNumber(val);
-                  const displayVal = !isNaN(num) ? 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (val || '-');
-                  return `<td class="stock-col-qty" style="text-align:right"><strong style="color:#0f766e">${displayVal}</strong></td>`;
-                }
-
                 if (isCost) {
                   const num = parseStockNumber(val);
                   return `<td style="text-align:right"><span style="font-weight:600;color:#92400e">${formatStockCost(num, 4)}</span></td>`;
                 }
 
-                const isValor = !isQty && !isSldAtu && !isCost && /custo|valor|preço|preco|vlr/i.test(h);
+                const isValor = !isQty && !isSldAtu && !isCost && !isReserva && /custo|valor|preço|preco|vlr/i.test(h);
                 if (isValor) {
                   const num = (typeof parseStockNumber === 'function') ? parseStockNumber(val) : parseFloat(val);
                   const displayVal = !isNaN(num) ? 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : (val || '-');
