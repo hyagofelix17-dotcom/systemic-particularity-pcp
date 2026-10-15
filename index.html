@@ -8397,22 +8397,39 @@ function detectDashColumns(headers, sampleRow) {
 }
 
 function matchArmazem(val, targetLoc) {
-  if (!targetLoc || targetLoc === 'ALL') return true;
+  if (!targetLoc || targetLoc === 'ALL' || targetLoc === '*' || String(targetLoc).toLowerCase() === 'todos') return true;
   if (val === undefined || val === null) return false;
   const s = String(val).trim();
   const tgt = String(targetLoc).trim();
-  if (tgt === '01') {
-    return s === '01' || s === '1' || s === '01.' || /^0?1\b/.test(s) || s.startsWith('01 -') || s.startsWith('01-') || s.toLowerCase() === 'armazem 01' || s.toLowerCase() === 'armazém 01';
+  if (!s) return false;
+  if (s.toLowerCase() === tgt.toLowerCase()) return true;
+
+  // Comparação de dígitos/números do armazém (ex: '01' == '1', '02' == '2', 'Armazém 02' vs '02')
+  const digitsS = s.replace(/\D/g, '');
+  const digitsTgt = tgt.replace(/\D/g, '');
+  if (digitsS && digitsTgt) {
+    const numS = parseInt(digitsS, 10);
+    const numTgt = parseInt(digitsTgt, 10);
+    if (!isNaN(numS) && !isNaN(numTgt) && numS === numTgt) return true;
   }
-  return s === tgt || s.toLowerCase() === tgt.toLowerCase();
+
+  // Correspondência por texto parcial
+  const sLower = s.toLowerCase();
+  const tgtLower = tgt.toLowerCase();
+  if (sLower.includes(tgtLower) || tgtLower.includes(sLower)) return true;
+
+  return false;
 }
 
 function matchCodigoPrefix(val, prefix) {
-  if (!prefix) return true;
-  if (!val) return false;
-  const s = String(val).trim();
-  const p = String(prefix).trim();
-  return s.startsWith(p) || s.replace(/[\.\-\/\s]/g, '').startsWith(p.replace(/[\.\-\/\s]/g, ''));
+  if (!prefix || !String(prefix).trim() || prefix === '*' || String(prefix).toLowerCase() === 'todos') return true;
+  if (val === undefined || val === null) return false;
+  const s = String(val).trim().toLowerCase();
+  const p = String(prefix).trim().toLowerCase();
+  if (s.startsWith(p)) return true;
+  const sClean = s.replace(/[\.\-\/\s]/g, '');
+  const pClean = p.replace(/[\.\-\/\s]/g, '');
+  return sClean.startsWith(pClean);
 }
 
 function dashLookupMpTag(code, desc) {
@@ -8639,6 +8656,10 @@ function generateAiDashboardInsights(data) {
   const { topItems, armazemTotalQty, armazemTotalValor, armazemAllItemCount, topSum, topValorSum, topSharePct, top1, avgSaldo, avgValor, top3SharePct } = data;
   if (!topItems.length || !top1) return '';
 
+  const locLabel = dashFilterState.armazem === 'ALL' ? 'Todos os Armazéns' : 'Armazém ' + dashFilterState.armazem;
+  const locLabelIn = dashFilterState.armazem === 'ALL' ? 'no estoque total' : 'no Armazém ' + dashFilterState.armazem;
+  const prefixLabel = dashFilterState.codigoPrefix ? `Código ${dashFilterState.codigoPrefix}...` : 'Todos os Códigos';
+
   const top3Codes = topItems.slice(0, 3).map(i => `<code>${i.code}</code>`).join(', ');
   const top1ShareOfTop = topValorSum > 0 ? (((top1.saldoValor || 0) / topValorSum) * 100).toFixed(1) : (topSum > 0 ? ((top1.saldoKg / topSum) * 100).toFixed(1) : '0');
   const lastItem = topItems[topItems.length - 1];
@@ -8646,9 +8667,9 @@ function generateAiDashboardInsights(data) {
 
   let concentrationTone = '';
   if (top3SharePct >= 60) {
-    concentrationTone = `<span style="color:#dc2626;font-weight:700">Hiperconcentração Crítica</span>: Os 3 primeiros itens (${top3Codes}) detêm <strong>${top3SharePct.toFixed(1)}%</strong> de todo o valor em estoque deste armazém. Qualquer divergência nestes 3 insumos impacta diretamente o fechamento financeiro e o Balanço de Massa.`;
+    concentrationTone = `<span style="color:#dc2626;font-weight:700">Hiperconcentração Crítica</span>: Os 3 primeiros itens (${top3Codes}) detêm <strong>${top3SharePct.toFixed(1)}%</strong> de todo o valor em estoque ${locLabelIn}. Qualquer divergência nestes 3 insumos impacta diretamente o fechamento financeiro e o Balanço de Massa.`;
   } else if (top3SharePct >= 40) {
-    concentrationTone = `<span style="color:#d97706;font-weight:700">Concentração Estratégica (Pareto)</span>: Os 3 maiores insumos representam <strong>${top3SharePct.toFixed(1)}%</strong> do valor do Armazém 01, constituindo a Curva A essencial da operação.`;
+    concentrationTone = `<span style="color:#d97706;font-weight:700">Concentração Estratégica (Pareto)</span>: Os 3 maiores insumos representam <strong>${top3SharePct.toFixed(1)}%</strong> do valor ${locLabelIn}, constituindo a Curva A essencial da operação.`;
   } else {
     concentrationTone = `<span style="color:#059669;font-weight:700">Distribuição Equilibrada</span>: O estoque está distribuído entre múltiplos insumos sem dependência financeira extrema de um único SKU.`;
   }
@@ -8660,7 +8681,7 @@ function generateAiDashboardInsights(data) {
           <span class="dash-ai-badge">🤖 Especialista AI em PCP & Visualização</span>
           <span style="font-size:13px;font-weight:700;color:var(--tx)">Diagnóstico Operacional & Inteligência de Estoque</span>
         </div>
-        <span style="font-size:11.5px;color:var(--mu);font-weight:600">Armazém 01 • Código 01... • Top Itens por Valor (SLD.ATU)</span>
+        <span style="font-size:11.5px;color:var(--mu);font-weight:600">${locLabel} • ${prefixLabel} • Top Itens por Valor (SLD.ATU)</span>
       </div>
 
       <div class="dash-ai-grid">
@@ -8669,13 +8690,13 @@ function generateAiDashboardInsights(data) {
             <span>⚖️</span> Curva ABC & Concentração Financeira
           </div>
           <p class="dash-ai-box-text">
-            ${concentrationTone} O grupo dos Top ${topItems.length} itens concentra <strong>${topSharePct.toFixed(1)}%</strong> do valor total estocado no Armazém 01 (${formatCurrencyDash(topValorSum)}).
+            ${concentrationTone} O grupo dos Top ${topItems.length} itens concentra <strong>${topSharePct.toFixed(1)}%</strong> do valor total estocado ${locLabelIn} (${formatCurrencyDash(topValorSum)}).
           </p>
         </div>
 
         <div class="dash-ai-box">
           <div class="dash-ai-box-title">
-            <span>👑</span> SKU Protagonista do Armazém 01
+            <span>👑</span> SKU Protagonista (${locLabel})
           </div>
           <p class="dash-ai-box-text">
             O insumo <strong>${top1.code}</strong> (${top1.mpTag ? `<strong>${esc(top1.mpTag)}</strong> - ` : ''}<em>${top1.desc}</em>) lidera o ranking detendo <strong>${formatCurrencyDash(top1.saldoValor)}</strong> com saldo físico de <strong>${formatSaldoKg(top1.saldoKg, top1.un || 'KG')}</strong>, correspondendo a <strong>${top1ShareOfTop}%</strong> de todo o grupo dos Top ${topItems.length}.
@@ -8706,9 +8727,23 @@ function generateAiDashboardInsights(data) {
   `;
 }
 
-function renderDashboardView() {
+function renderDashboardView(preserveFocus = false) {
   const container = document.getElementById('view-dashboard');
   if (!container) return;
+
+  let activeId = null;
+  let selStart = null;
+  let selEnd = null;
+
+  if (preserveFocus && document.activeElement) {
+    activeId = document.activeElement.id;
+    if (activeId && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      try {
+        selStart = document.activeElement.selectionStart;
+        selEnd = document.activeElement.selectionEnd;
+      } catch (e) {}
+    }
+  }
 
   const dataset = getDashboardDataset();
 
@@ -8743,32 +8778,133 @@ function renderDashboardView() {
   const cols = detectDashColumns(dataset.headers, dataset.rows[0]);
   const processed = processDashboardData(dataset.rows, cols, dashFilterState);
 
+  // Opções para o select de armazéns
+  const knownArmazens = new Set((processed && processed.uniqueArmazens) ? processed.uniqueArmazens : []);
+  if (!knownArmazens.has('01')) knownArmazens.add('01');
+  if (dashFilterState.armazem && dashFilterState.armazem !== 'ALL') {
+    knownArmazens.add(dashFilterState.armazem);
+  }
+
+  const sortedArmazens = Array.from(knownArmazens).sort((a, b) => {
+    const na = parseInt(String(a).replace(/\D/g, ''), 10);
+    const nb = parseInt(String(b).replace(/\D/g, ''), 10);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return String(a).localeCompare(String(b));
+  });
+
+  let armazemOptions = `<option value="ALL" ${dashFilterState.armazem === 'ALL' ? 'selected' : ''}>🏢 Todos os Armazéns</option>`;
+  sortedArmazens.forEach(loc => {
+    const is01 = String(loc).trim() === '01' || String(loc).trim() === '1';
+    let label = is01 ? `01 (Almoxarifado Principal / Matéria-Prima)` : `Armazém ${loc}`;
+    if (String(loc).toLowerCase().includes('armazém') || String(loc).toLowerCase().includes('armazem')) {
+      label = loc;
+    }
+    const isSelected = dashFilterState.armazem === loc || (is01 && dashFilterState.armazem === '01');
+    armazemOptions += `<option value="${esc(loc)}" ${isSelected ? 'selected' : ''}>${esc(label)}</option>`;
+  });
+  armazemOptions += `<option value="__custom__">✏️ Outro Armazém (Digitar)...</option>`;
+
+  const locDisplay = dashFilterState.armazem === 'ALL' ? 'Todos os Armazéns' : 'Armazém ' + dashFilterState.armazem;
+  const prefixDisplay = dashFilterState.codigoPrefix ? dashFilterState.codigoPrefix + '...' : 'Todos os Códigos';
+
+  // Cabeçalho Executivo e Barra de Controles (Sempre presentes no DOM para nunca travar a navegação)
+  const headerHtml = `
+    <div class="dash-header-card">
+      <div class="dash-header-meta">
+        <div class="dash-title-group">
+          <h2>📊 Visualização de Dados & Dashboard Executivo (AI PCP)</h2>
+          <p>Painel estratégico de materiais: Top itens no ${locDisplay} por saldo atual (coluna SLD.ATU)</p>
+        </div>
+        <div class="dash-badges-row">
+          <span class="dash-badge blue">🏢 ${locDisplay}</span>
+          <span class="dash-badge green">🏷️ Prefixo: ${prefixDisplay}</span>
+          <span class="dash-badge amber">📊 Valor: ${cols.sldValorCol || 'SLD.ATU'} • Saldo: ${cols.sldQtyCol || 'Saldo Atual'}</span>
+          <span class="dash-badge purple">📁 Base: ${esc(dataset.fileName)}</span>
+        </div>
+      </div>
+
+      <!-- Barra de Controles e Filtros Dinâmicos -->
+      <div class="dash-controls-bar">
+        <div class="dash-ctrl-group">
+          <span class="dash-ctrl-label">Armazém:</span>
+          <select class="dash-select" id="dash-sel-armazem" onchange="dashSetArmazem(this.value)">
+            ${armazemOptions}
+          </select>
+
+          <span class="dash-ctrl-label" style="margin-left:8px;">Prefixo do Código:</span>
+          <div style="display:inline-flex;align-items:center;position:relative;">
+            <input type="text" class="dash-input" style="width:85px;padding-right:20px;" id="dash-inp-prefix" value="${esc(dashFilterState.codigoPrefix)}" oninput="dashOnPrefixInput(this.value)" onchange="dashSetPrefix(this.value)" placeholder="Todos">
+            ${dashFilterState.codigoPrefix ? `<span onclick="dashClearPrefix()" style="position:absolute;right:6px;cursor:pointer;color:var(--mu);font-size:12px;font-weight:700;line-height:1;" title="Limpar prefixo (mostrar todos)">✕</span>` : ''}
+          </div>
+
+          <span class="dash-ctrl-label" style="margin-left:8px;">Exibir:</span>
+          <div class="dash-btn-toggle-group">
+            <button class="dash-btn-toggle ${dashFilterState.topN === 5 ? 'active' : ''}" onclick="dashSetTopN(5)">Top 5</button>
+            <button class="dash-btn-toggle ${dashFilterState.topN === 10 ? 'active' : ''}" onclick="dashSetTopN(10)">Top 10</button>
+            <button class="dash-btn-toggle ${dashFilterState.topN === 15 ? 'active' : ''}" onclick="dashSetTopN(15)">Top 15</button>
+            <button class="dash-btn-toggle ${dashFilterState.topN === 20 ? 'active' : ''}" onclick="dashSetTopN(20)">Top 20</button>
+          </div>
+        </div>
+
+        <div class="dash-ctrl-group">
+          <span class="dash-ctrl-label">Formato do Gráfico:</span>
+          <div class="dash-btn-toggle-group">
+            <button class="dash-btn-toggle ${dashFilterState.chartType === 'bar-h' ? 'active' : ''}" onclick="dashSetChartType('bar-h')" title="Barras Horizontais">Horizontal</button>
+            <button class="dash-btn-toggle ${dashFilterState.chartType === 'bar-v' ? 'active' : ''}" onclick="dashSetChartType('bar-v')" title="Colunas Verticais">Vertical</button>
+          </div>
+
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--tx);font-weight:600;margin-left:8px;">
+            <input type="checkbox" ${dashFilterState.groupByCode ? 'checked' : ''} onchange="dashSetGroupByCode(this.checked)">
+            Consolidar Lotes
+          </label>
+
+          <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashExportChart()" title="Baixar imagem do gráfico em PNG">
+            📷 Exportar Gráfico
+          </button>
+          <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashPrintReport()" title="Imprimir relatório executivo">
+            🖨️ Imprimir
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Se nenhum item foi localizado com os filtros atuais, mantém a barra de controles ativa!
   if (!processed || !processed.topItems.length) {
     container.innerHTML = `
       <div class="dash-container">
-        <div class="dash-header-card">
-          <div class="dash-title-group">
-            <h2>📊 Visualização de Dados - PCP</h2>
-            <p>Nenhum item localizado no Armazém <strong>${dashFilterState.armazem}</strong> com código inicial <strong>${dashFilterState.codigoPrefix}</strong>.</p>
+        ${headerHtml}
+        <div style="background:var(--card);border:1px dashed var(--bd);border-radius:12px;padding:36px 20px;text-align:center;margin-top:16px;">
+          <div style="font-size:38px;margin-bottom:10px">🔍</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:6px">Nenhum item localizado com os filtros selecionados</div>
+          <div style="font-size:13px;color:var(--mu);max-width:560px;margin:0 auto 18px;line-height:1.5">
+            Não foram encontrados produtos no <strong>${locDisplay}</strong> com prefixo de código <strong>"${dashFilterState.codigoPrefix || 'qualquer prefixo'}"</strong>.<br>
+            Altere o armazém ou limpe o prefixo acima para atualizar os dados automaticamente.
           </div>
-          <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-            <button class="btn outline" onclick="dashResetFilters()">↺ Redefinir Filtros Padrão</button>
-            <button class="btn" onclick="dashLoadDemoData()">✨ Carregar Base de Demonstração</button>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            ${dashFilterState.codigoPrefix ? `<button class="btn outline" onclick="dashClearPrefix()">🏷️ Limpar Prefixo (Mostrar Todos os Códigos)</button>` : ''}
+            ${dashFilterState.armazem !== 'ALL' ? `<button class="btn outline" onclick="dashSetArmazem('ALL')">🏢 Exibir Todos os Armazéns</button>` : ''}
+            <button class="btn" onclick="dashResetFilters()">↺ Redefinir Filtros Padrão (Armazém 01 / Cód 01)</button>
+            <button class="btn" style="background:#0f766e" onclick="dashLoadDemoData()">✨ Recarregar Base de Demonstração</button>
           </div>
         </div>
       </div>
     `;
+
+    if (dashChartInstance) { dashChartInstance.destroy(); dashChartInstance = null; }
+    if (dashDonutInstance) { dashDonutInstance.destroy(); dashDonutInstance = null; }
+
+    if (activeId) {
+      const el = document.getElementById(activeId);
+      if (el) {
+        el.focus();
+        if (selStart !== null && selEnd !== null && typeof el.setSelectionRange === 'function') {
+          try { el.setSelectionRange(selStart, selEnd); } catch (e) {}
+        }
+      }
+    }
     return;
   }
-
-  // Opções para o select de armazéns
-  let armazemOptions = `<option value="01" ${dashFilterState.armazem === '01' ? 'selected' : ''}>01 (Almoxarifado Principal / Matéria-Prima)</option>`;
-  processed.uniqueArmazens.forEach(loc => {
-    if (loc !== '01') {
-      armazemOptions += `<option value="${loc}" ${dashFilterState.armazem === loc ? 'selected' : ''}>Armazém ${loc}</option>`;
-    }
-  });
-  armazemOptions += `<option value="ALL" ${dashFilterState.armazem === 'ALL' ? 'selected' : ''}>Todos os Armazéns</option>`;
 
   // Gera as linhas da tabela
   const tableRowsHtml = processed.topItems.map((item, idx) => {
@@ -8846,72 +8982,17 @@ function renderDashboardView() {
 
   container.innerHTML = `
     <div class="dash-container">
-      <!-- Cabeçalho Executivo -->
-      <div class="dash-header-card">
-        <div class="dash-header-meta">
-          <div class="dash-title-group">
-            <h2>📊 Visualização de Dados & Dashboard Executivo (AI PCP)</h2>
-            <p>Painel estratégico de materiais: Top itens no Armazém 01 por saldo atual (coluna SLD.ATU)</p>
-          </div>
-          <div class="dash-badges-row">
-            <span class="dash-badge blue">🏢 Armazém: ${dashFilterState.armazem === 'ALL' ? 'Todos' : dashFilterState.armazem}</span>
-            <span class="dash-badge green">🏷️ Prefixo Cód: ${dashFilterState.codigoPrefix || 'Todos'}...</span>
-            <span class="dash-badge amber">📊 Valor: ${cols.sldValorCol || 'SLD.ATU'} • Saldo: ${cols.sldQtyCol || 'Saldo Atual'}</span>
-            <span class="dash-badge purple">📁 Base: ${esc(dataset.fileName)}</span>
-          </div>
-        </div>
-
-        <!-- Barra de Controles e Filtros -->
-        <div class="dash-controls-bar">
-          <div class="dash-ctrl-group">
-            <span class="dash-ctrl-label">Armazém:</span>
-            <select class="dash-select" id="dash-sel-armazem" onchange="dashSetArmazem(this.value)">
-              ${armazemOptions}
-            </select>
-
-            <span class="dash-ctrl-label" style="margin-left:8px;">Prefixo do Código:</span>
-            <input type="text" class="dash-input" style="width:80px;" id="dash-inp-prefix" value="${dashFilterState.codigoPrefix}" onchange="dashSetPrefix(this.value)" placeholder="ex: 01">
-
-            <span class="dash-ctrl-label" style="margin-left:8px;">Exibir:</span>
-            <div class="dash-btn-toggle-group">
-              <button class="dash-btn-toggle ${dashFilterState.topN === 5 ? 'active' : ''}" onclick="dashSetTopN(5)">Top 5</button>
-              <button class="dash-btn-toggle ${dashFilterState.topN === 10 ? 'active' : ''}" onclick="dashSetTopN(10)">Top 10</button>
-              <button class="dash-btn-toggle ${dashFilterState.topN === 15 ? 'active' : ''}" onclick="dashSetTopN(15)">Top 15</button>
-              <button class="dash-btn-toggle ${dashFilterState.topN === 20 ? 'active' : ''}" onclick="dashSetTopN(20)">Top 20</button>
-            </div>
-          </div>
-
-          <div class="dash-ctrl-group">
-            <span class="dash-ctrl-label">Formato do Gráfico:</span>
-            <div class="dash-btn-toggle-group">
-              <button class="dash-btn-toggle ${dashFilterState.chartType === 'bar-h' ? 'active' : ''}" onclick="dashSetChartType('bar-h')" title="Barras Horizontais">Horizontal</button>
-              <button class="dash-btn-toggle ${dashFilterState.chartType === 'bar-v' ? 'active' : ''}" onclick="dashSetChartType('bar-v')" title="Colunas Verticais">Vertical</button>
-            </div>
-
-            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--tx);font-weight:600;margin-left:8px;">
-              <input type="checkbox" ${dashFilterState.groupByCode ? 'checked' : ''} onchange="dashSetGroupByCode(this.checked)">
-              Consolidar Lotes
-            </label>
-
-            <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashExportChart()" title="Baixar imagem do gráfico em PNG">
-              📷 Exportar Gráfico
-            </button>
-            <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashPrintReport()" title="Imprimir relatório executivo">
-              🖨️ Imprimir
-            </button>
-          </div>
-        </div>
-      </div>
+      ${headerHtml}
 
       <!-- Grid de Indicadores Estratégicos (KPIs) -->
       <div class="dash-kpis-grid">
         <div class="dash-kpi-card" style="--kpi-c:#3b82f6">
           <div class="dash-kpi-top">
-            <span class="dash-kpi-title">Itens Analisados (Armazém ${dashFilterState.armazem})</span>
+            <span class="dash-kpi-title">Itens Analisados (${locDisplay})</span>
             <span class="dash-kpi-icon">📦</span>
           </div>
           <div class="dash-kpi-val">${processed.armazemAllItemCount.toLocaleString('pt-BR')} SKUs</div>
-          <div class="dash-kpi-sub">Insumos com código iniciando em "${dashFilterState.codigoPrefix}"</div>
+          <div class="dash-kpi-sub">Insumos com código iniciando em "${dashFilterState.codigoPrefix || 'Todos'}"</div>
         </div>
 
         <div class="dash-kpi-card" style="--kpi-c:#10b981">
@@ -8920,7 +9001,7 @@ function renderDashboardView() {
             <span class="dash-kpi-icon">💰</span>
           </div>
           <div class="dash-kpi-val">${formatCurrencyDash(processed.armazemTotalValor)}</div>
-          <div class="dash-kpi-sub">Saldo Físico Total: <strong>${formatSaldoKg(processed.armazemTotalQty, 'KG')}</strong> no Armazém ${dashFilterState.armazem}</div>
+          <div class="dash-kpi-sub">Saldo Físico Total: <strong>${formatSaldoKg(processed.armazemTotalQty, 'KG')}</strong> ${dashFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashFilterState.armazem}</div>
         </div>
 
         <div class="dash-kpi-card" style="--kpi-c:#f59e0b">
@@ -8930,7 +9011,7 @@ function renderDashboardView() {
           </div>
           <div class="dash-kpi-val">${formatCurrencyDash(processed.topValorSum)}</div>
           <div class="dash-kpi-sub" style="color:#d97706;font-weight:700">
-            ${processed.topSharePct.toFixed(1)}% do valor do armazém • ${formatSaldoKg(processed.topSum, 'KG')}
+            ${processed.topSharePct.toFixed(1)}% do valor ${dashFilterState.armazem === 'ALL' ? 'do estoque geral' : 'do armazém'} • ${formatSaldoKg(processed.topSum, 'KG')}
           </div>
         </div>
 
@@ -8962,12 +9043,12 @@ function renderDashboardView() {
 
       <!-- Linha com Ranking Principal (Layout Consulta de Saldo de Estoque) e Gráfico de Rosca/Concentração -->
       <div class="dash-charts-row">
-        <!-- Card Ranking Top N Itens com Maior Valor e Quantidade (Layout igual à aba Consulta de Saldo de Estoque) -->
+        <!-- Card Ranking Top N Itens com Maior Valor e Quantidade -->
         <div class="dash-chart-card">
           <div class="dash-chart-header">
             <h3 class="dash-chart-title">
               <span>📊</span>
-              Ranking Top ${processed.topItems.length} Itens com Maior Valor e Quantidade (Armazém ${dashFilterState.armazem})
+              Ranking Top ${processed.topItems.length} Itens com Maior Valor e Quantidade (${locDisplay})
             </h3>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="dash-btn-toggle-group">
@@ -9065,6 +9146,16 @@ function renderDashboardView() {
       ` : ''}
     </div>
   `;
+
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) {
+      el.focus();
+      if (selStart !== null && selEnd !== null && typeof el.setSelectionRange === 'function') {
+        try { el.setSelectionRange(selStart, selEnd); } catch (e) {}
+      }
+    }
+  }
 
   // Renderiza os gráficos via Chart.js ou Native SVG Fallback
   setTimeout(() => {
@@ -9169,7 +9260,7 @@ function renderChartJsMain(canvas, data) {
               if (it.custoUnit > 0) {
                 lines.push(`Custo Unitário: ${formatCustoUnitDash(it.custoUnit)}`);
               }
-              lines.push(`Participação no Armazém ${dashFilterState.armazem}: ${pct}%`);
+              lines.push(`Participação ${dashFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashFilterState.armazem}: ${pct}%`);
               return lines;
             }
           }
@@ -9234,7 +9325,7 @@ function renderChartJsDonut(canvas, data) {
   // Calcula fatia restante do armazém em valor
   const remaining = Math.max(0, data.armazemTotalValor - data.topValorSum);
   if (remaining > 0) {
-    labels.push('Demais Itens do Armazém');
+    labels.push(dashFilterState.armazem === 'ALL' ? 'Demais Itens do Estoque Geral' : 'Demais Itens do Armazém ' + dashFilterState.armazem);
     values.push(remaining);
   }
 
@@ -9284,7 +9375,7 @@ function renderChartJsDonut(canvas, data) {
                 const it = data.topItems[idx];
                 return (it.mpTag ? `[${it.mpTag}] ` : '') + (it.desc || it.code);
               }
-              return 'Demais Itens do Armazém';
+              return dashFilterState.armazem === 'ALL' ? 'Demais Itens do Estoque Geral' : 'Demais Itens do Armazém ' + dashFilterState.armazem;
             },
             label: function(ctx) {
               const val = ctx.parsed;
@@ -9348,7 +9439,7 @@ function renderNativeSvgCharts(data, mainContainer, donutContainer) {
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:20px;">
         <div style="font-size:36px;font-weight:800;color:var(--ac)">${data.topSharePct.toFixed(1)}%</div>
         <div style="font-size:13px;font-weight:600;color:var(--tx);text-align:center">
-          Concentração de Valor dos Top ${data.topItems.length} no Armazém ${dashFilterState.armazem}
+          Concentração de Valor dos Top ${data.topItems.length} ${dashFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashFilterState.armazem}
         </div>
         <div style="font-size:12px;color:var(--mu);text-align:center">
           Valor Top ${data.topItems.length}: <strong>${formatCurrencyDash(data.topValorSum)}</strong><br>
@@ -9378,13 +9469,40 @@ function dashSetCardViewMode(mode) {
   renderDashboardView();
 }
 
-function dashSetArmazem(loc) {
-  dashFilterState.armazem = loc;
-  renderDashboardView();
+let dashPrefixDebounceTimer = null;
+
+function dashOnPrefixInput(val) {
+  dashFilterState.codigoPrefix = val;
+  if (dashPrefixDebounceTimer) clearTimeout(dashPrefixDebounceTimer);
+  dashPrefixDebounceTimer = setTimeout(() => {
+    renderDashboardView(true);
+  }, 160);
 }
 
 function dashSetPrefix(prefix) {
+  if (dashPrefixDebounceTimer) clearTimeout(dashPrefixDebounceTimer);
   dashFilterState.codigoPrefix = prefix.trim();
+  renderDashboardView(true);
+}
+
+function dashClearPrefix() {
+  if (dashPrefixDebounceTimer) clearTimeout(dashPrefixDebounceTimer);
+  dashFilterState.codigoPrefix = '';
+  renderDashboardView(true);
+  const inp = document.getElementById('dash-inp-prefix');
+  if (inp) inp.focus();
+}
+
+function dashSetArmazem(loc) {
+  if (loc === '__custom__') {
+    const custom = prompt('Digite o número ou nome do armazém desejado (ou digite ALL para todos):', dashFilterState.armazem);
+    if (custom !== null && custom.trim()) {
+      dashFilterState.armazem = custom.trim();
+    }
+    renderDashboardView();
+    return;
+  }
+  dashFilterState.armazem = loc;
   renderDashboardView();
 }
 
@@ -9399,6 +9517,7 @@ function dashOnSearch(term) {
 }
 
 function dashResetFilters() {
+  if (dashPrefixDebounceTimer) clearTimeout(dashPrefixDebounceTimer);
   dashFilterState.armazem = '01';
   dashFilterState.codigoPrefix = '01';
   dashFilterState.topN = 10;
@@ -9436,7 +9555,9 @@ function dashExportChart() {
       const url = canvas.toDataURL('image/png');
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Top_10_Armazem_01_SLD_ATU_${new Date().toISOString().slice(0,10)}.png`;
+      const armLabel = dashFilterState.armazem === 'ALL' ? 'Todos_Armazens' : 'Armazem_' + dashFilterState.armazem;
+      const pfxLabel = dashFilterState.codigoPrefix ? `_Prefixo_${dashFilterState.codigoPrefix}` : '';
+      a.download = `Ranking_Top_${dashFilterState.topN}_${armLabel}${pfxLabel}_SLD_ATU_${new Date().toISOString().slice(0,10)}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -9453,6 +9574,7 @@ function dashPrintReport() {
 
 function dashLoadDemoData() {
   const demoItems = [
+    // Armazém 01 - Matérias-Primas (Prefixo 01...)
     { "Código": "01.124.00.2.001", "Descrição": "BAYHYDUR XP 2547 - GR (MP)", "Armazém": "01", "Saldo Atual": "18.300,00", "UM": "KG", "C.UNIT": "65,4000", "SLD.ATU": "1.196.820,00" },
     { "Código": "01.019.00.1.001", "Descrição": "ACIDO ACRILICO GLACIAL - GR (MP)", "Armazém": "01", "Saldo Atual": "142.300,00", "UM": "KG", "C.UNIT": "7,4947", "SLD.ATU": "1.066.495,81" },
     { "Código": "01.069.00.2.004", "Descrição": "ACRILATO DE BUTILA - GR (MP)", "Armazém": "01", "Saldo Atual": "118.750,00", "UM": "KG", "C.UNIT": "8,1250", "SLD.ATU": "964.843,75" },
@@ -9467,11 +9589,24 @@ function dashLoadDemoData() {
     { "Código": "01.127.00.2.002", "Descrição": "ANIDRIDO MALEICO - GR (MP)", "Armazém": "01", "Saldo Atual": "15.900,00", "UM": "KG", "C.UNIT": "12,1000", "SLD.ATU": "192.390,00" },
     { "Código": "01.126.00.0.001", "Descrição": "ATMP - GR (MP)", "Armazém": "01", "Saldo Atual": "9.800,00", "UM": "KG", "C.UNIT": "16,3000", "SLD.ATU": "159.740,00" },
     { "Código": "01.069.00.0.023", "Descrição": "BENTONITA POLENITA EXTRA - GR (MP)", "Armazém": "01", "Saldo Atual": "68.200,00", "UM": "KG", "C.UNIT": "1,8500", "SLD.ATU": "126.170,00" },
-    { "Código": "01.121.00.0.001", "Descrição": "AL TP-325 ELFUSA - GR (MP)", "Armazém": "01", "Saldo Atual": "12.400,00", "UM": "KG", "C.UNIT": "8,7500", "SLD.ATU": "108.500,00" }
+    { "Código": "01.121.00.0.001", "Descrição": "AL TP-325 ELFUSA - GR (MP)", "Armazém": "01", "Saldo Atual": "12.400,00", "UM": "KG", "C.UNIT": "8,7500", "SLD.ATU": "108.500,00" },
+
+    // Armazém 02 - Almoxarifado Auxiliar & Embalagens (Prefixo 02...)
+    { "Código": "02.015.00.1.001", "Descrição": "TAMBOR METALICO 200L HOMOLOGADO - UN", "Armazém": "02", "Saldo Atual": "1.450,00", "UM": "UN", "C.UNIT": "145,0000", "SLD.ATU": "210.250,00" },
+    { "Código": "02.020.00.2.005", "Descrição": "CONTAINER IBC 1000L RECONDICIONADO - UN", "Armazém": "02", "Saldo Atual": "320,00", "UM": "UN", "C.UNIT": "580,0000", "SLD.ATU": "185.600,00" },
+    { "Código": "02.030.00.1.010", "Descrição": "PALETE PBR PADRAO 1000X1200 - UN", "Armazém": "02", "Saldo Atual": "2.100,00", "UM": "UN", "C.UNIT": "48,5000", "SLD.ATU": "101.850,00" },
+    { "Código": "02.045.00.0.002", "Descrição": "FILME STRETCH MANUAL 500X0,025 - RL", "Armazém": "02", "Saldo Atual": "850,00", "UM": "RL", "C.UNIT": "38,9000", "SLD.ATU": "33.065,00" },
+    { "Código": "02.050.00.1.003", "Descrição": "SACO VALVULADO POLIETILENO 25KG - MIL", "Armazém": "02", "Saldo Atual": "18,50", "UM": "MIL", "C.UNIT": "1.420,0000", "SLD.ATU": "26.270,00" },
+
+    // Armazém 03 - Depósito de Produtos Acabados (Prefixo 03...)
+    { "Código": "03.100.00.1.001", "Descrição": "RESINA ACRILICA EMULSAO ACR-500 - KG", "Armazém": "03", "Saldo Atual": "45.200,00", "UM": "KG", "C.UNIT": "18,5000", "SLD.ATU": "836.200,00" },
+    { "Código": "03.110.00.2.004", "Descrição": "DISPERSAO COPOLIMERO ST-20 - KG", "Armazém": "03", "Saldo Atual": "32.800,00", "UM": "KG", "C.UNIT": "21,2000", "SLD.ATU": "695.360,00" },
+    { "Código": "03.120.00.1.008", "Descrição": "ESFÉRICO CERÂMICO ECO-GLOSS 70 - KG", "Armazém": "03", "Saldo Atual": "28.400,00", "UM": "KG", "C.UNIT": "16,8000", "SLD.ATU": "477.120,00" },
+    { "Código": "03.130.00.0.012", "Descrição": "AGLUTINANTE POLIMERICO FIX-30 - KG", "Armazém": "03", "Saldo Atual": "19.600,00", "UM": "KG", "C.UNIT": "14,3000", "SLD.ATU": "280.280,00" }
   ];
 
   STOCK_DATA = {
-    fileName: 'Demonstração - Saldo de Estoque PCP (Armazém 01)',
+    fileName: 'Demonstração - Saldo de Estoque Multi-Armazém (PCP)',
     importedAt: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     headers: ["Código", "Descrição", "Armazém", "Saldo Atual", "UM", "C.UNIT", "SLD.ATU"],
     rows: demoItems,
@@ -9487,7 +9622,7 @@ function dashLoadDemoData() {
   localStorage.setItem('pcp_stock_report', JSON.stringify(STOCK_DATA));
   if (typeof renderStockView === 'function') renderStockView();
   renderDashboardView();
-  showToast('Base de demonstração com Top 10 carregada com sucesso!');
+  showToast('Base de demonstração multi-armazém carregada com sucesso!');
 }
 
 </script>
