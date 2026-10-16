@@ -4267,6 +4267,57 @@ let efpCurrentCol = null;
 let efpDistinctValues = []; // [{ val, count }]
 let efpVisibleValues = [];  // [{ val, count }]
 let efpSelectedSet = new Set();
+// Helper to get formatted or text value of any column in Dashboard table
+function getDashColValue(item, colKey, top1Valor = 1, idx = 0) {
+  if (!item) return '';
+  const sldKg = item.saldoKg || item.saldo || 0;
+  const sldVal = item.saldoValor > 0 ? item.saldoValor : (item.custoUnit > 0 ? item.custoUnit * sldKg : sldKg);
+  switch (colKey) {
+    case 'rank':
+      return String(item.initialRank || (idx + 1));
+    case 'code':
+      return String(item.code || '').trim();
+    case 'desc':
+      return String(item.desc || '').trim();
+    case 'mp':
+      return String(item.mpTag || '').trim() || '-';
+    case 'armazem':
+      return String(item.armazem || '').trim();
+    case 'saldo':
+      return typeof formatNumDash === 'function' ? formatNumDash(sldKg) : sldKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    case 'custo':
+      return item.custoUnit > 0 ? (typeof formatCustoUnitDash === 'function' ? formatCustoUnitDash(item.custoUnit) : 'R$ ' + item.custoUnit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })) : '-';
+    case 'total':
+      return typeof formatCurrencyDash === 'function' ? formatCurrencyDash(sldVal) : 'R$ ' + sldVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    case 'proporcao':
+      const pct = top1Valor > 0 ? (sldVal / top1Valor) * 100 : 0;
+      return pct.toFixed(0) + '%';
+    default:
+      return String(item[colKey] || '').trim();
+  }
+}
+
+// Helper to get raw numeric value of columns in Dashboard table (for sorting and >, <, =, etc.)
+function getDashColNumericValue(item, colKey, top1Valor = 1, idx = 0) {
+  if (!item) return null;
+  const sldKg = item.saldoKg || item.saldo || 0;
+  const sldVal = item.saldoValor > 0 ? item.saldoValor : (item.custoUnit > 0 ? item.custoUnit * sldKg : sldKg);
+  switch (colKey) {
+    case 'rank':
+      return item.initialRank || (idx + 1);
+    case 'saldo':
+      return sldKg;
+    case 'custo':
+      return item.custoUnit || 0;
+    case 'total':
+      return sldVal;
+    case 'proporcao':
+      return top1Valor > 0 ? (sldVal / top1Valor) * 100 : 0;
+    default:
+      return null;
+  }
+}
+
 let efpContext = 'stock'; // 'stock', 'mp', 'ibc' or 'dash'
 
 function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
@@ -4280,8 +4331,19 @@ function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
   if (efpContext !== 'dash' && (!currentData || !currentData.rows)) return;
 
   efpCurrentCol = colName;
+  const colTitles = {
+    'rank': 'Rank',
+    'code': 'Código',
+    'desc': 'Descrição do Produto',
+    'mp': 'Matéria-Prima (MP)',
+    'armazem': 'Armazém',
+    'saldo': 'Saldo Atual (Quantidade)',
+    'custo': 'Custo Unitário (R$)',
+    'total': 'Saldo Total (R$ - SLD.ATU)',
+    'proporcao': 'Proporção'
+  };
   const titleEl = document.getElementById('efp-title-col');
-  if (titleEl) titleEl.textContent = (colName === 'desc' ? 'Descrição do Produto' : `${colName}`);
+  if (titleEl) titleEl.textContent = (efpContext === 'dash' && colTitles[colName]) ? colTitles[colName] : `${colName}`;
 
   // Gather distinct values and occurrences for this column
   const counts = new Map();
@@ -4291,10 +4353,10 @@ function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
     const unconstrainedFilters = Object.assign({}, dashFilterState, { colFilters: {}, colMultiFilters: {}, search: '' });
     const processed = processDashboardData(dataset.rows, cols, unconstrainedFilters);
     const items = (processed && processed.allItems) ? processed.allItems : [];
-    items.forEach(it => {
-      let v = it.desc;
-      v = (v !== undefined && v !== null) ? String(v).trim() : '';
-      if (v === '') v = '(Vazio)';
+    const baseTop1 = items[0] ? (items[0].saldoValor > 0 ? items[0].saldoValor : (items[0].custoUnit > 0 ? items[0].custoUnit * (items[0].saldoKg || 1) : 1)) : 1;
+    items.forEach((it, idx) => {
+      let v = getDashColValue(it, colName, baseTop1, idx);
+      if (!v || v === '-') v = '(Vazio)';
       counts.set(v, (counts.get(v) || 0) + (it.lotCount || 1));
     });
   } else {
@@ -8530,6 +8592,7 @@ function dashLookupMpTag(code, desc) {
 }
 
 function processDashboardData(rows, cols, filters) {
+  filters = filters || (typeof dashFilterState !== 'undefined' ? dashFilterState : {});
   const { codeCol, locCol, sldQtyCol, sldValorCol, descCol } = cols;
   let { unCol, costCol } = cols;
   if (!rows || !rows.length || (!sldQtyCol && !sldValorCol)) return null;
@@ -8667,15 +8730,29 @@ function processDashboardData(rows, cols, filters) {
   });
 
   const allItems = Array.from(groupedMap.values());
-  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU) ou pela coluna selecionada
-  if (filters.sortCol === 'desc') {
-    if (filters.sortDir === 'asc') {
-      allItems.sort((a, b) => (a.desc || '').localeCompare(b.desc || '', 'pt-BR'));
-    } else {
-      allItems.sort((a, b) => (b.desc || '').localeCompare(a.desc || '', 'pt-BR'));
-    }
-  } else {
-    allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
+  // Ordenação decrescente inicial pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU)
+  allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
+  const baseTop1Valor = allItems[0] ? (allItems[0].saldoValor > 0 ? allItems[0].saldoValor : (allItems[0].custoUnit > 0 ? allItems[0].custoUnit * (allItems[0].saldoKg || 1) : 1)) : 1;
+  allItems.forEach((it, idx) => {
+    it.initialRank = idx + 1;
+  });
+
+  // Ordenação pela coluna selecionada pelo usuário (se houver)
+  if (filters.sortCol && filters.sortDir) {
+    const colKey = filters.sortCol;
+    const isAsc = filters.sortDir === 'asc';
+    const isNumCol = ['rank', 'saldo', 'custo', 'total', 'proporcao'].includes(colKey);
+    allItems.sort((a, b) => {
+      if (isNumCol) {
+        const valA = getDashColNumericValue(a, colKey, baseTop1Valor) || 0;
+        const valB = getDashColNumericValue(b, colKey, baseTop1Valor) || 0;
+        return isAsc ? (valA - valB) : (valB - valA);
+      } else {
+        const strA = getDashColValue(a, colKey, baseTop1Valor);
+        const strB = getDashColValue(b, colKey, baseTop1Valor);
+        return isAsc ? strA.localeCompare(strB, 'pt-BR') : strB.localeCompare(strA, 'pt-BR');
+      }
+    });
   }
 
   let filteredList = allItems;
@@ -8684,25 +8761,54 @@ function processDashboardData(rows, cols, filters) {
     filteredList = allItems.filter(item => norm(item.code + ' ' + item.desc).includes(q));
   }
 
-  // Filtro de Coluna: Descrição do Produto (Texto)
-  const descFilter = filters.colFilters && (filters.colFilters.desc || filters.colFilters['Descrição do Produto']);
-  if (descFilter && descFilter.trim()) {
-    const term = norm(descFilter.trim());
-    filteredList = filteredList.filter(item => {
-      const dNorm = norm(item.desc || '');
-      return dNorm.includes(term) || (typeof cmp === 'function' && cmp(dNorm).includes(cmp(term)));
-    });
+  // Filtros por Coluna: Texto ou Operadores Numéricos (>, >=, <, <=, =) em todas as colunas
+  if (filters.colFilters && typeof filters.colFilters === 'object') {
+    const activeColEntries = Object.entries(filters.colFilters).filter(([_, v]) => v && String(v).trim().length > 0);
+    if (activeColEntries.length > 0) {
+      filteredList = filteredList.filter((item, idx) => {
+        for (const [colKey, rawVal] of activeColEntries) {
+          const fVal = String(rawVal).trim();
+          const isNumCol = ['rank', 'saldo', 'custo', 'total', 'proporcao'].includes(colKey);
+          if (isNumCol) {
+            const matchOp = fVal.match(/^([><]=?|=)\s*(-?\d+[\d.,]*%?)$/);
+            if (matchOp) {
+              const op = matchOp[1];
+              const cleanNumStr = matchOp[2].replace('%', '');
+              const targetNum = typeof parseStockNumber === 'function' ? parseStockNumber(cleanNumStr) : parseFloat(cleanNumStr.replace(/\./g, '').replace(',', '.'));
+              const cellNum = getDashColNumericValue(item, colKey, baseTop1Valor, idx) || 0;
+              if (op === '>' && !(cellNum > targetNum)) return false;
+              if (op === '>=' && !(cellNum >= targetNum)) return false;
+              if (op === '<' && !(cellNum < targetNum)) return false;
+              if (op === '<=' && !(cellNum <= targetNum)) return false;
+              if (op === '=' && cellNum !== targetNum) return false;
+              continue;
+            }
+          }
+          const filterTerm = norm(fVal);
+          const cellStr = norm(getDashColValue(item, colKey, baseTop1Valor, idx));
+          if (!cellStr.includes(filterTerm) && !(typeof cmp === 'function' && cmp(cellStr).includes(cmp(filterTerm)))) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
   }
 
-  // Filtro de Coluna: Descrição do Produto (Checklist Múltiplo estilo Excel)
-  const multiDesc = filters.colMultiFilters && (filters.colMultiFilters.desc || filters.colMultiFilters['Descrição do Produto']);
-  if (Array.isArray(multiDesc) && multiDesc.length > 0) {
-    const allowedSet = new Set(multiDesc);
-    filteredList = filteredList.filter(item => {
-      let val = String(item.desc || '').trim();
-      if (!val) val = '(Vazio)';
-      return allowedSet.has(val);
-    });
+  // Filtros por Coluna: Checklist Múltiplo estilo Excel em todas as colunas
+  if (filters.colMultiFilters && typeof filters.colMultiFilters === 'object') {
+    const activeMultiEntries = Object.entries(filters.colMultiFilters).filter(([_, arr]) => Array.isArray(arr) && arr.length > 0);
+    if (activeMultiEntries.length > 0) {
+      filteredList = filteredList.filter((item, idx) => {
+        for (const [colKey, allowedValues] of activeMultiEntries) {
+          const allowedSet = new Set(allowedValues);
+          let cellVal = getDashColValue(item, colKey, baseTop1Valor, idx);
+          if (!cellVal || cellVal === '-') cellVal = '(Vazio)';
+          if (!allowedSet.has(cellVal)) return false;
+        }
+        return true;
+      });
+    }
   }
 
   const topN = Math.max(1, parseInt(filters.topN, 10) || 10);
@@ -8816,6 +8922,71 @@ function generateAiDashboardInsights(data) {
       </div>
     </div>
   `;
+}
+
+function renderDashTableHeader(detailed = false) {
+  const dashCols = [
+    { key: 'rank', label: 'Rank', width: '50px', align: 'center', isQty: false, placeholder: 'Ex: <=5' },
+    { key: 'code', label: 'Código', width: '120px', align: 'left', isQty: false, placeholder: 'Filtrar...' },
+    { key: 'desc', label: 'Descrição do Produto', width: '', align: 'left', isQty: false, placeholder: 'Filtrar...' },
+    { key: 'mp', label: 'MP', width: '80px', align: 'center', isQty: false, placeholder: 'Filtrar...' },
+    { key: 'armazem', label: 'Armazém', width: '70px', align: 'center', isQty: false, placeholder: 'Filtrar...' },
+    { key: 'saldo', label: 'Saldo Atual', width: '120px', align: 'right', isQty: true, placeholder: 'Ex: >1000' },
+    { key: 'custo', label: 'Custo Unit. (R$)', width: '110px', align: 'right', isQty: false, placeholder: 'Ex: >10' },
+    { key: 'total', label: 'Saldo Total (R$)', width: '130px', align: 'right', isQty: false, placeholder: 'Ex: >50000' },
+    { key: 'proporcao', label: 'Proporção', width: '90px', align: 'center', isQty: false, placeholder: 'Ex: >=50%' },
+    { key: 'acao', label: 'Ação', width: '55px', align: 'center', isQty: false, noFilter: true }
+  ];
+
+  const headerRow = dashCols.map(col => {
+    let styleStr = 'white-space:nowrap;';
+    if (col.align === 'center') styleStr += 'text-align:center;';
+    else if (col.align === 'right') styleStr += 'text-align:right;';
+    if (col.width) styleStr += `width:${col.width};`;
+
+    if (col.noFilter) {
+      return `<th style="${styleStr}">${esc(col.label)}</th>`;
+    }
+
+    const isSorted = dashFilterState.sortCol === col.key;
+    const arrow = isSorted ? (dashFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
+    const multiVals = dashFilterState.colMultiFilters && dashFilterState.colMultiFilters[col.key];
+    const hasMulti = Array.isArray(multiVals);
+    const multiCount = hasMulti ? multiVals.length : 0;
+    const multiBadge = hasMulti ? `<span style="display:inline-block;background:#1d5fd1;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${multiCount} valor(es) selecionados no checklist">✓ ${multiCount}</span>` : '';
+
+    return `<th class="${col.isQty ? 'stock-col-qty' : ''}" style="${styleStr}" onclick="dashSortCol('${col.key}')" title="Clique para ordenar por ${esc(col.label)}"><span>${esc(col.label)}${arrow}${multiBadge}</span></th>`;
+  }).join('');
+
+  const filterRow = dashCols.map(col => {
+    let styleStr = '';
+    if (col.align === 'center') styleStr += 'text-align:center;';
+    else if (col.align === 'right') styleStr += 'text-align:right;';
+    if (col.width) styleStr += `width:${col.width};`;
+
+    if (col.noFilter) {
+      return `<th style="${styleStr}"></th>`;
+    }
+
+    const curVal = (dashFilterState.colFilters && dashFilterState.colFilters[col.key]) || '';
+    const multiVals = dashFilterState.colMultiFilters && dashFilterState.colMultiFilters[col.key];
+    const hasMulti = Array.isArray(multiVals);
+    const multiCount = hasMulti ? multiVals.length : 0;
+    const placeholder = hasMulti ? `(${multiCount} sel.)` : (col.placeholder || 'Filtrar...');
+    const inputId = detailed ? `dash-col-filter-${col.key}-detailed` : `dash-col-filter-${col.key}`;
+
+    return `<th class="${col.isQty ? 'stock-col-qty' : ''}" style="${styleStr}">
+      <div class="stock-th-filter">
+        <input type="text" id="${inputId}" class="stock-col-input ${(curVal || hasMulti) ? 'active' : ''}" placeholder="${placeholder}" value="${esc(curVal)}" data-col="${col.key}" oninput="handleDashColFilter(this, event)">
+        <button type="button" class="stock-excel-filter-trigger ${hasMulti ? 'active' : ''}" onclick="openExcelFilterPopover('${col.key}', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
+          ${hasMulti ? `✓ ${multiCount}` : '▾'}
+        </button>
+        ${(curVal || hasMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('${col.key}', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+      </div>
+    </th>`;
+  }).join('');
+
+  return `<tr>${headerRow}</tr><tr class="stock-filter-row">${filterRow}</tr>`;
 }
 
 function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPosition = null) {
@@ -8997,19 +9168,13 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     return;
   }
 
-  const curDescVal = (dashFilterState.colFilters && (dashFilterState.colFilters.desc || dashFilterState.colFilters['Descrição do Produto'])) || '';
-  const multiDescVals = dashFilterState.colMultiFilters && (dashFilterState.colMultiFilters.desc || dashFilterState.colMultiFilters['Descrição do Produto']);
-  const hasDescMulti = Array.isArray(multiDescVals);
-  const descMultiCount = hasDescMulti ? multiDescVals.length : 0;
-  const descPlaceholder = hasDescMulti ? `(${descMultiCount} sel.)` : 'Filtrar...';
-  const descMultiBadge = hasDescMulti ? `<span style="display:inline-block;background:#1d5fd1;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${descMultiCount} valor(es) selecionados no checklist">✓ ${descMultiCount}</span>` : '';
-  const isDescSorted = dashFilterState.sortCol === 'desc';
-  const descSortArrow = isDescSorted ? (dashFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
-  const hasDescFilterActive = Boolean((curDescVal && curDescVal.trim()) || hasDescMulti);
+  const activeColEntries = Object.entries(dashFilterState.colFilters || {}).filter(([_, v]) => v && String(v).trim().length > 0);
+  const activeMultiEntries = Object.entries(dashFilterState.colMultiFilters || {}).filter(([_, arr]) => Array.isArray(arr) && arr.length > 0);
+  const hasAnyDashColFilterActive = activeColEntries.length > 0 || activeMultiEntries.length > 0 || Boolean(dashFilterState.sortCol);
 
   // Gera as linhas da tabela
   const tableRowsHtml = processed.topItems.length ? processed.topItems.map((item, idx) => {
-    const rankNum = idx + 1;
+    const rankNum = item.initialRank || (idx + 1);
     let rankBadgeClass = 'dash-rank-other';
     let medal = `${rankNum}º`;
     if (rankNum === 1) { rankBadgeClass = 'dash-rank-1'; medal = '🥇 1º'; }
@@ -9034,7 +9199,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
 
     return `
       <tr>
-        <td style="text-align:center;width:36px">
+        <td style="text-align:center;width:50px">
           <span class="dash-rank-badge ${rankBadgeClass}">${medal}</span>
         </td>
         <td style="white-space:nowrap">
@@ -9063,7 +9228,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
         <td style="text-align:right;white-space:nowrap">
           <strong style="color:#0f766e;font-size:13px">${totalValorStr}</strong>
         </td>
-        <td style="width:120px">
+        <td style="width:110px">
           <div style="display:flex;align-items:center;gap:6px;">
             <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
               <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:5px;"></div>
@@ -9082,7 +9247,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     <tr>
       <td colspan="10" style="text-align:center;padding:32px;color:var(--mu);font-size:13px">
         Nenhum produto encontrado com os filtros selecionados.
-        ${hasDescFilterActive ? `<button class="btn outline" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="clearSingleDashColFilter('desc', event)">✕ Limpar Filtro de Descrição</button>` : ''}
+        ${hasAnyDashColFilterActive ? `<button class="btn outline" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="dashClearAllColFilters(event)">✕ Limpar Filtros das Colunas</button>` : ''}
       </td>
     </tr>
   `;
@@ -9098,7 +9263,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
             <span class="dash-kpi-title">Itens Analisados (${locDisplay})</span>
             <span class="dash-kpi-icon">📦</span>
           </div>
-          <div class="dash-kpi-val">${processed.filteredList.length.toLocaleString('pt-BR')} SKUs${hasDescFilterActive ? ` <span style="font-size:12px;font-weight:normal;color:var(--mu)">(${processed.armazemAllItemCount} total)</span>` : ''}</div>
+          <div class="dash-kpi-val">${processed.filteredList.length.toLocaleString('pt-BR')} SKUs${hasAnyDashColFilterActive ? ` <span style="font-size:12px;font-weight:normal;color:var(--mu)">(${processed.armazemAllItemCount} total)</span>` : ''}</div>
           <div class="dash-kpi-sub">${processed.isEmbalagens ? 'Embalagens' : 'Insumos'} com código iniciando em "${dashFilterState.codigoPrefix || 'Todos'}"</div>
         </div>
 
@@ -9169,38 +9334,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
             <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:none;overflow-y:visible;overflow-x:auto;border:1px solid var(--bd);">
               <table class="stock-table" style="width:100%;">
                 <thead>
-                  <tr>
-                    <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
-                    <th style="white-space:nowrap">Código</th>
-                    <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
-                    <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
-                    <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
-                    <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
-                    <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
-                    <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
-                    <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
-                    <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
-                  </tr>
-                  <tr class="stock-filter-row">
-                    <th style="text-align:center;width:34px"></th>
-                    <th></th>
-                    <th>
-                      <div class="stock-th-filter">
-                        <input type="text" id="dash-col-filter-desc" class="stock-col-input ${(curDescVal||hasDescMulti)?'active':''}" placeholder="${descPlaceholder}" value="${esc(curDescVal)}" data-col="desc" oninput="handleDashColFilter(this, event)">
-                        <button type="button" class="stock-excel-filter-trigger ${hasDescMulti?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
-                          ${hasDescMulti ? `✓ ${descMultiCount}` : '▾'}
-                        </button>
-                        ${(curDescVal || hasDescMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
-                      </div>
-                    </th>
-                    <th style="text-align:center;width:70px"></th>
-                    <th style="text-align:center;width:50px"></th>
-                    <th class="stock-col-qty" style="text-align:right"></th>
-                    <th style="text-align:right"></th>
-                    <th style="text-align:right"></th>
-                    <th style="width:75px;text-align:center"></th>
-                    <th style="text-align:center;width:55px"></th>
-                  </tr>
+                  ${renderDashTableHeader(false)}
                 </thead>
                 <tbody>
                   ${tableRowsHtml}
@@ -9251,38 +9385,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
           <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:none;overflow-y:visible;overflow-x:auto;border:1px solid var(--bd);">
             <table class="stock-table" style="width:100%;">
               <thead>
-                <tr>
-                  <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
-                  <th style="white-space:nowrap">Código</th>
-                  <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
-                  <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
-                  <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
-                  <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
-                  <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
-                  <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
-                  <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
-                  <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
-                </tr>
-                <tr class="stock-filter-row">
-                  <th style="text-align:center;width:34px"></th>
-                  <th></th>
-                  <th>
-                    <div class="stock-th-filter">
-                      <input type="text" id="dash-col-filter-desc-detailed" class="stock-col-input ${(curDescVal||hasDescMulti)?'active':''}" placeholder="${descPlaceholder}" value="${esc(curDescVal)}" data-col="desc" oninput="handleDashColFilter(this, event)">
-                      <button type="button" class="stock-excel-filter-trigger ${hasDescMulti?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
-                        ${hasDescMulti ? `✓ ${descMultiCount}` : '▾'}
-                      </button>
-                      ${(curDescVal || hasDescMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
-                    </div>
-                  </th>
-                  <th style="text-align:center;width:70px"></th>
-                  <th style="text-align:center;width:50px"></th>
-                  <th class="stock-col-qty" style="text-align:right"></th>
-                  <th style="text-align:right"></th>
-                  <th style="text-align:right"></th>
-                  <th style="width:75px;text-align:center"></th>
-                  <th style="text-align:center;width:55px"></th>
-                </tr>
+                ${renderDashTableHeader(true)}
               </thead>
               <tbody>
                 ${tableRowsHtml}
@@ -9699,6 +9802,16 @@ function clearSingleDashColFilter(col, e) {
     delete dashFilterState.colMultiFilters[col];
   }
   renderDashboardView(true);
+}
+
+function dashClearAllColFilters(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  dashFilterState.colFilters = {};
+  dashFilterState.colMultiFilters = {};
+  dashFilterState.sortCol = null;
+  dashFilterState.sortDir = null;
+  renderDashboardView();
+  if (typeof showToast === 'function') showToast('Filtros das colunas limpos!');
 }
 
 function dashSortCol(col) {
