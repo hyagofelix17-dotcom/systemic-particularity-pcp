@@ -8261,9 +8261,29 @@ let dashFilterState = {
 let dashChartInstance = null;
 let dashDonutInstance = null;
 
-function formatSaldoKg(n, unit = 'KG') {
-  if (typeof n !== 'number' || isNaN(n)) return '0,00 ' + unit;
-  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + unit;
+function isEmbalagensDashboard(armazem, prefix) {
+  const arm = String(armazem !== undefined && armazem !== null ? armazem : (typeof dashFilterState !== 'undefined' ? dashFilterState.armazem : '')).trim();
+  const pfx = String(prefix !== undefined && prefix !== null ? prefix : (typeof dashFilterState !== 'undefined' ? dashFilterState.codigoPrefix : '')).trim();
+
+  // Armazém 02 (ex: '02', '2', 'Armazém 02', etc.)
+  const armDigits = arm.replace(/\D/g, '');
+  const isArm02 = (armDigits === '02' || armDigits === '2') || (typeof matchArmazem === 'function' && matchArmazem(arm, '02'));
+
+  // Prefixo 02 (ex: '02', '02.', '2')
+  const pfxDigits = pfx.replace(/\D/g, '');
+  const isPfx02 = pfx.startsWith('02') || pfxDigits.startsWith('02') || (pfx === '2' && !pfxDigits.startsWith('01')) || (typeof matchCodigoPrefix === 'function' && matchCodigoPrefix('02', pfx));
+
+  return Boolean(isArm02 && isPfx02);
+}
+
+function formatSaldoKg(n, unit = null) {
+  const isEmbalagem = (typeof isEmbalagensDashboard === 'function') && isEmbalagensDashboard();
+  let resolvedUnit = unit;
+  if (!resolvedUnit || (resolvedUnit === 'KG' && isEmbalagem)) {
+    resolvedUnit = isEmbalagem ? 'UN' : 'KG';
+  }
+  if (typeof n !== 'number' || isNaN(n)) return '0,00 ' + resolvedUnit;
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + resolvedUnit;
 }
 
 function formatCustoUnitDash(n) {
@@ -8515,12 +8535,21 @@ function processDashboardData(rows, cols, filters) {
     const rawCode = String(r[codeCol] || '').trim();
     const rawDesc = r[descCol] || '';
 
-    // Unidade de Medida limpa (se for vazia ou numérica, padroniza KG para insumos de MP)
-    let rawUn = 'KG';
+    // Unidade de Medida limpa: padroniza UN para embalagens (Armazém 02 / Prefixo 02) ou KG para insumos de MP
+    const isContextEmbalagem = (typeof isEmbalagensDashboard === 'function') && isEmbalagensDashboard(filters.armazem, filters.codigoPrefix);
+    const isItemEmbalagem = (typeof matchArmazem === 'function' ? matchArmazem(rawLoc, '02') : /02|2/.test(rawLoc)) && 
+                            (typeof matchCodigoPrefix === 'function' ? matchCodigoPrefix(rawCode, '02') : rawCode.startsWith('02'));
+
+    let rawUn = (isContextEmbalagem || isItemEmbalagem) ? 'UN' : 'KG';
     if (unCol && r[unCol]) {
       const uStr = String(r[unCol]).trim();
       if (uStr && isNaN(Number(uStr.replace(',', '.')))) {
-        rawUn = uStr;
+        // Se for embalagem e o relatório contiver KG, converte para UN (embalagens são controladas em UN)
+        if ((isContextEmbalagem || isItemEmbalagem) && /^kg$/i.test(uStr)) {
+          rawUn = 'UN';
+        } else {
+          rawUn = uStr;
+        }
       }
     }
 
@@ -8634,6 +8663,9 @@ function processDashboardData(rows, cols, filters) {
   const top3ValorSum = topItems.slice(0, 3).reduce((acc, curr) => acc + (curr.saldoValor || 0), 0);
   const top3SharePct = armazemTotalValor > 0 ? (top3ValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (top3Sum / armazemTotalQty) * 100 : 0);
 
+  const isEmbalagens = (typeof isEmbalagensDashboard === 'function') && isEmbalagensDashboard(filters.armazem, filters.codigoPrefix);
+  const defaultUnit = isEmbalagens ? 'UN' : 'KG';
+
   return {
     allItems,
     topItems,
@@ -8648,14 +8680,17 @@ function processDashboardData(rows, cols, filters) {
     avgSaldo,
     avgValor,
     top3SharePct,
-    cols
+    cols,
+    defaultUnit,
+    isEmbalagens
   };
 }
 
 function generateAiDashboardInsights(data) {
-  const { topItems, armazemTotalQty, armazemTotalValor, armazemAllItemCount, topSum, topValorSum, topSharePct, top1, avgSaldo, avgValor, top3SharePct } = data;
+  const { topItems, armazemTotalQty, armazemTotalValor, armazemAllItemCount, topSum, topValorSum, topSharePct, top1, avgSaldo, avgValor, top3SharePct, defaultUnit, isEmbalagens } = data;
   if (!topItems.length || !top1) return '';
 
+  const currentUnit = defaultUnit || (isEmbalagens ? 'UN' : 'KG');
   const locLabel = dashFilterState.armazem === 'ALL' ? 'Todos os Armazéns' : 'Armazém ' + dashFilterState.armazem;
   const locLabelIn = dashFilterState.armazem === 'ALL' ? 'no estoque total' : 'no Armazém ' + dashFilterState.armazem;
   const prefixLabel = dashFilterState.codigoPrefix ? `Código ${dashFilterState.codigoPrefix}...` : 'Todos os Códigos';
@@ -8699,7 +8734,7 @@ function generateAiDashboardInsights(data) {
             <span>👑</span> SKU Protagonista (${locLabel})
           </div>
           <p class="dash-ai-box-text">
-            O insumo <strong>${top1.code}</strong> (${top1.mpTag ? `<strong>${esc(top1.mpTag)}</strong> - ` : ''}<em>${top1.desc}</em>) lidera o ranking detendo <strong>${formatCurrencyDash(top1.saldoValor)}</strong> com saldo físico de <strong>${formatSaldoKg(top1.saldoKg, top1.un || 'KG')}</strong>, correspondendo a <strong>${top1ShareOfTop}%</strong> de todo o grupo dos Top ${topItems.length}.
+            O ${isEmbalagens ? 'item de embalagem' : 'insumo'} <strong>${top1.code}</strong> (${top1.mpTag ? `<strong>${esc(top1.mpTag)}</strong> - ` : ''}<em>${top1.desc}</em>) lidera o ranking detendo <strong>${formatCurrencyDash(top1.saldoValor)}</strong> com saldo físico de <strong>${formatSaldoKg(top1.saldoKg, top1.un || currentUnit)}</strong>, correspondendo a <strong>${top1ShareOfTop}%</strong> de todo o grupo dos Top ${topItems.length}.
           </p>
         </div>
 
@@ -8708,7 +8743,7 @@ function generateAiDashboardInsights(data) {
             <span>📈</span> Dispersão & Amplitude de Giro
           </div>
           <p class="dash-ai-box-text">
-            A proporção de valor entre o 1º colocado (<strong>${top1.code}</strong>) e o ${topItems.length}º colocado (<strong>${lastItem.code}</strong>) é de <strong>${ratio1ToLast}x</strong>. A média de valor no grupo Top é de <strong>${formatCurrencyDash(avgValor)}</strong> (média de saldo: ${formatSaldoKg(avgSaldo, 'KG')}).
+            A proporção de valor entre o 1º colocado (<strong>${top1.code}</strong>) e o ${topItems.length}º colocado (<strong>${lastItem.code}</strong>) é de <strong>${ratio1ToLast}x</strong>. A média de valor no grupo Top é de <strong>${formatCurrencyDash(avgValor)}</strong> (média de saldo: ${formatSaldoKg(avgSaldo, currentUnit)}).
           </p>
         </div>
 
@@ -8718,8 +8753,8 @@ function generateAiDashboardInsights(data) {
           </div>
           <p class="dash-ai-box-text">
             1. <strong>Inventário Cíclico:</strong> Realizar contagem física semanal prioritária nos itens de maior valor em estoque.<br>
-            2. <strong>Controle de O.P:</strong> Monitorar apontamentos e transferências para evitar divergências em ordens de produção.<br>
-            3. <strong>Embalagens & Bloqueios:</strong> Consultar na aba <em>Identificação de IBC'S</em> e <em>Particularidades</em> o status de liberação dessas matérias-primas.
+            2. <strong>Controle de O.P:</strong> ${isEmbalagens ? 'Monitorar requisições e consumo de embalagens para evitar paradas de linha por falta de vasilhames ou sacaria.' : 'Monitorar apontamentos e transferências para evitar divergências em ordens de produção.'}<br>
+            3. <strong>Embalagens & Bloqueios:</strong> Consultar na aba <em>Identificação de IBC\'S</em> e <em>Particularidades</em> o status de liberação dessas ${isEmbalagens ? 'embalagens e vasilhames' : 'matérias-primas'}.
           </p>
         </div>
       </div>
@@ -8818,7 +8853,7 @@ function renderDashboardView(preserveFocus = false) {
         <div class="dash-badges-row">
           <span class="dash-badge blue">🏢 ${locDisplay}</span>
           <span class="dash-badge green">🏷️ Prefixo: ${prefixDisplay}</span>
-          <span class="dash-badge amber">📊 Valor: ${cols.sldValorCol || 'SLD.ATU'} • Saldo: ${cols.sldQtyCol || 'Saldo Atual'}</span>
+          <span class="dash-badge amber">📊 Valor: ${cols.sldValorCol || 'SLD.ATU'} • Saldo: ${cols.sldQtyCol || 'Saldo Atual'}${processed.isEmbalagens ? ' (UN)' : ''}</span>
           <span class="dash-badge purple">📁 Base: ${esc(dataset.fileName)}</span>
         </div>
       </div>
@@ -8991,7 +9026,7 @@ function renderDashboardView(preserveFocus = false) {
             <span class="dash-kpi-icon">📦</span>
           </div>
           <div class="dash-kpi-val">${processed.armazemAllItemCount.toLocaleString('pt-BR')} SKUs</div>
-          <div class="dash-kpi-sub">Insumos com código iniciando em "${dashFilterState.codigoPrefix || 'Todos'}"</div>
+          <div class="dash-kpi-sub">${processed.isEmbalagens ? 'Embalagens' : 'Insumos'} com código iniciando em "${dashFilterState.codigoPrefix || 'Todos'}"</div>
         </div>
 
         <div class="dash-kpi-card" style="--kpi-c:#10b981">
@@ -9000,7 +9035,7 @@ function renderDashboardView(preserveFocus = false) {
             <span class="dash-kpi-icon">💰</span>
           </div>
           <div class="dash-kpi-val">${formatCurrencyDash(processed.armazemTotalValor)}</div>
-          <div class="dash-kpi-sub">Saldo Físico Total: <strong>${formatSaldoKg(processed.armazemTotalQty, 'KG')}</strong> ${dashFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashFilterState.armazem}</div>
+          <div class="dash-kpi-sub">Saldo Físico Total: <strong>${formatSaldoKg(processed.armazemTotalQty, processed.defaultUnit)}</strong> ${dashFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashFilterState.armazem}</div>
         </div>
 
         <div class="dash-kpi-card" style="--kpi-c:#f59e0b">
@@ -9010,7 +9045,7 @@ function renderDashboardView(preserveFocus = false) {
           </div>
           <div class="dash-kpi-val">${formatCurrencyDash(processed.topValorSum)}</div>
           <div class="dash-kpi-sub" style="color:#d97706;font-weight:700">
-            ${processed.topSharePct.toFixed(1)}% do valor ${dashFilterState.armazem === 'ALL' ? 'do estoque geral' : 'do armazém'} • ${formatSaldoKg(processed.topSum, 'KG')}
+            ${processed.topSharePct.toFixed(1)}% do valor ${dashFilterState.armazem === 'ALL' ? 'do estoque geral' : 'do armazém'} • ${formatSaldoKg(processed.topSum, processed.defaultUnit)}
           </div>
         </div>
 
@@ -9026,7 +9061,7 @@ function renderDashboardView(preserveFocus = false) {
             ${processed.top1 ? `${processed.top1.mpTag ? `<span class="mp-desc-int-tag" style="font-size:10px;padding:1px 5px;margin-right:4px;vertical-align:middle">${esc(processed.top1.mpTag)}</span> ` : ''}${esc(processed.top1.desc)}` : ''}
           </div>
           <div class="dash-kpi-sub">
-            ${processed.top1 ? `Valor: <strong>${formatCurrencyDash(processed.top1.saldoValor)}</strong> • Saldo: ${formatSaldoKg(processed.top1.saldoKg, processed.top1.un || 'KG')}` : '-'}
+            ${processed.top1 ? `Valor: <strong>${formatCurrencyDash(processed.top1.saldoValor)}</strong> • Saldo: ${formatSaldoKg(processed.top1.saldoKg, processed.top1.un || processed.defaultUnit)}` : '-'}
           </div>
         </div>
 
@@ -9036,7 +9071,7 @@ function renderDashboardView(preserveFocus = false) {
             <span class="dash-kpi-icon">📊</span>
           </div>
           <div class="dash-kpi-val">${formatCurrencyDash(processed.avgValor)}</div>
-          <div class="dash-kpi-sub">Média em valor • Média saldo: ${formatSaldoKg(processed.avgSaldo, 'KG')}</div>
+          <div class="dash-kpi-sub">Média em valor • Média saldo: ${formatSaldoKg(processed.avgSaldo, processed.defaultUnit)}</div>
         </div>
       </div>
 
@@ -9254,7 +9289,7 @@ function renderChartJsMain(canvas, data) {
               const lines = [
                 `Produto: ${it.mpTag ? `[${it.mpTag}] ` : ''}${it.desc}`,
                 `Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)}`,
-                `Saldo Atual (Quantidade): ${formatSaldoKg(sldKg, it.un || 'KG')}`
+                `Saldo Atual (Quantidade): ${formatSaldoKg(sldKg, it.un || data.defaultUnit || 'KG')}`
               ];
               if (it.custoUnit > 0) {
                 lines.push(`Custo Unitário: ${formatCustoUnitDash(it.custoUnit)}`);
@@ -9387,7 +9422,7 @@ function renderChartJsDonut(canvas, data) {
                 const totalVal = it.saldoValor > 0 ? it.saldoValor : (it.custoUnit > 0 ? sldKg * it.custoUnit : val);
                 return [
                   ` Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)} (${pct}%)`,
-                  ` Saldo Atual: ${formatSaldoKg(sldKg, it.un || 'KG')}`
+                  ` Saldo Atual: ${formatSaldoKg(sldKg, it.un || data.defaultUnit || 'KG')}`
                 ];
               }
               return ` Valor Total: ${formatCurrencyDash(val)} (${pct}%)`;
@@ -9424,7 +9459,7 @@ function renderNativeSvgCharts(data, mainContainer, donutContainer) {
           </div>
           <div class="svg-bar-val">
             <strong style="color:#0f766e">${formatCurrencyDash(sldVal)}</strong>
-            <span style="font-size:11px;color:var(--mu);margin-left:4px">(${formatSaldoKg(sldKg, item.un || 'KG')})</span>
+            <span style="font-size:11px;color:var(--mu);margin-left:4px">(${formatSaldoKg(sldKg, item.un || data.defaultUnit || 'KG')})</span>
           </div>
         </div>
       `;
@@ -9501,7 +9536,16 @@ function dashSetArmazem(loc) {
     renderDashboardView();
     return;
   }
+  const prevArm = dashFilterState.armazem;
   dashFilterState.armazem = loc;
+
+  // Ao alternar para o Armazém 02, se o prefixo ainda estiver em 01, sincroniza automaticamente para 02 (embalagens)
+  if ((typeof matchArmazem === 'function' && (matchArmazem(loc, '02') || matchArmazem(loc, '2'))) && dashFilterState.codigoPrefix === '01') {
+    dashFilterState.codigoPrefix = '02';
+  } else if ((typeof matchArmazem === 'function' && (matchArmazem(loc, '01') || matchArmazem(loc, '1'))) && dashFilterState.codigoPrefix === '02') {
+    dashFilterState.codigoPrefix = '01';
+  }
+
   renderDashboardView();
 }
 
