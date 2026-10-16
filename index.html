@@ -4331,7 +4331,8 @@ function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
   if (efpContext === 'mp') { currentData = MP_DATA; currentFilterState = mpFilterState; }
   else if (efpContext === 'ibc') { currentData = IBC_DATA; currentFilterState = ibcFilterState; }
   else if (efpContext === 'dash') { currentFilterState = dashFilterState; }
-  if (efpContext !== 'dash' && (!currentData || !currentData.rows)) return;
+  else if (efpContext === 'dashQty') { currentFilterState = typeof dashQtyFilterState !== 'undefined' ? dashQtyFilterState : dashFilterState; }
+  if (efpContext !== 'dash' && efpContext !== 'dashQty' && (!currentData || !currentData.rows)) return;
 
   efpCurrentCol = colName;
   const colTitles = {
@@ -4346,17 +4347,18 @@ function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
     'proporcao': 'Proporção'
   };
   const titleEl = document.getElementById('efp-title-col');
-  if (titleEl) titleEl.textContent = (efpContext === 'dash' && colTitles[colName]) ? colTitles[colName] : `${colName}`;
+  if (titleEl) titleEl.textContent = ((efpContext === 'dash' || efpContext === 'dashQty') && colTitles[colName]) ? colTitles[colName] : `${colName}`;
 
   // Gather distinct values and occurrences for this column
   const counts = new Map();
-  if (efpContext === 'dash') {
+  if (efpContext === 'dash' || efpContext === 'dashQty') {
     const dataset = getDashboardDataset();
     const cols = detectDashColumns(dataset.headers, dataset.rows[0]);
-    const unconstrainedFilters = Object.assign({}, dashFilterState, { colFilters: {}, colMultiFilters: {}, search: '' });
+    const fState = (efpContext === 'dashQty' && typeof dashQtyFilterState !== 'undefined') ? dashQtyFilterState : dashFilterState;
+    const unconstrainedFilters = Object.assign({}, fState, { colFilters: {}, colMultiFilters: {}, search: '', rankBy: efpContext === 'dashQty' ? 'qty' : 'valor' });
     const processed = processDashboardData(dataset.rows, cols, unconstrainedFilters);
     const items = (processed && processed.allItems) ? processed.allItems : [];
-    const baseTop1 = items[0] ? (items[0].saldoValor > 0 ? items[0].saldoValor : (items[0].custoUnit > 0 ? items[0].custoUnit * (items[0].saldoKg || 1) : 1)) : 1;
+    const baseTop1 = items[0] ? (efpContext === 'dashQty' ? (items[0].saldoKg || 1) : (items[0].saldoValor > 0 ? items[0].saldoValor : (items[0].custoUnit > 0 ? items[0].custoUnit * (items[0].saldoKg || 1) : 1))) : 1;
     items.forEach((it, idx) => {
       let v = getDashColValue(it, colName, baseTop1, idx);
       if (!v || v === '-') v = '(Vazio)';
@@ -4516,7 +4518,7 @@ function updateExcelPopoverFooter() {
 
 function efpSortCol(dir) {
   if (!efpCurrentCol) return;
-  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dash' ? dashFilterState : stockFilterState));
+  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dashQty' ? (typeof dashQtyFilterState !== 'undefined' ? dashQtyFilterState : dashFilterState) : (efpContext === 'dash' ? dashFilterState : stockFilterState)));
   currentFilterState.sortCol = efpCurrentCol;
   currentFilterState.sortDir = dir;
   closeExcelFilterPopover();
@@ -4524,7 +4526,7 @@ function efpSortCol(dir) {
     renderMpView();
   } else if (efpContext === 'ibc') {
     renderIbcView();
-  } else if (efpContext === 'dash') {
+  } else if (efpContext === 'dash' || efpContext === 'dashQty') {
     renderDashboardView();
   } else {
     renderStockView();
@@ -4533,7 +4535,7 @@ function efpSortCol(dir) {
 
 function applyExcelFilterPopover() {
   if (!efpCurrentCol) return;
-  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dash' ? dashFilterState : stockFilterState));
+  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dashQty' ? (typeof dashQtyFilterState !== 'undefined' ? dashQtyFilterState : dashFilterState) : (efpContext === 'dash' ? dashFilterState : stockFilterState)));
   if (!currentFilterState.colMultiFilters) currentFilterState.colMultiFilters = {};
 
   if (efpSelectedSet.size === efpDistinctValues.length) {
@@ -4549,7 +4551,7 @@ function applyExcelFilterPopover() {
     renderMpView();
   } else if (efpContext === 'ibc') {
     renderIbcView();
-  } else if (efpContext === 'dash') {
+  } else if (efpContext === 'dash' || efpContext === 'dashQty') {
     renderDashboardView();
   } else {
     renderStockView();
@@ -4559,7 +4561,7 @@ function applyExcelFilterPopover() {
 
 function clearCurrentColumnMultiFilter() {
   if (!efpCurrentCol) return;
-  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dash' ? dashFilterState : stockFilterState));
+  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dashQty' ? (typeof dashQtyFilterState !== 'undefined' ? dashQtyFilterState : dashFilterState) : (efpContext === 'dash' ? dashFilterState : stockFilterState)));
   if (currentFilterState.colMultiFilters) {
     delete currentFilterState.colMultiFilters[efpCurrentCol];
   }
@@ -4569,7 +4571,7 @@ function clearCurrentColumnMultiFilter() {
     renderMpView();
   } else if (efpContext === 'ibc') {
     renderIbcView();
-  } else if (efpContext === 'dash') {
+  } else if (efpContext === 'dash' || efpContext === 'dashQty') {
     renderDashboardView();
   } else {
     renderStockView();
@@ -8345,11 +8347,29 @@ let dashFilterState = {
   colFilters: {},
   colMultiFilters: {},
   sortCol: null,
-  sortDir: null
+  sortDir: null,
+  rankBy: 'valor'
+};
+
+let dashQtyFilterState = {
+  armazem: '01',          // Padrão: armazém 01
+  codigoPrefix: '01',     // Padrão: código inicial 01....
+  topN: 10,               // Padrão: top 10 itens
+  chartType: 'bar-h',     // 'bar-h' (barras horizontais), 'bar-v' (colunas verticais)
+  cardViewMode: 'table',  // Padrão: 'table'
+  groupByCode: true,      // Agrupar e somar lotes do mesmo código de produto
+  search: '',
+  colFilters: {},
+  colMultiFilters: {},
+  sortCol: null,
+  sortDir: null,
+  rankBy: 'qty'
 };
 
 let dashChartInstance = null;
 let dashDonutInstance = null;
+let dashQtyChartInstance = null;
+let dashQtyDonutInstance = null;
 let dashChartsRenderTimeout = null;
 
 function isEmbalagensDashboard(armazem, prefix) {
@@ -8733,13 +8753,15 @@ function processDashboardData(rows, cols, filters) {
   });
 
   const allItems = Array.from(groupedMap.values());
-  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU) ou pela coluna selecionada
+  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU) ou MAIORES QUANTIDADES ou pela coluna selecionada
   if (filters.sortCol === 'desc') {
     if (filters.sortDir === 'asc') {
       allItems.sort((a, b) => (a.desc || '').localeCompare(b.desc || '', 'pt-BR'));
     } else {
       allItems.sort((a, b) => (b.desc || '').localeCompare(a.desc || '', 'pt-BR'));
     }
+  } else if (filters.rankBy === 'qty') {
+    allItems.sort((a, b) => (b.saldoKg || 0) - (a.saldoKg || 0));
   } else {
     allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
   }
@@ -8776,13 +8798,18 @@ function processDashboardData(rows, cols, filters) {
 
   const topSum = topItems.reduce((acc, curr) => acc + curr.saldoKg, 0);
   const topValorSum = topItems.reduce((acc, curr) => acc + (curr.saldoValor || 0), 0);
-  const topSharePct = armazemTotalValor > 0 ? (topValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (topSum / armazemTotalQty) * 100 : 0);
+  const isRankByQty = filters.rankBy === 'qty';
+  const topSharePct = isRankByQty
+    ? (armazemTotalQty > 0 ? (topSum / armazemTotalQty) * 100 : 0)
+    : (armazemTotalValor > 0 ? (topValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (topSum / armazemTotalQty) * 100 : 0));
   const top1 = topItems[0] || null;
   const avgSaldo = topItems.length > 0 ? (topSum / topItems.length) : 0;
   const avgValor = topItems.length > 0 ? (topValorSum / topItems.length) : 0;
   const top3Sum = topItems.slice(0, 3).reduce((acc, curr) => acc + curr.saldoKg, 0);
   const top3ValorSum = topItems.slice(0, 3).reduce((acc, curr) => acc + (curr.saldoValor || 0), 0);
-  const top3SharePct = armazemTotalValor > 0 ? (top3ValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (top3Sum / armazemTotalQty) * 100 : 0);
+  const top3SharePct = isRankByQty
+    ? (armazemTotalQty > 0 ? (top3Sum / armazemTotalQty) * 100 : 0)
+    : (armazemTotalValor > 0 ? (top3ValorSum / armazemTotalValor) * 100 : (armazemTotalQty > 0 ? (top3Sum / armazemTotalQty) * 100 : 0));
 
   const isEmbalagens = (typeof isEmbalagensDashboard === 'function') && isEmbalagensDashboard(filters.armazem, filters.codigoPrefix);
   const defaultUnit = isEmbalagens ? 'UN' : 'KG';
@@ -8921,12 +8948,12 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
           <div style="font-size:44px;margin-bottom:12px">📊</div>
           <div style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:8px">Nenhum Relatório de Estoque Carregado no Momento</div>
           <div style="font-size:13.5px;color:var(--mu);max-width:560px;margin:0 auto 20px;line-height:1.5">
-            Para gerar o gráfico dos <strong>Top 10 itens no Armazém 01</strong> com código inicial <strong>01....</strong> ordenados pelo maior valor de <strong>SLD.ATU</strong>, importe sua planilha do ERP ou carregue a demonstração pronta:
+            Para gerar os gráficos de <strong>Maiores Valores</strong> e <strong>Maiores Quantidades</strong> ordenados por <strong>SLD.ATU</strong>, importe sua planilha do ERP ou carregue a demonstração pronta:
           </div>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
             <button class="btn" onclick="triggerStockFileInput()">📂 Importar Planilha Excel / CSV</button>
             <button class="btn outline" onclick="openStockPasteModal()">📋 Colar Dados do Excel (Ctrl+V)</button>
-            <button class="btn" style="background:#0f766e" onclick="dashLoadDemoData()">✨ Carregar Dados de Demonstração (Top 10 Armazém 01)</button>
+            <button class="btn" style="background:#0f766e" onclick="dashLoadDemoData()">✨ Carregar Dados de Demonstração</button>
           </div>
         </div>
       </div>
@@ -8935,14 +8962,14 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
   }
 
   const cols = detectDashColumns(dataset.headers, dataset.rows[0]);
-  const processed = processDashboardData(dataset.rows, cols, dashFilterState);
+  const processed = processDashboardData(dataset.rows, cols, Object.assign({}, dashFilterState, { rankBy: 'valor' }));
+  const processedQty = processDashboardData(dataset.rows, cols, Object.assign({}, dashQtyFilterState, { rankBy: 'qty' }));
 
-  // Opções para o select de armazéns
+  // Opções para o select de armazéns (compartilhado ou independente)
   const knownArmazens = new Set((processed && processed.uniqueArmazens) ? processed.uniqueArmazens : []);
   if (!knownArmazens.has('01')) knownArmazens.add('01');
-  if (dashFilterState.armazem && dashFilterState.armazem !== 'ALL') {
-    knownArmazens.add(dashFilterState.armazem);
-  }
+  if (dashFilterState.armazem && dashFilterState.armazem !== 'ALL') knownArmazens.add(dashFilterState.armazem);
+  if (dashQtyFilterState.armazem && dashQtyFilterState.armazem !== 'ALL') knownArmazens.add(dashQtyFilterState.armazem);
 
   const sortedArmazens = Array.from(knownArmazens).sort((a, b) => {
     const na = parseInt(String(a).replace(/\D/g, ''), 10);
@@ -8951,6 +8978,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     return String(a).localeCompare(String(b));
   });
 
+  // Select de Armazém - Seção 1 (Valores)
   let armazemOptions = `<option value="ALL" ${dashFilterState.armazem === 'ALL' ? 'selected' : ''}>🏢 Todos os Armazéns</option>`;
   sortedArmazens.forEach(loc => {
     const is01 = String(loc).trim() === '01' || String(loc).trim() === '1';
@@ -8963,26 +8991,44 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
   });
   armazemOptions += `<option value="__custom__">✏️ Outro Armazém (Digitar)...</option>`;
 
+  // Select de Armazém - Seção 2 (Quantidades)
+  let armazemOptionsQty = `<option value="ALL" ${dashQtyFilterState.armazem === 'ALL' ? 'selected' : ''}>🏢 Todos os Armazéns</option>`;
+  sortedArmazens.forEach(loc => {
+    const is01 = String(loc).trim() === '01' || String(loc).trim() === '1';
+    let label = is01 ? `01 (Almoxarifado Principal / Matéria-Prima)` : `Armazém ${loc}`;
+    if (String(loc).toLowerCase().includes('armazém') || String(loc).toLowerCase().includes('armazem')) {
+      label = loc;
+    }
+    const isSelected = dashQtyFilterState.armazem === loc || (is01 && dashQtyFilterState.armazem === '01');
+    armazemOptionsQty += `<option value="${esc(loc)}" ${isSelected ? 'selected' : ''}>${esc(label)}</option>`;
+  });
+  armazemOptionsQty += `<option value="__custom__">✏️ Outro Armazém (Digitar)...</option>`;
+
   const locDisplay = dashFilterState.armazem === 'ALL' ? 'Todos os Armazéns' : 'Armazém ' + dashFilterState.armazem;
   const prefixDisplay = dashFilterState.codigoPrefix ? dashFilterState.codigoPrefix + '...' : 'Todos os Códigos';
 
-  // Cabeçalho Executivo e Barra de Controles (Sempre presentes no DOM para nunca travar a navegação)
+  const locDisplayQty = dashQtyFilterState.armazem === 'ALL' ? 'Todos os Armazéns' : 'Armazém ' + dashQtyFilterState.armazem;
+  const prefixDisplayQty = dashQtyFilterState.codigoPrefix ? dashQtyFilterState.codigoPrefix + '...' : 'Todos os Códigos';
+
+  // ══════════════════════════════════════════════════════════════
+  // SEÇÃO 1: CABEÇALHO & TABELA DE MAIORES VALORES (R$)
+  // ══════════════════════════════════════════════════════════════
   const headerHtml = `
     <div class="dash-header-card">
       <div class="dash-header-meta">
         <div class="dash-title-group">
-          <h2>📊 Visualização de Dados & Dashboard Executivo (AI PCP)</h2>
-          <p>Painel estratégico de materiais: Top itens no ${locDisplay} por saldo atual (coluna SLD.ATU)</p>
+          <h2>📊 Visualização de Dados & Dashboard Executivo (AI PCP) - Ranking por Valor Financeiro (R$)</h2>
+          <p>Painel estratégico de materiais: Top itens no ${locDisplay} por maior valor financeiro em estoque (coluna ${cols.sldValorCol || 'SLD.ATU'})</p>
         </div>
         <div class="dash-badges-row">
           <span class="dash-badge blue">🏢 ${locDisplay}</span>
           <span class="dash-badge green">🏷️ Prefixo: ${prefixDisplay}</span>
-          <span class="dash-badge amber">📊 Valor: ${cols.sldValorCol || 'SLD.ATU'} • Saldo: ${cols.sldQtyCol || 'Saldo Atual'}${processed.isEmbalagens ? ' (UN)' : ''}</span>
+          <span class="dash-badge amber">💰 Valor Total: ${formatCurrencyDash(processed.armazemTotalValor)}</span>
           <span class="dash-badge purple">📁 Base: ${esc(dataset.fileName)}</span>
         </div>
       </div>
 
-      <!-- Barra de Controles e Filtros Dinâmicos -->
+      <!-- Barra de Controles e Filtros Dinâmicos (Valores) -->
       <div class="dash-controls-bar">
         <div class="dash-ctrl-group">
           <span class="dash-ctrl-label">Armazém:</span>
@@ -9028,43 +9074,6 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     </div>
   `;
 
-  // Se nenhum item foi localizado no armazém/prefixo geral, mantém a barra de controles ativa!
-  if (!processed || !processed.allItems.length) {
-    container.innerHTML = `
-      <div class="dash-container">
-        ${headerHtml}
-        <div style="background:var(--card);border:1px dashed var(--bd);border-radius:12px;padding:36px 20px;text-align:center;margin-top:16px;">
-          <div style="font-size:38px;margin-bottom:10px">🔍</div>
-          <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:6px">Nenhum item localizado com os filtros selecionados</div>
-          <div style="font-size:13px;color:var(--mu);max-width:560px;margin:0 auto 18px;line-height:1.5">
-            Não foram encontrados produtos no <strong>${locDisplay}</strong> com prefixo de código <strong>"${dashFilterState.codigoPrefix || 'qualquer prefixo'}"</strong>.<br>
-            Altere o armazém ou limpe o prefixo acima para atualizar os dados automaticamente.
-          </div>
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-            ${dashFilterState.codigoPrefix ? `<button class="btn outline" onclick="dashClearPrefix()">🏷️ Limpar Prefixo (Mostrar Todos os Códigos)</button>` : ''}
-            ${dashFilterState.armazem !== 'ALL' ? `<button class="btn outline" onclick="dashSetArmazem('ALL')">🏢 Exibir Todos os Armazéns</button>` : ''}
-            <button class="btn" onclick="dashResetFilters()">↺ Redefinir Filtros Padrão (Armazém 01 / Cód 01)</button>
-            <button class="btn" style="background:#0f766e" onclick="dashLoadDemoData()">✨ Recarregar Base de Demonstração</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    if (dashChartInstance) { dashChartInstance.destroy(); dashChartInstance = null; }
-    if (dashDonutInstance) { dashDonutInstance.destroy(); dashDonutInstance = null; }
-
-    if (activeId) {
-      const el = document.getElementById(activeId);
-      if (el) {
-        el.focus();
-        if (selStart !== null && selEnd !== null && typeof el.setSelectionRange === 'function') {
-          try { el.setSelectionRange(selStart, selEnd); } catch (e) {}
-        }
-      }
-    }
-    return;
-  }
-
   const curDescVal = (dashFilterState.colFilters && (dashFilterState.colFilters.desc || dashFilterState.colFilters['Descrição do Produto'])) || '';
   const multiDescVals = dashFilterState.colMultiFilters && (dashFilterState.colMultiFilters.desc || dashFilterState.colMultiFilters['Descrição do Produto']);
   const hasDescMulti = Array.isArray(multiDescVals);
@@ -9075,7 +9084,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
   const descSortArrow = isDescSorted ? (dashFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
   const hasDescFilterActive = Boolean((curDescVal && curDescVal.trim()) || hasDescMulti);
 
-  // Gera as linhas da tabela
+  // Linhas da tabela de Valores
   const tableRowsHtml = processed.topItems.length ? processed.topItems.map((item, idx) => {
     const rankNum = idx + 1;
     let rankBadgeClass = 'dash-rank-other';
@@ -9097,7 +9106,6 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     else barColor = 'linear-gradient(90deg, #06b6d4, #0284c7)';
 
     const sldKgFormatted = formatNumDash(sldKg);
-    const unStr = esc(item.un || 'KG');
     const custoUnitStr = item.custoUnit > 0 ? formatCustoUnitDash(item.custoUnit) : '-';
     const totalValorStr = item.saldoValor > 0 ? formatCurrencyDash(item.saldoValor) : (item.custoUnit > 0 && sldKg > 0 ? formatCurrencyDash(item.custoUnit * sldKg) : '-');
 
@@ -9134,7 +9142,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
         </td>
         <td style="width:120px">
           <div style="display:flex;align-items:center;gap:6px;">
-            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
+            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder em valor" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
               <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:5px;"></div>
             </div>
             <span style="font-size:10.5px;font-weight:700;color:var(--mu);min-width:32px;text-align:right">${pctTop1.toFixed(0)}%</span>
@@ -9156,11 +9164,178 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     </tr>
   `;
 
+  // ══════════════════════════════════════════════════════════════
+  // SEÇÃO 2: CABEÇALHO & TABELA DE MAIORES QUANTIDADES (SALDO FÍSICO)
+  // ══════════════════════════════════════════════════════════════
+  const headerHtmlQty = `
+    <div class="dash-header-card" style="border-top: 3px solid #10b981;">
+      <div class="dash-header-meta">
+        <div class="dash-title-group">
+          <h2>⚖️ Visualização de Dados & Dashboard Executivo (AI PCP) - Ranking por Maior Quantidade & Saldo Físico</h2>
+          <p>Painel volumétrico de materiais: Top itens no ${locDisplayQty} por maior saldo físico (coluna ${cols.sldQtyCol || 'Saldo Atual'}${processedQty.isEmbalagens ? ' - UN' : ' - KG'})</p>
+        </div>
+        <div class="dash-badges-row">
+          <span class="dash-badge blue">🏢 ${locDisplayQty}</span>
+          <span class="dash-badge green">🏷️ Prefixo: ${prefixDisplayQty}</span>
+          <span class="dash-badge amber" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);color:#059669;">⚖️ Saldo Físico Total: ${formatSaldoKg(processedQty.armazemTotalQty, processedQty.defaultUnit)}</span>
+          <span class="dash-badge purple">📁 Base: ${esc(dataset.fileName)}</span>
+        </div>
+      </div>
+
+      <!-- Barra de Controles e Filtros Dinâmicos (Quantidades) -->
+      <div class="dash-controls-bar">
+        <div class="dash-ctrl-group">
+          <span class="dash-ctrl-label">Armazém:</span>
+          <select class="dash-select" id="dash-qty-sel-armazem" onchange="dashQtySetArmazem(this.value)">
+            ${armazemOptionsQty}
+          </select>
+
+          <span class="dash-ctrl-label" style="margin-left:8px;">Prefixo do Código:</span>
+          <div style="display:inline-flex;align-items:center;position:relative;">
+            <input type="text" class="dash-input" style="width:85px;padding-right:20px;" id="dash-qty-inp-prefix" value="${esc(dashQtyFilterState.codigoPrefix)}" oninput="dashQtyOnPrefixInput(this.value)" onchange="dashQtySetPrefix(this.value)" placeholder="Todos">
+            ${dashQtyFilterState.codigoPrefix ? `<span onclick="dashQtyClearPrefix()" style="position:absolute;right:6px;cursor:pointer;color:var(--mu);font-size:12px;font-weight:700;line-height:1;" title="Limpar prefixo (mostrar todos)">✕</span>` : ''}
+          </div>
+
+          <span class="dash-ctrl-label" style="margin-left:8px;">Exibir:</span>
+          <div class="dash-btn-toggle-group">
+            <button class="dash-btn-toggle ${dashQtyFilterState.topN === 5 ? 'active' : ''}" onclick="dashQtySetTopN(5)">Top 5</button>
+            <button class="dash-btn-toggle ${dashQtyFilterState.topN === 10 ? 'active' : ''}" onclick="dashQtySetTopN(10)">Top 10</button>
+            <button class="dash-btn-toggle ${dashQtyFilterState.topN === 15 ? 'active' : ''}" onclick="dashQtySetTopN(15)">Top 15</button>
+            <button class="dash-btn-toggle ${dashQtyFilterState.topN === 20 ? 'active' : ''}" onclick="dashQtySetTopN(20)">Top 20</button>
+          </div>
+        </div>
+
+        <div class="dash-ctrl-group">
+          <span class="dash-ctrl-label">Formato do Gráfico:</span>
+          <div class="dash-btn-toggle-group">
+            <button class="dash-btn-toggle ${dashQtyFilterState.chartType === 'bar-h' ? 'active' : ''}" onclick="dashQtySetChartType('bar-h')" title="Barras Horizontais">Horizontal</button>
+            <button class="dash-btn-toggle ${dashQtyFilterState.chartType === 'bar-v' ? 'active' : ''}" onclick="dashQtySetChartType('bar-v')" title="Colunas Verticais">Vertical</button>
+          </div>
+
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--tx);font-weight:600;margin-left:8px;">
+            <input type="checkbox" ${dashQtyFilterState.groupByCode ? 'checked' : ''} onchange="dashQtySetGroupByCode(this.checked)">
+            Consolidar Lotes
+          </label>
+
+          <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashSyncQtyFiltersFromValue()" title="Copiar os filtros de Armazém e Prefixo da Seção de Valores acima">
+            🔗 Sincronizar com Valores
+          </button>
+          <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashQtyExportChart()" title="Baixar imagem do gráfico de quantidades em PNG">
+            📷 Exportar Gráfico
+          </button>
+          <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="dashQtyPrintReport()" title="Imprimir relatório executivo">
+            🖨️ Imprimir
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const curDescValQty = (dashQtyFilterState.colFilters && (dashQtyFilterState.colFilters.desc || dashQtyFilterState.colFilters['Descrição do Produto'])) || '';
+  const multiDescValsQty = dashQtyFilterState.colMultiFilters && (dashQtyFilterState.colMultiFilters.desc || dashQtyFilterState.colMultiFilters['Descrição do Produto']);
+  const hasDescMultiQty = Array.isArray(multiDescValsQty);
+  const descMultiCountQty = hasDescMultiQty ? multiDescValsQty.length : 0;
+  const descPlaceholderQty = hasDescMultiQty ? `(${descMultiCountQty} sel.)` : 'Filtrar...';
+  const descMultiBadgeQty = hasDescMultiQty ? `<span style="display:inline-block;background:#10b981;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${descMultiCountQty} valor(es) selecionados no checklist">✓ ${descMultiCountQty}</span>` : '';
+  const isDescSortedQty = dashQtyFilterState.sortCol === 'desc';
+  const descSortArrowQty = isDescSortedQty ? (dashQtyFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
+  const hasDescFilterActiveQty = Boolean((curDescValQty && curDescValQty.trim()) || hasDescMultiQty);
+
+  // Linhas da tabela de Quantidades
+  const tableRowsQtyHtml = processedQty.topItems.length ? processedQty.topItems.map((item, idx) => {
+    const rankNum = idx + 1;
+    let rankBadgeClass = 'dash-rank-other';
+    let rankTitle = `${rankNum}º Lugar em Quantidade`;
+    if (rankNum === 1) { rankBadgeClass = 'dash-rank-1'; rankTitle = '🥇 1º Lugar em Quantidade'; }
+    else if (rankNum === 2) { rankBadgeClass = 'dash-rank-2'; rankTitle = '🥈 2º Lugar em Quantidade'; }
+    else if (rankNum === 3) { rankBadgeClass = 'dash-rank-3'; rankTitle = '🥉 3º Lugar em Quantidade'; }
+    const medal = `${rankNum}º`;
+
+    const sldKg = item.saldoKg || item.saldo || 0;
+    const top1Qty = processedQty.top1 ? (processedQty.top1.saldoKg || 1) : 1;
+    const pctTop1 = top1Qty > 0 ? (sldKg / top1Qty) * 100 : 0;
+
+    let barColor = 'linear-gradient(90deg, #10b981, #059669)';
+    if (rankNum === 1) barColor = 'linear-gradient(90deg, #10b981, #047857)';
+    else if (rankNum === 2) barColor = 'linear-gradient(90deg, #06b6d4, #0284c7)';
+    else if (rankNum === 3) barColor = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+    else barColor = 'linear-gradient(90deg, #6366f1, #4f46e5)';
+
+    const sldKgFormatted = formatNumDash(sldKg);
+    const unStr = esc(item.un || processedQty.defaultUnit || 'KG');
+    const custoUnitStr = item.custoUnit > 0 ? formatCustoUnitDash(item.custoUnit) : '-';
+    const totalValorStr = item.saldoValor > 0 ? formatCurrencyDash(item.saldoValor) : (item.custoUnit > 0 && sldKg > 0 ? formatCurrencyDash(item.custoUnit * sldKg) : '-');
+
+    return `
+      <tr>
+        <td style="text-align:center;width:36px">
+          <span class="dash-rank-badge ${rankBadgeClass}" title="${rankTitle}">${medal}</span>
+        </td>
+        <td style="white-space:nowrap">
+          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            <span class="code" title="Clique para copiar" style="cursor:pointer;white-space:nowrap" onclick="copyText('${esc(item.code)}')">${esc(item.code)}</span>
+            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.code)}')" title="Copiar código">📋</button>
+          </div>
+        </td>
+        <td>
+          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            <strong style="color:var(--tx)">${esc(item.desc)}</strong>
+            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.desc)}')" title="Copiar descrição">📋</button>
+          </div>
+          ${item.lotCount > 1 ? `<div style="font-size:10px;color:var(--mu);margin-top:2px;">Consolidado de ${item.lotCount} apontamentos</div>` : ''}
+        </td>
+        <td style="text-align:center;white-space:nowrap">
+          ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:11px">-</span>'}
+        </td>
+        <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap">${esc(item.armazem)}</td>
+        <td class="stock-col-qty" style="text-align:right;white-space:nowrap;background:rgba(16,185,129,0.06);">
+          <span style="color:#0f766e; font-weight:800; font-size:13px">${sldKgFormatted} <small style="font-size:10.5px;font-weight:600;color:var(--mu)">${unStr}</small></span>
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <span style="font-weight:600;color:#92400e;font-size:12.5px">${custoUnitStr}</span>
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <strong style="color:var(--tx);font-size:13px">${totalValorStr}</strong>
+        </td>
+        <td style="width:120px">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder em quantidade" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
+              <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:5px;"></div>
+            </div>
+            <span style="font-size:10.5px;font-weight:700;color:var(--mu);min-width:32px;text-align:right">${pctTop1.toFixed(0)}%</span>
+          </div>
+        </td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn outline" style="padding:2px 6px;font-size:10px;line-height:1.2" onclick="dashJumpToStock('${item.code}')" title="Ver detalhes deste produto na aba de Estoque">
+            🔍 Estoque
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('') : `
+    <tr>
+      <td colspan="10" style="text-align:center;padding:32px;color:var(--mu);font-size:13px">
+        Nenhum produto encontrado com os filtros selecionados.
+        ${hasDescFilterActiveQty ? `<button class="btn outline" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="clearSingleDashQtyColFilter('desc', event)">✕ Limpar Filtro de Descrição</button>` : ''}
+      </td>
+    </tr>
+  `;
+
+  // Limpa instâncias de gráficos ativas
+  if (dashChartInstance) { dashChartInstance.destroy(); dashChartInstance = null; }
+  if (dashDonutInstance) { dashDonutInstance.destroy(); dashDonutInstance = null; }
+  if (dashQtyChartInstance) { dashQtyChartInstance.destroy(); dashQtyChartInstance = null; }
+  if (dashQtyDonutInstance) { dashQtyDonutInstance.destroy(); dashQtyDonutInstance = null; }
+
+  // Montagem Completa do DOM (Seção 1: Valores + Seção 2: Quantidades)
   container.innerHTML = `
     <div class="dash-container">
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- 1. BLOCO DE ANÁLISE: RANKING POR VALOR FINANCEIRO (R$)     -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
       ${headerHtml}
 
-      <!-- Grid de Indicadores Estratégicos (KPIs) -->
+      <!-- Grid de Indicadores Estratégicos (KPIs de Valor) -->
       <div class="dash-kpis-grid">
         <div class="dash-kpi-card" style="--kpi-c:#3b82f6">
           <div class="dash-kpi-top">
@@ -9217,14 +9392,13 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
         </div>
       </div>
 
-      <!-- Linha com Ranking Principal (Layout Consulta de Saldo de Estoque) e Gráfico de Rosca/Concentração -->
+      <!-- Linha com Ranking Principal (Valor) e Gráfico de Concentração de Valor -->
       <div class="dash-charts-row">
-        <!-- Card Ranking Top N Itens com Maior Valor e Quantidade -->
         <div class="dash-chart-card">
           <div class="dash-chart-header">
             <h3 class="dash-chart-title">
               <span>📊</span>
-              Ranking Top ${processed.topItems.length} Itens com Maior Valor e Quantidade (${locDisplay})
+              Ranking Top ${processed.topItems.length} Itens com Maior Valor Financeiro (${locDisplay})
             </h3>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="dash-btn-toggle-group">
@@ -9246,7 +9420,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
                     <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
                     <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
                     <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
-                    <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
+                    <th style="text-align:right;white-space:nowrap;background:rgba(15,118,110,0.06);">Saldo Total (R$)</th>
                     <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
                     <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
                   </tr>
@@ -9283,12 +9457,12 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
           `}
         </div>
 
-        <!-- Card Gráfico de Rosca / Concentração -->
+        <!-- Card Gráfico de Rosca / Concentração de Valor -->
         <div class="dash-chart-card">
           <div class="dash-chart-header">
             <h3 class="dash-chart-title">
               <span>🍩</span>
-              Curva de Concentração (Top ${processed.topItems.length} vs Restante)
+              Curva de Concentração Financeira (Top ${processed.topItems.length} vs Restante)
             </h3>
             <span style="font-size:12px;color:var(--mu);font-weight:600">
               ${processed.topSharePct.toFixed(1)}% concentrado
@@ -9300,16 +9474,16 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
         </div>
       </div>
 
-      <!-- Diagnóstico Inteligente AI Insights -->
+      <!-- Diagnóstico Inteligente AI Insights (Financeiro) -->
       ${generateAiDashboardInsights(processed)}
 
       ${dashFilterState.cardViewMode === 'chart' ? `
-        <!-- Tabela Detalhada de Classificação (Exibida quando em modo Gráfico) -->
+        <!-- Tabela Detalhada de Classificação de Valor (Exibida quando em modo Gráfico) -->
         <div class="dash-table-card">
           <div class="dash-chart-header">
             <h3 class="dash-chart-title">
               <span>📋</span>
-              Detalhamento e Ranking Executivo dos Top ${processed.topItems.length} Itens
+              Detalhamento e Ranking Executivo dos Top ${processed.topItems.length} Itens em Valor
             </h3>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="search" placeholder="🔍 Filtrar nesta tabela..." class="dash-input" style="width:200px;" value="${esc(dashFilterState.search)}" oninput="dashOnSearch(this.value)">
@@ -9360,9 +9534,228 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
           </div>
         </div>
       ` : ''}
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- DIVISOR ELEGANTE ENTRE AS SEÇÕES                           -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <div class="dash-section-divider" style="margin: 40px 0 24px 0; display:flex; align-items:center; gap:16px;">
+        <div style="flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--bd), var(--bd));"></div>
+        <div style="display:flex; align-items:center; gap:8px; padding: 7px 20px; background:var(--card); border:1px solid var(--bd); border-radius:99px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+          <span style="font-size:18px;">⚖️</span>
+          <span style="font-size:13.5px; font-weight:800; color:var(--tx); letter-spacing:-0.2px;">Painel Estratégico: Maiores Quantidades & Volume Físico</span>
+          <span style="font-size:11px; padding:2px 8px; border-radius:99px; background:#10b981; color:#fff; font-weight:800;">Volume (${processedQty.defaultUnit})</span>
+        </div>
+        <div style="flex:1; height:1px; background:linear-gradient(90deg, var(--bd), var(--bd), transparent);"></div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- 2. BLOCO DE ANÁLISE: RANKING POR QUANTIDADE & VOLUME (KG/UN)-->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      ${headerHtmlQty}
+
+      <!-- Grid de Indicadores Estratégicos (KPIs de Quantidade) -->
+      <div class="dash-kpis-grid">
+        <div class="dash-kpi-card" style="--kpi-c:#3b82f6">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Itens Analisados (${locDisplayQty})</span>
+            <span class="dash-kpi-icon">📦</span>
+          </div>
+          <div class="dash-kpi-val">${processedQty.filteredList.length.toLocaleString('pt-BR')} SKUs${hasDescFilterActiveQty ? ` <span style="font-size:12px;font-weight:normal;color:var(--mu)">(${processedQty.armazemAllItemCount} total)</span>` : ''}</div>
+          <div class="dash-kpi-sub">${processedQty.isEmbalagens ? 'Embalagens' : 'Insumos'} com código iniciando em "${dashQtyFilterState.codigoPrefix || 'Todos'}"</div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#10b981">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Saldo Físico Total em Estoque</span>
+            <span class="dash-kpi-icon">⚖️</span>
+          </div>
+          <div class="dash-kpi-val" style="color:#0f766e;">${formatSaldoKg(processedQty.armazemTotalQty, processedQty.defaultUnit)}</div>
+          <div class="dash-kpi-sub">Valor Total Estimado: <strong>${formatCurrencyDash(processedQty.armazemTotalValor)}</strong> ${dashQtyFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashQtyFilterState.armazem}</div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#f59e0b">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Volume nos Top ${processedQty.topItems.length}</span>
+            <span class="dash-kpi-icon">🏆</span>
+          </div>
+          <div class="dash-kpi-val">${formatSaldoKg(processedQty.topSum, processedQty.defaultUnit)}</div>
+          <div class="dash-kpi-sub" style="color:#d97706;font-weight:700">
+            ${processedQty.topSharePct.toFixed(1)}% do volume total ${dashQtyFilterState.armazem === 'ALL' ? 'do estoque geral' : 'do armazém'} • ${formatCurrencyDash(processedQty.topValorSum)}
+          </div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#7c3aed">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Item Líder em Quantidade (#1)</span>
+            <span class="dash-kpi-icon">👑</span>
+          </div>
+          <div class="dash-kpi-val" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${processedQty.top1 ? esc(processedQty.top1.code) : ''}">
+            ${processedQty.top1 ? esc(processedQty.top1.code) : '-'}
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#7c3aed;margin:3px 0 2px 0;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;" title="${processedQty.top1 ? esc(processedQty.top1.desc) : ''}">
+            ${processedQty.top1 ? `${processedQty.top1.mpTag ? `<span class="mp-desc-int-tag" style="font-size:10px;padding:1px 5px;margin-right:4px;vertical-align:middle">${esc(processedQty.top1.mpTag)}</span> ` : ''}${esc(processedQty.top1.desc)}` : ''}
+          </div>
+          <div class="dash-kpi-sub">
+            ${processedQty.top1 ? `Saldo: <strong>${formatSaldoKg(processedQty.top1.saldoKg, processedQty.top1.un || processedQty.defaultUnit)}</strong> • Valor: ${formatCurrencyDash(processedQty.top1.saldoValor)}` : '-'}
+          </div>
+        </div>
+
+        <div class="dash-kpi-card" style="--kpi-c:#06b6d4">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-title">Média dos Top ${processedQty.topItems.length}</span>
+            <span class="dash-kpi-icon">📊</span>
+          </div>
+          <div class="dash-kpi-val">${formatSaldoKg(processedQty.avgSaldo, processedQty.defaultUnit)}</div>
+          <div class="dash-kpi-sub">Média física por SKU • Média valor: ${formatCurrencyDash(processedQty.avgValor)}</div>
+        </div>
+      </div>
+
+      <!-- Linha com Ranking Principal (Quantidade) e Gráfico de Concentração de Volume -->
+      <div class="dash-charts-row">
+        <div class="dash-chart-card">
+          <div class="dash-chart-header">
+            <h3 class="dash-chart-title">
+              <span>⚖️</span>
+              Ranking Top ${processedQty.topItems.length} Itens com Maior Quantidade & Volume (${locDisplayQty})
+            </h3>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="dash-btn-toggle-group">
+                <button class="dash-btn-toggle ${dashQtyFilterState.cardViewMode === 'table' ? 'active' : ''}" onclick="dashQtySetCardViewMode('table')" title="Layout idêntico à aba Consulta de Saldo de Estoque">📋 Tabela</button>
+                <button class="dash-btn-toggle ${dashQtyFilterState.cardViewMode === 'chart' ? 'active' : ''}" onclick="dashQtySetCardViewMode('chart')" title="Alternar para Gráfico de Barras">📊 Gráfico</button>
+              </div>
+            </div>
+          </div>
+
+          ${dashQtyFilterState.cardViewMode === 'table' ? `
+            <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:none;overflow-y:visible;overflow-x:auto;border:1px solid var(--bd);">
+              <table class="stock-table" style="width:100%;">
+                <thead>
+                  <tr>
+                    <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
+                    <th style="white-space:nowrap">Código</th>
+                    <th style="white-space:nowrap" onclick="dashQtySortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrowQty}${descMultiBadgeQty}</span></th>
+                    <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
+                    <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
+                    <th class="stock-col-qty" style="text-align:right;white-space:nowrap;background:rgba(16,185,129,0.08);">Saldo Atual (${processedQty.defaultUnit})</th>
+                    <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
+                    <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
+                    <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
+                    <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
+                  </tr>
+                  <tr class="stock-filter-row">
+                    <th style="text-align:center;width:34px"></th>
+                    <th></th>
+                    <th>
+                      <div class="stock-th-filter">
+                        <input type="text" id="dash-qty-col-filter-desc" class="stock-col-input ${(curDescValQty||hasDescMultiQty)?'active':''}" placeholder="${descPlaceholderQty}" value="${esc(curDescValQty)}" data-col="desc" oninput="handleDashQtyColFilter(this, event)">
+                        <button type="button" class="stock-excel-filter-trigger ${hasDescMultiQty?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dashQty')" title="Abrir checklist de seleção múltipla estilo Excel">
+                          ${hasDescMultiQty ? `✓ ${descMultiCountQty}` : '▾'}
+                        </button>
+                        ${(curDescValQty || hasDescMultiQty) ? `<button class="stock-col-clear" onclick="clearSingleDashQtyColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+                      </div>
+                    </th>
+                    <th style="text-align:center;width:70px"></th>
+                    <th style="text-align:center;width:50px"></th>
+                    <th class="stock-col-qty" style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                    <th style="width:75px;text-align:center"></th>
+                    <th style="text-align:center;width:55px"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRowsQtyHtml}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="dash-canvas-container" id="dashQtyMainChartContainer">
+              <canvas id="dashQtyMainCanvas"></canvas>
+            </div>
+          `}
+        </div>
+
+        <!-- Card Gráfico de Rosca / Concentração de Volume -->
+        <div class="dash-chart-card">
+          <div class="dash-chart-header">
+            <h3 class="dash-chart-title">
+              <span>🍩</span>
+              Curva de Concentração de Volume (Top ${processedQty.topItems.length} vs Restante)
+            </h3>
+            <span style="font-size:12px;color:var(--mu);font-weight:600">
+              ${processedQty.topSharePct.toFixed(1)}% concentrado
+            </span>
+          </div>
+          <div class="dash-canvas-container" id="dashQtyDonutChartContainer" style="min-height:430px;">
+            <canvas id="dashQtyDonutCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnóstico Inteligente AI Insights (Volume e Capacidade Física) -->
+      ${generateAiDashboardQtyInsights(processedQty)}
+
+      ${dashQtyFilterState.cardViewMode === 'chart' ? `
+        <!-- Tabela Detalhada de Classificação de Quantidade (Exibida quando em modo Gráfico) -->
+        <div class="dash-table-card">
+          <div class="dash-chart-header">
+            <h3 class="dash-chart-title">
+              <span>📋</span>
+              Detalhamento e Ranking Executivo dos Top ${processedQty.topItems.length} Itens em Quantidade
+            </h3>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="search" placeholder="🔍 Filtrar nesta tabela..." class="dash-input" style="width:200px;" value="${esc(dashQtyFilterState.search)}" oninput="dashQtyOnSearch(this.value)">
+              <span style="font-size:12px;color:var(--mu);">${processedQty.topItems.length} itens listados</span>
+            </div>
+          </div>
+
+          <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:none;overflow-y:visible;overflow-x:auto;border:1px solid var(--bd);">
+            <table class="stock-table" style="width:100%;">
+              <thead>
+                <tr>
+                  <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
+                  <th style="white-space:nowrap">Código</th>
+                  <th style="white-space:nowrap" onclick="dashQtySortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrowQty}${descMultiBadgeQty}</span></th>
+                  <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
+                  <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
+                  <th class="stock-col-qty" style="text-align:right;white-space:nowrap;background:rgba(16,185,129,0.08);">Saldo Atual (${processedQty.defaultUnit})</th>
+                  <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
+                  <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
+                  <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
+                  <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
+                </tr>
+                <tr class="stock-filter-row">
+                  <th style="text-align:center;width:34px"></th>
+                  <th></th>
+                  <th>
+                    <div class="stock-th-filter">
+                      <input type="text" id="dash-qty-col-filter-desc-detailed" class="stock-col-input ${(curDescValQty||hasDescMultiQty)?'active':''}" placeholder="${descPlaceholderQty}" value="${esc(curDescValQty)}" data-col="desc" oninput="handleDashQtyColFilter(this, event)">
+                      <button type="button" class="stock-excel-filter-trigger ${hasDescMultiQty?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dashQty')" title="Abrir checklist de seleção múltipla estilo Excel">
+                        ${hasDescMultiQty ? `✓ ${descMultiCountQty}` : '▾'}
+                      </button>
+                      ${(curDescValQty || hasDescMultiQty) ? `<button class="stock-col-clear" onclick="clearSingleDashQtyColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+                    </div>
+                  </th>
+                  <th style="text-align:center;width:70px"></th>
+                  <th style="text-align:center;width:50px"></th>
+                  <th class="stock-col-qty" style="text-align:right"></th>
+                  <th style="text-align:right"></th>
+                  <th style="text-align:right"></th>
+                  <th style="width:75px;text-align:center"></th>
+                  <th style="text-align:center;width:55px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRowsQtyHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
     </div>
   `;
 
+  // Restaura foco de digitação (seja na seção de valores ou na de quantidades)
   if (activeId) {
     const el = document.getElementById(activeId);
     if (el) {
@@ -9381,24 +9774,33 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     }
   }
 
-  // Renderiza os gráficos via Chart.js ou Native SVG Fallback
+  // Renderiza os gráficos via Chart.js ou Native SVG Fallback (Valores + Quantidades)
   if (dashChartsRenderTimeout) clearTimeout(dashChartsRenderTimeout);
   dashChartsRenderTimeout = setTimeout(() => {
-    renderDashCharts(processed);
+    renderDashCharts(processed, processedQty);
   }, 50);
 }
 
-function renderDashCharts(data) {
+function renderDashCharts(dataValor, dataQty) {
+  // Gráficos de Valor
   const mainCanvas = document.getElementById('dashMainCanvas');
   const donutCanvas = document.getElementById('dashDonutCanvas');
   const mainContainer = document.getElementById('dashMainChartContainer');
   const donutContainer = document.getElementById('dashDonutChartContainer');
 
+  // Gráficos de Quantidade
+  const qtyMainCanvas = document.getElementById('dashQtyMainCanvas');
+  const qtyDonutCanvas = document.getElementById('dashQtyDonutCanvas');
+  const qtyMainContainer = document.getElementById('dashQtyMainChartContainer');
+  const qtyDonutContainer = document.getElementById('dashQtyDonutChartContainer');
+
   // Se Chart.js estiver disponível via CDN
   if (typeof Chart !== 'undefined') {
     try {
-      if (mainCanvas) renderChartJsMain(mainCanvas, data);
-      if (donutCanvas) renderChartJsDonut(donutCanvas, data);
+      if (mainCanvas && dataValor) renderChartJsMain(mainCanvas, dataValor);
+      if (donutCanvas && dataValor) renderChartJsDonut(donutCanvas, dataValor);
+      if (qtyMainCanvas && dataQty) renderChartJsQtyMain(qtyMainCanvas, dataQty);
+      if (qtyDonutCanvas && dataQty) renderChartJsQtyDonut(qtyDonutCanvas, dataQty);
       return;
     } catch(err) {
       console.warn('Chart.js falhou, acionando renderizador nativo SVG:', err);
@@ -9407,7 +9809,10 @@ function renderDashCharts(data) {
 
   // Fallback 100% Offline e Nativo (SVG Vectorial de Alta Definição)
   if (mainContainer || donutContainer) {
-    renderNativeSvgCharts(data, mainContainer, donutContainer);
+    renderNativeSvgCharts(dataValor, mainContainer, donutContainer);
+  }
+  if (qtyMainContainer || qtyDonutContainer) {
+    renderNativeSvgQtyCharts(dataQty, qtyMainContainer, qtyDonutContainer);
   }
 }
 
@@ -9416,6 +9821,7 @@ function renderChartJsMain(canvas, data) {
     dashChartInstance.destroy();
     dashChartInstance = null;
   }
+  if (!data || !data.topItems || !data.topItems.length) return;
 
   const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const textColor = isDark ? '#e8ebf0' : '#1b2430';
@@ -9428,7 +9834,6 @@ function renderChartJsMain(canvas, data) {
 
   const values = data.topItems.map(i => i.saldoValor > 0 ? i.saldoValor : (i.saldoKg * (i.custoUnit || 1)));
 
-  // Paleta de cores vibrantes com destaques para 1º, 2º e 3º colocados
   const backgroundColors = data.topItems.map((_, idx) => {
     if (idx === 0) return '#f59e0b'; // Ouro #1
     if (idx === 1) return '#3b82f6'; // Azul Real #2
@@ -9536,18 +9941,17 @@ function renderChartJsDonut(canvas, data) {
     dashDonutInstance.destroy();
     dashDonutInstance = null;
   }
+  if (!data || !data.topItems || !data.topItems.length) return;
 
   const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const textColor = isDark ? '#e8ebf0' : '#1b2430';
 
-  // O usuário solicitou: apagar as informações de código/posição e incluir SOMENTE a descrição do produto
   const labels = data.topItems.map(i => {
     const desc = (i.desc || i.code || '').trim();
     return desc.length > 38 ? desc.slice(0, 38) + '…' : desc;
   });
   const values = data.topItems.map(i => i.saldoValor > 0 ? i.saldoValor : (i.saldoKg * (i.custoUnit || 1)));
 
-  // Calcula fatia restante do armazém em valor
   const remaining = Math.max(0, data.armazemTotalValor - data.topValorSum);
   if (remaining > 0) {
     labels.push(dashFilterState.armazem === 'ALL' ? 'Demais Itens do Estoque Geral' : 'Demais Itens do Armazém ' + dashFilterState.armazem);
@@ -9625,8 +10029,223 @@ function renderChartJsDonut(canvas, data) {
   });
 }
 
+// ══════════════════════════════════════════════════════════════
+// RENDERIZADORES DE GRÁFICO: QUANTIDADES & SALDO FÍSICO
+// ══════════════════════════════════════════════════════════════
+function renderChartJsQtyMain(canvas, data) {
+  if (dashQtyChartInstance) {
+    dashQtyChartInstance.destroy();
+    dashQtyChartInstance = null;
+  }
+  if (!data || !data.topItems || !data.topItems.length) return;
+
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor = isDark ? '#e8ebf0' : '#1b2430';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+  const labels = data.topItems.map(i => {
+    const shortDesc = i.desc.length > 28 ? i.desc.slice(0, 28) + '…' : i.desc;
+    return `${i.code} - ${shortDesc}`;
+  });
+
+  const values = data.topItems.map(i => i.saldoKg || i.saldo || 0);
+
+  const backgroundColors = data.topItems.map((_, idx) => {
+    if (idx === 0) return '#10b981'; // Destaque #1 em Quantidade (Verde Esmeralda)
+    if (idx === 1) return '#06b6d4'; // Ciano #2
+    if (idx === 2) return '#3b82f6'; // Azul #3
+    const palette = ['#8b5cf6', '#ec4899', '#f59e0b', '#14b8a6', '#6366f1', '#84cc16'];
+    return palette[(idx - 3) % palette.length];
+  });
+
+  const isHorizontal = dashQtyFilterState.chartType === 'bar-h';
+
+  dashQtyChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: `Saldo Físico em Estoque (${data.defaultUnit} - SLD.ATU)`,
+        data: values,
+        backgroundColor: backgroundColors,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'
+      }]
+    },
+    options: {
+      indexAxis: isHorizontal ? 'y' : 'x',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : '#0f172a',
+          titleColor: '#fff',
+          bodyColor: '#e2e8f0',
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          callbacks: {
+            title: function(items) {
+              const idx = items[0].dataIndex;
+              const item = data.topItems[idx];
+              return `#${idx + 1} - ${item.code}`;
+            },
+            label: function(item) {
+              const idx = item.dataIndex;
+              const it = data.topItems[idx];
+              const sldKg = it.saldoKg || it.saldo || 0;
+              const totalVal = it.saldoValor > 0 ? it.saldoValor : (it.custoUnit > 0 ? sldKg * it.custoUnit : 0);
+              const pct = data.armazemTotalQty > 0 ? ((sldKg / data.armazemTotalQty) * 100).toFixed(1) : '0';
+              const lines = [
+                `Produto: ${it.mpTag ? `[${it.mpTag}] ` : ''}${it.desc}`,
+                `Saldo Físico (Quantidade): ${formatSaldoKg(sldKg, it.un || data.defaultUnit || 'KG')}`,
+                `Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)}`
+              ];
+              if (it.custoUnit > 0) {
+                lines.push(`Custo Unitário: ${formatCustoUnitDash(it.custoUnit)}`);
+              }
+              lines.push(`Participação no Volume ${dashQtyFilterState.armazem === 'ALL' ? 'do Estoque Geral' : 'do Armazém ' + dashQtyFilterState.armazem}: ${pct}%`);
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            font: { family: 'system-ui, sans-serif', size: 11 },
+            callback: function(val) {
+              if (isHorizontal) {
+                const n = Number(val);
+                if (isNaN(n)) return val;
+                if (Math.abs(n) >= 1000000) return (n / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M ' + data.defaultUnit;
+                if (Math.abs(n) >= 1000) return (n / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k ' + data.defaultUnit;
+                return n.toLocaleString('pt-BR') + ' ' + data.defaultUnit;
+              }
+              return this.getLabelForValue ? this.getLabelForValue(val) : val;
+            }
+          }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            font: { family: 'system-ui, sans-serif', size: 11 },
+            callback: function(val) {
+              if (!isHorizontal) {
+                const n = Number(val);
+                if (isNaN(n)) return val;
+                if (Math.abs(n) >= 1000000) return (n / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M ' + data.defaultUnit;
+                if (Math.abs(n) >= 1000) return (n / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k ' + data.defaultUnit;
+                return n.toLocaleString('pt-BR') + ' ' + data.defaultUnit;
+              }
+              return this.getLabelForValue ? this.getLabelForValue(val) : val;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderChartJsQtyDonut(canvas, data) {
+  if (dashQtyDonutInstance) {
+    dashQtyDonutInstance.destroy();
+    dashQtyDonutInstance = null;
+  }
+  if (!data || !data.topItems || !data.topItems.length) return;
+
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor = isDark ? '#e8ebf0' : '#1b2430';
+
+  const labels = data.topItems.map(i => {
+    const desc = (i.desc || i.code || '').trim();
+    return desc.length > 38 ? desc.slice(0, 38) + '…' : desc;
+  });
+  const values = data.topItems.map(i => i.saldoKg || i.saldo || 0);
+
+  const remaining = Math.max(0, data.armazemTotalQty - data.topSum);
+  if (remaining > 0) {
+    labels.push(dashQtyFilterState.armazem === 'ALL' ? 'Demais Itens do Estoque Geral' : 'Demais Itens do Armazém ' + dashQtyFilterState.armazem);
+    values.push(remaining);
+  }
+
+  const backgroundColors = data.topItems.map((_, idx) => {
+    if (idx === 0) return '#10b981';
+    if (idx === 1) return '#06b6d4';
+    if (idx === 2) return '#3b82f6';
+    const palette = ['#8b5cf6', '#ec4899', '#f59e0b', '#14b8a6', '#6366f1'];
+    return palette[(idx - 3) % palette.length];
+  });
+  if (remaining > 0) backgroundColors.push(isDark ? '#334155' : '#cbd5e1');
+
+  dashQtyDonutInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors,
+        borderWidth: 2,
+        borderColor: isDark ? '#1b212b' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: textColor,
+            boxWidth: 12,
+            font: { size: 10.5, weight: '500' },
+            padding: 8
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : '#0f172a',
+          titleColor: '#fff',
+          bodyColor: '#e2e8f0',
+          padding: 10,
+          callbacks: {
+            title: function(items) {
+              const idx = items[0].dataIndex;
+              if (idx < data.topItems.length) {
+                const it = data.topItems[idx];
+                return (it.mpTag ? `[${it.mpTag}] ` : '') + (it.desc || it.code);
+              }
+              return dashQtyFilterState.armazem === 'ALL' ? 'Demais Itens do Estoque Geral' : 'Demais Itens do Armazém ' + dashQtyFilterState.armazem;
+            },
+            label: function(ctx) {
+              const val = ctx.parsed;
+              const total = data.armazemTotalQty;
+              const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
+              const idx = ctx.dataIndex;
+              const it = (idx < data.topItems.length) ? data.topItems[idx] : null;
+              if (it) {
+                const sldKg = it.saldoKg || it.saldo || 0;
+                const totalVal = it.saldoValor > 0 ? it.saldoValor : (it.custoUnit > 0 ? sldKg * it.custoUnit : 0);
+                return [
+                  ` Saldo Físico: ${formatSaldoKg(sldKg, it.un || data.defaultUnit || 'KG')} (${pct}%)`,
+                  ` Valor Total (SLD.ATU): ${formatCurrencyDash(totalVal)}`
+                ];
+              }
+              return ` Saldo Físico: ${formatSaldoKg(val, data.defaultUnit || 'KG')} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 function renderNativeSvgCharts(data, mainContainer, donutContainer) {
-  // Renderizador puro HTML/SVG caso o Chart.js esteja inacessível
   if (mainContainer) {
     const maxVal = data.top1 ? (data.top1.saldoValor > 0 ? data.top1.saldoValor : (data.top1.saldoKg * (data.top1.custoUnit || 1))) : 1;
     let barsHtml = data.topItems.map((item, idx) => {
@@ -9678,7 +10297,111 @@ function renderNativeSvgCharts(data, mainContainer, donutContainer) {
   }
 }
 
-// Funções de Interação e Filtros
+function renderNativeSvgQtyCharts(data, mainContainer, donutContainer) {
+  if (mainContainer) {
+    const maxQty = data.top1 ? (data.top1.saldoKg || 1) : 1;
+    let barsHtml = data.topItems.map((item, idx) => {
+      const sldKg = item.saldoKg || item.saldo || 0;
+      const sldVal = item.saldoValor > 0 ? item.saldoValor : (item.custoUnit > 0 ? sldKg * item.custoUnit : 0);
+      const pct = maxQty > 0 ? (sldKg / maxQty) * 100 : 0;
+      let barColor = 'linear-gradient(90deg, #10b981, #059669)';
+      if (idx === 0) barColor = 'linear-gradient(90deg, #10b981, #047857)';
+      else if (idx === 1) barColor = 'linear-gradient(90deg, #06b6d4, #0284c7)';
+      else if (idx === 2) barColor = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+
+      return `
+        <div class="svg-bar-row">
+          <div class="svg-bar-label" title="${esc(item.code)} - ${esc(item.desc)}">
+            <strong>#${idx + 1}</strong> ${esc(item.code)} - ${esc(item.desc)}
+          </div>
+          <div class="svg-bar-track">
+            <div class="svg-bar-fill" style="width:${Math.max(4, pct)}%;background:${barColor};">
+              ${pct > 25 ? formatSaldoKg(sldKg, item.un || data.defaultUnit || 'KG') : ''}
+            </div>
+          </div>
+          <div class="svg-bar-val">
+            <strong style="color:#10b981">${formatSaldoKg(sldKg, item.un || data.defaultUnit || 'KG')}</strong>
+            <span style="font-size:11px;color:var(--mu);margin-left:4px">(${formatCurrencyDash(sldVal)})</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    mainContainer.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px;padding:10px 0;">${barsHtml}</div>`;
+  }
+
+  if (donutContainer) {
+    donutContainer.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:20px;">
+        <div style="font-size:36px;font-weight:800;color:#10b981">${data.topSharePct.toFixed(1)}%</div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx);text-align:center">
+          Concentração Volumétrica dos Top ${data.topItems.length} ${dashQtyFilterState.armazem === 'ALL' ? 'no Estoque Geral' : 'no Armazém ' + dashQtyFilterState.armazem}
+        </div>
+        <div style="font-size:12px;color:var(--mu);text-align:center">
+          Volume Top ${data.topItems.length}: <strong>${formatSaldoKg(data.topSum, data.defaultUnit)}</strong><br>
+          Volume Total Armazém: <strong>${formatSaldoKg(data.armazemTotalQty, data.defaultUnit)}</strong>
+        </div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;width:100%;font-size:11px;max-width:320px;">
+          ${data.topItems.map(i => `<div style="display:flex;align-items:center;justify-content:space-between;color:var(--tx);gap:8px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">• ${i.mpTag ? `[${esc(i.mpTag)}] ` : ''}${esc(i.desc || i.code)}</span><strong style="white-space:nowrap;color:#10b981">${formatSaldoKg(i.saldoKg, i.un || data.defaultUnit)}</strong></div>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function generateAiDashboardQtyInsights(data) {
+  const { topItems, armazemTotalQty, armazemTotalValor, armazemAllItemCount, topSum, topValorSum, topSharePct, top1, avgSaldo, avgValor, top3SharePct, defaultUnit, isEmbalagens } = data;
+  if (!topItems.length || !top1) return '';
+
+  const currentUnit = defaultUnit || (isEmbalagens ? 'UN' : 'KG');
+  const locLabel = dashQtyFilterState.armazem === 'ALL' ? 'Todos os Armazéns' : 'Armazém ' + dashQtyFilterState.armazem;
+  const locLabelIn = dashQtyFilterState.armazem === 'ALL' ? 'no estoque total' : 'no Armazém ' + dashQtyFilterState.armazem;
+
+  const top3Codes = topItems.slice(0, 3).map(i => `<code>${i.code}</code>`).join(', ');
+  const top1ShareOfTop = topSum > 0 ? (((top1.saldoKg || 0) / topSum) * 100).toFixed(1) : '0';
+  const lastItem = topItems[topItems.length - 1];
+  const ratio1ToLast = lastItem && (lastItem.saldoKg > 0) ? ((top1.saldoKg) / (lastItem.saldoKg)).toFixed(1) : '1';
+
+  let concentrationTone = '';
+  if (top3SharePct >= 60) {
+    concentrationTone = `<span style="color:#dc2626;font-weight:700">Hiperconcentração de Volume Físico</span>: Os 3 maiores insumos em volume (${top3Codes}) ocupam <strong>${top3SharePct.toFixed(1)}%</strong> de toda a massa/quantidade física ${locLabelIn}. Esta concentração extrema exige monitoramento rigoroso de espaço em porta-paletes, capacidade de piso e agilidade de pesagem/dosagem na produção.`;
+  } else if (top3SharePct >= 40) {
+    concentrationTone = `<span style="color:#d97706;font-weight:700">Concentração Volumétrica Significativa</span>: Os 3 insumos com maior saldo físico representam <strong>${top3SharePct.toFixed(1)}%</strong> de toda a movimentação volumétrica ${locLabelIn}. Recomenda-se posicioná-los nas posições de piso e corredores de fácil acesso para minimizar tempos de empilhadeira e separação.`;
+  } else {
+    concentrationTone = `<span style="color:#059669;font-weight:700">Distribuição Volumétrica Equilibrada</span>: O volume físico estocado está bem distribuído entre os materiais, sem sobrecarga ou estrangulamento de espaço por insumos isolados.`;
+  }
+
+  return `
+    <div class="dash-ai-card" style="margin-top: 14px; border-color: rgba(16, 185, 129, 0.35); background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(6, 182, 212, 0.07) 100%);">
+      <div class="dash-ai-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="dash-ai-badge" style="background:#10b981;">🤖 AI PCP Insights: Volume Físico & Capacidade</span>
+          <span style="font-size:12px;color:var(--mu);font-weight:500;">Análise baseada em ${topItems.length} materiais de maior volume físico (${locLabel})</span>
+        </div>
+      </div>
+      <div class="dash-ai-content" style="font-size:13px;line-height:1.6;color:var(--tx);margin-top:8px;">
+        <p style="margin:0 0 8px 0;">
+          ${concentrationTone}
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-top:12px;padding-top:10px;border-top:1px dashed rgba(16, 185, 129, 0.25);">
+          <div style="font-size:12px;color:var(--mu);">
+            🏆 <strong>Líder em Volume:</strong> <code>${esc(top1.code)}</code> (${esc(top1.desc)}) com <strong>${formatSaldoKg(top1.saldoKg, currentUnit)}</strong> (${top1ShareOfTop}% do Top ${topItems.length}) e valor equivalente de <strong>${formatCurrencyDash(top1.saldoValor)}</strong>.
+          </div>
+          <div style="font-size:12px;color:var(--mu);">
+            📦 <strong>Dispersão Volumétrica:</strong> O item #1 possui <strong>${ratio1ToLast}x</strong> mais quantidade física que o #${topItems.length} da listagem.
+          </div>
+          <div style="font-size:12px;color:var(--mu);">
+            📐 <strong>Ocupação Física:</strong> O Top ${topItems.length} totaliza <strong>${formatSaldoKg(topSum, currentUnit)}</strong> (${topSharePct.toFixed(1)}% do estoque total), representando a maior demanda de espaço físico no armazém.
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FUNÇÕES DE INTERAÇÃO E FILTROS - SEÇÃO 1 (VALORES)
+// ══════════════════════════════════════════════════════════════
 function dashSetTopN(n) {
   dashFilterState.topN = n;
   renderDashboardView();
@@ -9727,10 +10450,8 @@ function dashSetArmazem(loc) {
     renderDashboardView();
     return;
   }
-  const prevArm = dashFilterState.armazem;
   dashFilterState.armazem = loc;
 
-  // Ao alternar para o Armazém 02, se o prefixo ainda estiver em 01, sincroniza automaticamente para 02 (embalagens)
   if ((typeof matchArmazem === 'function' && (matchArmazem(loc, '02') || matchArmazem(loc, '2'))) && dashFilterState.codigoPrefix === '01') {
     dashFilterState.codigoPrefix = '02';
   } else if ((typeof matchArmazem === 'function' && (matchArmazem(loc, '01') || matchArmazem(loc, '1'))) && dashFilterState.codigoPrefix === '02') {
@@ -9808,6 +10529,183 @@ function dashResetFilters() {
   renderDashboardView();
 }
 
+function dashExportChart() {
+  const canvas = document.getElementById('dashMainCanvas');
+  if (canvas && typeof canvas.toDataURL === 'function') {
+    try {
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      const armLabel = dashFilterState.armazem === 'ALL' ? 'Todos_Armazens' : 'Armazem_' + dashFilterState.armazem;
+      const pfxLabel = dashFilterState.codigoPrefix ? `_Prefixo_${dashFilterState.codigoPrefix}` : '';
+      a.download = `Ranking_Top_${dashFilterState.topN}_${armLabel}${pfxLabel}_SLD_ATU_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Gráfico de Valores exportado com sucesso em PNG!');
+      return;
+    } catch(e) {}
+  }
+  window.print();
+}
+
+function dashPrintReport() {
+  window.print();
+}
+
+// ══════════════════════════════════════════════════════════════
+// FUNÇÕES DE INTERAÇÃO E FILTROS - SEÇÃO 2 (QUANTIDADES)
+// ══════════════════════════════════════════════════════════════
+function dashQtySetTopN(n) {
+  dashQtyFilterState.topN = n;
+  renderDashboardView();
+}
+
+function dashQtySetChartType(type) {
+  dashQtyFilterState.chartType = type;
+  renderDashboardView();
+}
+
+function dashQtySetCardViewMode(mode) {
+  dashQtyFilterState.cardViewMode = mode;
+  renderDashboardView();
+}
+
+let dashQtyPrefixDebounceTimer = null;
+
+function dashQtyOnPrefixInput(val) {
+  dashQtyFilterState.codigoPrefix = val;
+  if (dashQtyPrefixDebounceTimer) clearTimeout(dashQtyPrefixDebounceTimer);
+  dashQtyPrefixDebounceTimer = setTimeout(() => {
+    renderDashboardView(true);
+  }, 160);
+}
+
+function dashQtySetPrefix(prefix) {
+  if (dashQtyPrefixDebounceTimer) clearTimeout(dashQtyPrefixDebounceTimer);
+  dashQtyFilterState.codigoPrefix = prefix.trim();
+  renderDashboardView(true);
+}
+
+function dashQtyClearPrefix() {
+  if (dashQtyPrefixDebounceTimer) clearTimeout(dashQtyPrefixDebounceTimer);
+  dashQtyFilterState.codigoPrefix = '';
+  renderDashboardView(true);
+  const inp = document.getElementById('dash-qty-inp-prefix');
+  if (inp) inp.focus();
+}
+
+function dashQtySetArmazem(loc) {
+  if (loc === '__custom__') {
+    const custom = prompt('Digite o número ou nome do armazém desejado (ou digite ALL para todos):', dashQtyFilterState.armazem);
+    if (custom !== null && custom.trim()) {
+      dashQtyFilterState.armazem = custom.trim();
+    }
+    renderDashboardView();
+    return;
+  }
+  dashQtyFilterState.armazem = loc;
+
+  if ((typeof matchArmazem === 'function' && (matchArmazem(loc, '02') || matchArmazem(loc, '2'))) && dashQtyFilterState.codigoPrefix === '01') {
+    dashQtyFilterState.codigoPrefix = '02';
+  } else if ((typeof matchArmazem === 'function' && (matchArmazem(loc, '01') || matchArmazem(loc, '1'))) && dashQtyFilterState.codigoPrefix === '02') {
+    dashQtyFilterState.codigoPrefix = '01';
+  }
+
+  renderDashboardView();
+}
+
+function dashQtySetGroupByCode(val) {
+  dashQtyFilterState.groupByCode = Boolean(val);
+  renderDashboardView();
+}
+
+function dashQtyOnSearch(term) {
+  dashQtyFilterState.search = term;
+  renderDashboardView();
+}
+
+function handleDashQtyColFilter(el, e) {
+  const col = el.dataset.col || 'desc';
+  const val = el.value;
+  if (!dashQtyFilterState.colFilters) dashQtyFilterState.colFilters = {};
+  dashQtyFilterState.colFilters[col] = val;
+  const pos = el.selectionStart;
+  renderDashboardView(true, col, pos);
+}
+
+function clearSingleDashQtyColFilter(col, e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (dashQtyFilterState.colFilters) {
+    delete dashQtyFilterState.colFilters[col];
+  }
+  if (dashQtyFilterState.colMultiFilters) {
+    delete dashQtyFilterState.colMultiFilters[col];
+  }
+  renderDashboardView(true);
+}
+
+function dashQtySortCol(col) {
+  if (dashQtyFilterState.sortCol === col) {
+    if (dashQtyFilterState.sortDir === 'asc') {
+      dashQtyFilterState.sortDir = 'desc';
+    } else {
+      dashQtyFilterState.sortCol = null;
+      dashQtyFilterState.sortDir = null;
+    }
+  } else {
+    dashQtyFilterState.sortCol = col;
+    dashQtyFilterState.sortDir = 'asc';
+  }
+  renderDashboardView();
+}
+
+function dashQtyResetFilters() {
+  if (dashQtyPrefixDebounceTimer) clearTimeout(dashQtyPrefixDebounceTimer);
+  dashQtyFilterState.armazem = '01';
+  dashQtyFilterState.codigoPrefix = '01';
+  dashQtyFilterState.topN = 10;
+  dashQtyFilterState.search = '';
+  dashQtyFilterState.colFilters = {};
+  dashQtyFilterState.colMultiFilters = {};
+  dashQtyFilterState.sortCol = null;
+  dashQtyFilterState.sortDir = null;
+  renderDashboardView();
+}
+
+function dashSyncQtyFiltersFromValue() {
+  dashQtyFilterState.armazem = dashFilterState.armazem;
+  dashQtyFilterState.codigoPrefix = dashFilterState.codigoPrefix;
+  dashQtyFilterState.topN = dashFilterState.topN;
+  dashQtyFilterState.groupByCode = dashFilterState.groupByCode;
+  renderDashboardView();
+  if (typeof showToast === 'function') showToast('Filtros de Armazém e Prefixo sincronizados com a Seção de Valores!');
+}
+
+function dashQtyExportChart() {
+  const canvas = document.getElementById('dashQtyMainCanvas');
+  if (canvas && typeof canvas.toDataURL === 'function') {
+    try {
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      const armLabel = dashQtyFilterState.armazem === 'ALL' ? 'Todos_Armazens' : 'Armazem_' + dashQtyFilterState.armazem;
+      const pfxLabel = dashQtyFilterState.codigoPrefix ? `_Prefixo_${dashQtyFilterState.codigoPrefix}` : '';
+      a.download = `Ranking_Top_${dashQtyFilterState.topN}_${armLabel}${pfxLabel}_QUANTIDADE_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Gráfico de Quantidades exportado com sucesso em PNG!');
+      return;
+    } catch(e) {}
+  }
+  window.print();
+}
+
+function dashQtyPrintReport() {
+  window.print();
+}
+
 function dashJumpToStock(code) {
   switchTab('estoque');
   const qInput = document.getElementById('stock-q');
@@ -9829,30 +10727,6 @@ function dashCopyCode(code) {
   } else {
     showToast(`Código: ${code}`);
   }
-}
-
-function dashExportChart() {
-  const canvas = document.getElementById('dashMainCanvas');
-  if (canvas && typeof canvas.toDataURL === 'function') {
-    try {
-      const url = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = url;
-      const armLabel = dashFilterState.armazem === 'ALL' ? 'Todos_Armazens' : 'Armazem_' + dashFilterState.armazem;
-      const pfxLabel = dashFilterState.codigoPrefix ? `_Prefixo_${dashFilterState.codigoPrefix}` : '';
-      a.download = `Ranking_Top_${dashFilterState.topN}_${armLabel}${pfxLabel}_SLD_ATU_${new Date().toISOString().slice(0,10)}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast('Gráfico exportado com sucesso em PNG!');
-      return;
-    } catch(e) {}
-  }
-  window.print();
-}
-
-function dashPrintReport() {
-  window.print();
 }
 
 function dashLoadDemoData() {
