@@ -1635,7 +1635,10 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
   height: 26px;
   border-radius: 50%;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11.5px;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .dash-rank-1 { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
@@ -9076,10 +9079,11 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
   const tableRowsHtml = processed.topItems.length ? processed.topItems.map((item, idx) => {
     const rankNum = idx + 1;
     let rankBadgeClass = 'dash-rank-other';
-    let medal = `${rankNum}º`;
-    if (rankNum === 1) { rankBadgeClass = 'dash-rank-1'; medal = '🥇 1º'; }
-    else if (rankNum === 2) { rankBadgeClass = 'dash-rank-2'; medal = '🥈 2º'; }
-    else if (rankNum === 3) { rankBadgeClass = 'dash-rank-3'; medal = '🥉 3º'; }
+    let rankTitle = `${rankNum}º Lugar`;
+    if (rankNum === 1) { rankBadgeClass = 'dash-rank-1'; rankTitle = '🥇 1º Lugar'; }
+    else if (rankNum === 2) { rankBadgeClass = 'dash-rank-2'; rankTitle = '🥈 2º Lugar'; }
+    else if (rankNum === 3) { rankBadgeClass = 'dash-rank-3'; rankTitle = '🥉 3º Lugar'; }
+    const medal = `${rankNum}º`;
 
     const sldKg = item.saldoKg || item.saldo || 0;
     const itemValor = item.saldoValor > 0 ? item.saldoValor : (item.custoUnit > 0 ? item.custoUnit * sldKg : sldKg);
@@ -9100,7 +9104,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     return `
       <tr>
         <td style="text-align:center;width:36px">
-          <span class="dash-rank-badge ${rankBadgeClass}">${medal}</span>
+          <span class="dash-rank-badge ${rankBadgeClass}" title="${rankTitle}">${medal}</span>
         </td>
         <td style="white-space:nowrap">
           <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
