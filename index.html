@@ -1463,13 +1463,90 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
   align-items: stretch;
 }
 
-.dash-chart-card .stock-table th,
-.dash-chart-card .stock-table td {
-  padding: 4px 5px !important;
-  font-size: 11px;
+/* Quando no modo tabela, o card do ranking ocupa a largura total da tela */
+.dash-charts-row.table-view-active {
+  grid-template-columns: 1fr !important;
 }
-.dash-chart-card .stock-table th {
-  padding: 5px 5px !important;
+.dash-charts-row.table-view-active #dashDonutChartContainer {
+  min-height: 280px !important;
+  max-height: 320px;
+}
+
+/* Compact Table Styling for Dashboard (Ranking & Detalhamento) */
+.dash-chart-card .stock-table,
+.dash-table-card .stock-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 11px !important;
+  table-layout: auto !important;
+}
+
+.dash-chart-card .stock-table th,
+.dash-table-card .stock-table th {
+  padding: 3px 4px !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+
+.dash-chart-card .stock-table td,
+.dash-table-card .stock-table td {
+  padding: 3px 4px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.dash-chart-card .stock-filter-row th,
+.dash-table-card .stock-filter-row th {
+  padding: 2px 2px !important;
+  background: var(--card) !important;
+}
+
+.dash-chart-card .stock-th-filter,
+.dash-table-card .stock-th-filter {
+  gap: 2px !important;
+  width: 100% !important;
+}
+
+.dash-chart-card .stock-col-input,
+.dash-table-card .stock-col-input {
+  height: 20px !important;
+  font-size: 9.5px !important;
+  padding: 1px 3px !important;
+  min-width: 16px !important;
+  border-radius: 3px !important;
+}
+
+.dash-chart-card .stock-excel-filter-trigger,
+.dash-table-card .stock-excel-filter-trigger {
+  height: 20px !important;
+  min-width: 15px !important;
+  padding: 0 2px !important;
+  font-size: 9px !important;
+  line-height: 20px !important;
+  border-radius: 3px !important;
+}
+
+.dash-chart-card .stock-col-clear,
+.dash-table-card .stock-col-clear {
+  height: 20px !important;
+  padding: 0 3px !important;
+  font-size: 11px !important;
+  line-height: 20px !important;
+  border-radius: 3px !important;
+}
+
+.dash-chart-card .dash-rank-badge {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 10px !important;
+  line-height: 22px !important;
+}
+
+.dash-chart-card .code,
+.dash-table-card .code {
+  font-size: 10.5px !important;
+  padding: 1px 4px !important;
 }
 
 @media(max-width: 1080px) {
@@ -8926,16 +9003,16 @@ function generateAiDashboardInsights(data) {
 
 function renderDashTableHeader(detailed = false) {
   const dashCols = [
-    { key: 'rank', label: 'Rank', width: '50px', align: 'center', isQty: false, placeholder: 'Ex: <=5' },
-    { key: 'code', label: 'Código', width: '120px', align: 'left', isQty: false, placeholder: 'Filtrar...' },
-    { key: 'desc', label: 'Descrição do Produto', width: '', align: 'left', isQty: false, placeholder: 'Filtrar...' },
-    { key: 'mp', label: 'MP', width: '80px', align: 'center', isQty: false, placeholder: 'Filtrar...' },
-    { key: 'armazem', label: 'Armazém', width: '70px', align: 'center', isQty: false, placeholder: 'Filtrar...' },
-    { key: 'saldo', label: 'Saldo Atual', width: '120px', align: 'right', isQty: true, placeholder: 'Ex: >1000' },
-    { key: 'custo', label: 'Custo Unit. (R$)', width: '110px', align: 'right', isQty: false, placeholder: 'Ex: >10' },
-    { key: 'total', label: 'Saldo Total (R$)', width: '130px', align: 'right', isQty: false, placeholder: 'Ex: >50000' },
-    { key: 'proporcao', label: 'Proporção', width: '90px', align: 'center', isQty: false, placeholder: 'Ex: >=50%' },
-    { key: 'acao', label: 'Ação', width: '55px', align: 'center', isQty: false, noFilter: true }
+    { key: 'rank', label: 'Rank', width: '38px', align: 'center', isQty: false, placeholder: '<=5' },
+    { key: 'code', label: 'Código', width: '105px', align: 'left', isQty: false, placeholder: 'Filtrar' },
+    { key: 'desc', label: 'Descrição do Produto', width: '', align: 'left', isQty: false, placeholder: 'Filtrar' },
+    { key: 'mp', label: 'MP', width: '58px', align: 'center', isQty: false, placeholder: 'MP' },
+    { key: 'armazem', label: 'Armazém', width: '48px', align: 'center', isQty: false, placeholder: 'Arm' },
+    { key: 'saldo', label: 'Saldo Atual', width: '95px', align: 'right', isQty: true, placeholder: '>0' },
+    { key: 'custo', label: 'Custo Unit.', width: '85px', align: 'right', isQty: false, placeholder: '>0' },
+    { key: 'total', label: 'Saldo Total (R$)', width: '105px', align: 'right', isQty: false, placeholder: '>0' },
+    { key: 'proporcao', label: 'Proporção', width: '70px', align: 'center', isQty: false, placeholder: '>=50%' },
+    { key: 'acao', label: 'Ação', width: '48px', align: 'center', isQty: false, noFilter: true }
   ];
 
   const headerRow = dashCols.map(col => {
@@ -9199,45 +9276,39 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
 
     return `
       <tr>
-        <td style="text-align:center;width:50px">
+        <td style="text-align:center;width:38px">
           <span class="dash-rank-badge ${rankBadgeClass}">${medal}</span>
         </td>
-        <td style="white-space:nowrap">
-          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
-            <span class="code" title="Clique para copiar" style="cursor:pointer;white-space:nowrap" onclick="copyText('${esc(item.code)}')">${esc(item.code)}</span>
-            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.code)}')" title="Copiar código">📋</button>
-          </div>
+        <td style="white-space:nowrap;width:105px">
+          <span class="code" title="Clique para copiar" style="cursor:pointer;white-space:nowrap;font-size:10.5px;padding:1px 4px" onclick="copyText('${esc(item.code)}')">${esc(item.code)}</span>
         </td>
         <td>
-          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
-            <strong style="color:var(--tx)">${esc(item.desc)}</strong>
-            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.desc)}')" title="Copiar descrição">📋</button>
-          </div>
-          ${item.lotCount > 1 ? `<div style="font-size:10px;color:var(--mu);margin-top:2px;">Consolidado de ${item.lotCount} apontamentos</div>` : ''}
+          <strong style="color:var(--tx);font-size:11px;line-height:1.25;cursor:pointer" title="Clique para copiar descrição" onclick="copyText('${esc(item.desc)}')">${esc(item.desc)}</strong>
+          ${item.lotCount > 1 ? `<div style="font-size:9.5px;color:var(--mu);margin-top:1px;">${item.lotCount} apontamentos</div>` : ''}
         </td>
-        <td style="text-align:center;white-space:nowrap">
-          ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:11px">-</span>'}
+        <td style="text-align:center;white-space:nowrap;width:58px">
+          ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:10px;padding:1px 4px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:10px">-</span>'}
         </td>
-        <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap">${esc(item.armazem)}</td>
-        <td class="stock-col-qty" style="text-align:right;white-space:nowrap">
-          <span style="color:#000000; font-weight:800; font-size:13px">${sldKgFormatted}</span>
+        <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap;width:48px;font-size:11px">${esc(item.armazem)}</td>
+        <td class="stock-col-qty" style="text-align:right;white-space:nowrap;width:95px">
+          <span style="color:#000000;font-weight:800;font-size:11.5px">${sldKgFormatted}</span>
         </td>
-        <td style="text-align:right;white-space:nowrap">
-          <span style="font-weight:600;color:#92400e;font-size:12.5px">${custoUnitStr}</span>
+        <td style="text-align:right;white-space:nowrap;width:85px">
+          <span style="font-weight:600;color:#92400e;font-size:11px">${custoUnitStr}</span>
         </td>
-        <td style="text-align:right;white-space:nowrap">
-          <strong style="color:#0f766e;font-size:13px">${totalValorStr}</strong>
+        <td style="text-align:right;white-space:nowrap;width:105px">
+          <strong style="color:#0f766e;font-size:11.5px">${totalValorStr}</strong>
         </td>
-        <td style="width:110px">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
-              <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:5px;"></div>
+        <td style="width:70px">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:8px;background:var(--bg);border:1px solid var(--bd);border-radius:4px;overflow:hidden;">
+              <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:4px;"></div>
             </div>
-            <span style="font-size:10.5px;font-weight:700;color:var(--mu);min-width:32px;text-align:right">${pctTop1.toFixed(0)}%</span>
+            <span style="font-size:10px;font-weight:700;color:var(--mu);min-width:24px;text-align:right">${pctTop1.toFixed(0)}%</span>
           </div>
         </td>
-        <td style="text-align:center;white-space:nowrap">
-          <button class="btn outline" style="padding:2px 6px;font-size:10px;line-height:1.2" onclick="dashJumpToStock('${item.code}')" title="Ver detalhes deste produto na aba de Estoque">
+        <td style="text-align:center;white-space:nowrap;width:48px">
+          <button class="btn outline" style="padding:1px 5px;font-size:9.5px;line-height:1.2" onclick="dashJumpToStock('${item.code}')" title="Ver detalhes deste produto na aba de Estoque">
             🔍 Estoque
           </button>
         </td>
@@ -9314,7 +9385,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
       </div>
 
       <!-- Linha com Ranking Principal (Layout Consulta de Saldo de Estoque) e Gráfico de Rosca/Concentração -->
-      <div class="dash-charts-row">
+      <div class="dash-charts-row ${dashFilterState.cardViewMode === 'table' ? 'table-view-active' : ''}">
         <!-- Card Ranking Top N Itens com Maior Valor e Quantidade -->
         <div class="dash-chart-card">
           <div class="dash-chart-header">
