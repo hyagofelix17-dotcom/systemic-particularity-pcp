@@ -1463,90 +1463,13 @@ main.wide-layout{max-width:98vw;padding-left:12px;padding-right:12px}
   align-items: stretch;
 }
 
-/* Quando no modo tabela, o card do ranking ocupa a largura total da tela */
-.dash-charts-row.table-view-active {
-  grid-template-columns: 1fr !important;
-}
-.dash-charts-row.table-view-active #dashDonutChartContainer {
-  min-height: 280px !important;
-  max-height: 320px;
-}
-
-/* Compact Table Styling for Dashboard (Ranking & Detalhamento) */
-.dash-chart-card .stock-table,
-.dash-table-card .stock-table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  font-size: 11px !important;
-  table-layout: auto !important;
-}
-
 .dash-chart-card .stock-table th,
-.dash-table-card .stock-table th {
-  padding: 3px 4px !important;
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0 !important;
+.dash-chart-card .stock-table td {
+  padding: 4px 5px !important;
+  font-size: 11px;
 }
-
-.dash-chart-card .stock-table td,
-.dash-table-card .stock-table td {
-  padding: 3px 4px !important;
-  font-size: 11px !important;
-  line-height: 1.2 !important;
-}
-
-.dash-chart-card .stock-filter-row th,
-.dash-table-card .stock-filter-row th {
-  padding: 2px 2px !important;
-  background: var(--card) !important;
-}
-
-.dash-chart-card .stock-th-filter,
-.dash-table-card .stock-th-filter {
-  gap: 2px !important;
-  width: 100% !important;
-}
-
-.dash-chart-card .stock-col-input,
-.dash-table-card .stock-col-input {
-  height: 20px !important;
-  font-size: 9.5px !important;
-  padding: 1px 3px !important;
-  min-width: 16px !important;
-  border-radius: 3px !important;
-}
-
-.dash-chart-card .stock-excel-filter-trigger,
-.dash-table-card .stock-excel-filter-trigger {
-  height: 20px !important;
-  min-width: 15px !important;
-  padding: 0 2px !important;
-  font-size: 9px !important;
-  line-height: 20px !important;
-  border-radius: 3px !important;
-}
-
-.dash-chart-card .stock-col-clear,
-.dash-table-card .stock-col-clear {
-  height: 20px !important;
-  padding: 0 3px !important;
-  font-size: 11px !important;
-  line-height: 20px !important;
-  border-radius: 3px !important;
-}
-
-.dash-chart-card .dash-rank-badge {
-  width: 22px !important;
-  height: 22px !important;
-  font-size: 10px !important;
-  line-height: 22px !important;
-}
-
-.dash-chart-card .code,
-.dash-table-card .code {
-  font-size: 10.5px !important;
-  padding: 1px 4px !important;
+.dash-chart-card .stock-table th {
+  padding: 5px 5px !important;
 }
 
 @media(max-width: 1080px) {
@@ -8807,29 +8730,15 @@ function processDashboardData(rows, cols, filters) {
   });
 
   const allItems = Array.from(groupedMap.values());
-  // Ordenação decrescente inicial pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU)
-  allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
-  const baseTop1Valor = allItems[0] ? (allItems[0].saldoValor > 0 ? allItems[0].saldoValor : (allItems[0].custoUnit > 0 ? allItems[0].custoUnit * (allItems[0].saldoKg || 1) : 1)) : 1;
-  allItems.forEach((it, idx) => {
-    it.initialRank = idx + 1;
-  });
-
-  // Ordenação pela coluna selecionada pelo usuário (se houver)
-  if (filters.sortCol && filters.sortDir) {
-    const colKey = filters.sortCol;
-    const isAsc = filters.sortDir === 'asc';
-    const isNumCol = ['rank', 'saldo', 'custo', 'total', 'proporcao'].includes(colKey);
-    allItems.sort((a, b) => {
-      if (isNumCol) {
-        const valA = getDashColNumericValue(a, colKey, baseTop1Valor) || 0;
-        const valB = getDashColNumericValue(b, colKey, baseTop1Valor) || 0;
-        return isAsc ? (valA - valB) : (valB - valA);
-      } else {
-        const strA = getDashColValue(a, colKey, baseTop1Valor);
-        const strB = getDashColValue(b, colKey, baseTop1Valor);
-        return isAsc ? strA.localeCompare(strB, 'pt-BR') : strB.localeCompare(strA, 'pt-BR');
-      }
-    });
+  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU) ou pela coluna selecionada
+  if (filters.sortCol === 'desc') {
+    if (filters.sortDir === 'asc') {
+      allItems.sort((a, b) => (a.desc || '').localeCompare(b.desc || '', 'pt-BR'));
+    } else {
+      allItems.sort((a, b) => (b.desc || '').localeCompare(a.desc || '', 'pt-BR'));
+    }
+  } else {
+    allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
   }
 
   let filteredList = allItems;
@@ -8838,54 +8747,25 @@ function processDashboardData(rows, cols, filters) {
     filteredList = allItems.filter(item => norm(item.code + ' ' + item.desc).includes(q));
   }
 
-  // Filtros por Coluna: Texto ou Operadores Numéricos (>, >=, <, <=, =) em todas as colunas
-  if (filters.colFilters && typeof filters.colFilters === 'object') {
-    const activeColEntries = Object.entries(filters.colFilters).filter(([_, v]) => v && String(v).trim().length > 0);
-    if (activeColEntries.length > 0) {
-      filteredList = filteredList.filter((item, idx) => {
-        for (const [colKey, rawVal] of activeColEntries) {
-          const fVal = String(rawVal).trim();
-          const isNumCol = ['rank', 'saldo', 'custo', 'total', 'proporcao'].includes(colKey);
-          if (isNumCol) {
-            const matchOp = fVal.match(/^([><]=?|=)\s*(-?\d+[\d.,]*%?)$/);
-            if (matchOp) {
-              const op = matchOp[1];
-              const cleanNumStr = matchOp[2].replace('%', '');
-              const targetNum = typeof parseStockNumber === 'function' ? parseStockNumber(cleanNumStr) : parseFloat(cleanNumStr.replace(/\./g, '').replace(',', '.'));
-              const cellNum = getDashColNumericValue(item, colKey, baseTop1Valor, idx) || 0;
-              if (op === '>' && !(cellNum > targetNum)) return false;
-              if (op === '>=' && !(cellNum >= targetNum)) return false;
-              if (op === '<' && !(cellNum < targetNum)) return false;
-              if (op === '<=' && !(cellNum <= targetNum)) return false;
-              if (op === '=' && cellNum !== targetNum) return false;
-              continue;
-            }
-          }
-          const filterTerm = norm(fVal);
-          const cellStr = norm(getDashColValue(item, colKey, baseTop1Valor, idx));
-          if (!cellStr.includes(filterTerm) && !(typeof cmp === 'function' && cmp(cellStr).includes(cmp(filterTerm)))) {
-            return false;
-          }
-        }
-        return true;
-      });
-    }
+  // Filtro de Coluna: Descrição do Produto (Texto)
+  const descFilter = filters.colFilters && (filters.colFilters.desc || filters.colFilters['Descrição do Produto']);
+  if (descFilter && descFilter.trim()) {
+    const term = norm(descFilter.trim());
+    filteredList = filteredList.filter(item => {
+      const dNorm = norm(item.desc || '');
+      return dNorm.includes(term) || (typeof cmp === 'function' && cmp(dNorm).includes(cmp(term)));
+    });
   }
 
-  // Filtros por Coluna: Checklist Múltiplo estilo Excel em todas as colunas
-  if (filters.colMultiFilters && typeof filters.colMultiFilters === 'object') {
-    const activeMultiEntries = Object.entries(filters.colMultiFilters).filter(([_, arr]) => Array.isArray(arr) && arr.length > 0);
-    if (activeMultiEntries.length > 0) {
-      filteredList = filteredList.filter((item, idx) => {
-        for (const [colKey, allowedValues] of activeMultiEntries) {
-          const allowedSet = new Set(allowedValues);
-          let cellVal = getDashColValue(item, colKey, baseTop1Valor, idx);
-          if (!cellVal || cellVal === '-') cellVal = '(Vazio)';
-          if (!allowedSet.has(cellVal)) return false;
-        }
-        return true;
-      });
-    }
+  // Filtro de Coluna: Descrição do Produto (Checklist Múltiplo estilo Excel)
+  const multiDesc = filters.colMultiFilters && (filters.colMultiFilters.desc || filters.colMultiFilters['Descrição do Produto']);
+  if (Array.isArray(multiDesc) && multiDesc.length > 0) {
+    const allowedSet = new Set(multiDesc);
+    filteredList = filteredList.filter(item => {
+      let val = String(item.desc || '').trim();
+      if (!val) val = '(Vazio)';
+      return allowedSet.has(val);
+    });
   }
 
   const topN = Math.max(1, parseInt(filters.topN, 10) || 10);
@@ -9001,70 +8881,7 @@ function generateAiDashboardInsights(data) {
   `;
 }
 
-function renderDashTableHeader(detailed = false) {
-  const dashCols = [
-    { key: 'rank', label: 'Rank', width: '38px', align: 'center', isQty: false, placeholder: '<=5' },
-    { key: 'code', label: 'Código', width: '105px', align: 'left', isQty: false, placeholder: 'Filtrar' },
-    { key: 'desc', label: 'Descrição do Produto', width: '', align: 'left', isQty: false, placeholder: 'Filtrar' },
-    { key: 'mp', label: 'MP', width: '58px', align: 'center', isQty: false, placeholder: 'MP' },
-    { key: 'armazem', label: 'Armazém', width: '48px', align: 'center', isQty: false, placeholder: 'Arm' },
-    { key: 'saldo', label: 'Saldo Atual', width: '95px', align: 'right', isQty: true, placeholder: '>0' },
-    { key: 'custo', label: 'Custo Unit.', width: '85px', align: 'right', isQty: false, placeholder: '>0' },
-    { key: 'total', label: 'Saldo Total (R$)', width: '105px', align: 'right', isQty: false, placeholder: '>0' },
-    { key: 'proporcao', label: 'Proporção', width: '70px', align: 'center', isQty: false, placeholder: '>=50%' },
-    { key: 'acao', label: 'Ação', width: '48px', align: 'center', isQty: false, noFilter: true }
-  ];
 
-  const headerRow = dashCols.map(col => {
-    let styleStr = 'white-space:nowrap;';
-    if (col.align === 'center') styleStr += 'text-align:center;';
-    else if (col.align === 'right') styleStr += 'text-align:right;';
-    if (col.width) styleStr += `width:${col.width};`;
-
-    if (col.noFilter) {
-      return `<th style="${styleStr}">${esc(col.label)}</th>`;
-    }
-
-    const isSorted = dashFilterState.sortCol === col.key;
-    const arrow = isSorted ? (dashFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
-    const multiVals = dashFilterState.colMultiFilters && dashFilterState.colMultiFilters[col.key];
-    const hasMulti = Array.isArray(multiVals);
-    const multiCount = hasMulti ? multiVals.length : 0;
-    const multiBadge = hasMulti ? `<span style="display:inline-block;background:#1d5fd1;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${multiCount} valor(es) selecionados no checklist">✓ ${multiCount}</span>` : '';
-
-    return `<th class="${col.isQty ? 'stock-col-qty' : ''}" style="${styleStr}" onclick="dashSortCol('${col.key}')" title="Clique para ordenar por ${esc(col.label)}"><span>${esc(col.label)}${arrow}${multiBadge}</span></th>`;
-  }).join('');
-
-  const filterRow = dashCols.map(col => {
-    let styleStr = '';
-    if (col.align === 'center') styleStr += 'text-align:center;';
-    else if (col.align === 'right') styleStr += 'text-align:right;';
-    if (col.width) styleStr += `width:${col.width};`;
-
-    if (col.noFilter) {
-      return `<th style="${styleStr}"></th>`;
-    }
-
-    const curVal = (dashFilterState.colFilters && dashFilterState.colFilters[col.key]) || '';
-    const multiVals = dashFilterState.colMultiFilters && dashFilterState.colMultiFilters[col.key];
-    const hasMulti = Array.isArray(multiVals);
-    const multiCount = hasMulti ? multiVals.length : 0;
-    const placeholder = hasMulti ? `(${multiCount} sel.)` : (col.placeholder || 'Filtrar...');
-    const inputId = detailed ? `dash-col-filter-${col.key}-detailed` : `dash-col-filter-${col.key}`;
-
-    return `<th class="${col.isQty ? 'stock-col-qty' : ''}" style="${styleStr}">
-      <div class="stock-th-filter">
-        <input type="text" id="${inputId}" class="stock-col-input ${(curVal || hasMulti) ? 'active' : ''}" placeholder="${placeholder}" value="${esc(curVal)}" data-col="${col.key}" oninput="handleDashColFilter(this, event)">
-        <button type="button" class="stock-excel-filter-trigger ${hasMulti ? 'active' : ''}" onclick="openExcelFilterPopover('${col.key}', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
-          ${hasMulti ? `✓ ${multiCount}` : '▾'}
-        </button>
-        ${(curVal || hasMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('${col.key}', event)" title="Limpar filtros desta coluna">×</button>` : ''}
-      </div>
-    </th>`;
-  }).join('');
-
-  return `<tr>${headerRow}</tr><tr class="stock-filter-row">${filterRow}</tr>`;
-}
 
 function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPosition = null) {
   const container = document.getElementById('view-dashboard');
@@ -9245,13 +9062,19 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     return;
   }
 
-  const activeColEntries = Object.entries(dashFilterState.colFilters || {}).filter(([_, v]) => v && String(v).trim().length > 0);
-  const activeMultiEntries = Object.entries(dashFilterState.colMultiFilters || {}).filter(([_, arr]) => Array.isArray(arr) && arr.length > 0);
-  const hasAnyDashColFilterActive = activeColEntries.length > 0 || activeMultiEntries.length > 0 || Boolean(dashFilterState.sortCol);
+  const curDescVal = (dashFilterState.colFilters && (dashFilterState.colFilters.desc || dashFilterState.colFilters['Descrição do Produto'])) || '';
+  const multiDescVals = dashFilterState.colMultiFilters && (dashFilterState.colMultiFilters.desc || dashFilterState.colMultiFilters['Descrição do Produto']);
+  const hasDescMulti = Array.isArray(multiDescVals);
+  const descMultiCount = hasDescMulti ? multiDescVals.length : 0;
+  const descPlaceholder = hasDescMulti ? `(${descMultiCount} sel.)` : 'Filtrar...';
+  const descMultiBadge = hasDescMulti ? `<span style="display:inline-block;background:#1d5fd1;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${descMultiCount} valor(es) selecionados no checklist">✓ ${descMultiCount}</span>` : '';
+  const isDescSorted = dashFilterState.sortCol === 'desc';
+  const descSortArrow = isDescSorted ? (dashFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
+  const hasDescFilterActive = Boolean((curDescVal && curDescVal.trim()) || hasDescMulti);
 
   // Gera as linhas da tabela
   const tableRowsHtml = processed.topItems.length ? processed.topItems.map((item, idx) => {
-    const rankNum = item.initialRank || (idx + 1);
+    const rankNum = idx + 1;
     let rankBadgeClass = 'dash-rank-other';
     let medal = `${rankNum}º`;
     if (rankNum === 1) { rankBadgeClass = 'dash-rank-1'; medal = '🥇 1º'; }
@@ -9276,39 +9099,45 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
 
     return `
       <tr>
-        <td style="text-align:center;width:38px">
+        <td style="text-align:center;width:36px">
           <span class="dash-rank-badge ${rankBadgeClass}">${medal}</span>
         </td>
-        <td style="white-space:nowrap;width:105px">
-          <span class="code" title="Clique para copiar" style="cursor:pointer;white-space:nowrap;font-size:10.5px;padding:1px 4px" onclick="copyText('${esc(item.code)}')">${esc(item.code)}</span>
-        </td>
-        <td>
-          <strong style="color:var(--tx);font-size:11px;line-height:1.25;cursor:pointer" title="Clique para copiar descrição" onclick="copyText('${esc(item.desc)}')">${esc(item.desc)}</strong>
-          ${item.lotCount > 1 ? `<div style="font-size:9.5px;color:var(--mu);margin-top:1px;">${item.lotCount} apontamentos</div>` : ''}
-        </td>
-        <td style="text-align:center;white-space:nowrap;width:58px">
-          ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:10px;padding:1px 4px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:10px">-</span>'}
-        </td>
-        <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap;width:48px;font-size:11px">${esc(item.armazem)}</td>
-        <td class="stock-col-qty" style="text-align:right;white-space:nowrap;width:95px">
-          <span style="color:#000000;font-weight:800;font-size:11.5px">${sldKgFormatted}</span>
-        </td>
-        <td style="text-align:right;white-space:nowrap;width:85px">
-          <span style="font-weight:600;color:#92400e;font-size:11px">${custoUnitStr}</span>
-        </td>
-        <td style="text-align:right;white-space:nowrap;width:105px">
-          <strong style="color:#0f766e;font-size:11.5px">${totalValorStr}</strong>
-        </td>
-        <td style="width:70px">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:8px;background:var(--bg);border:1px solid var(--bd);border-radius:4px;overflow:hidden;">
-              <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:4px;"></div>
-            </div>
-            <span style="font-size:10px;font-weight:700;color:var(--mu);min-width:24px;text-align:right">${pctTop1.toFixed(0)}%</span>
+        <td style="white-space:nowrap">
+          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            <span class="code" title="Clique para copiar" style="cursor:pointer;white-space:nowrap" onclick="copyText('${esc(item.code)}')">${esc(item.code)}</span>
+            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.code)}')" title="Copiar código">📋</button>
           </div>
         </td>
-        <td style="text-align:center;white-space:nowrap;width:48px">
-          <button class="btn outline" style="padding:1px 5px;font-size:9.5px;line-height:1.2" onclick="dashJumpToStock('${item.code}')" title="Ver detalhes deste produto na aba de Estoque">
+        <td>
+          <div style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            <strong style="color:var(--tx)">${esc(item.desc)}</strong>
+            <button class="btn outline" style="padding:2px 5px;font-size:10px;line-height:1.2;flex-shrink:0" onclick="copyText('${esc(item.desc)}')" title="Copiar descrição">📋</button>
+          </div>
+          ${item.lotCount > 1 ? `<div style="font-size:10px;color:var(--mu);margin-top:2px;">Consolidado de ${item.lotCount} apontamentos</div>` : ''}
+        </td>
+        <td style="text-align:center;white-space:nowrap">
+          ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:11px">-</span>'}
+        </td>
+        <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap">${esc(item.armazem)}</td>
+        <td class="stock-col-qty" style="text-align:right;white-space:nowrap">
+          <span style="color:#000000; font-weight:800; font-size:13px">${sldKgFormatted}</span>
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <span style="font-weight:600;color:#92400e;font-size:12.5px">${custoUnitStr}</span>
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          <strong style="color:#0f766e;font-size:13px">${totalValorStr}</strong>
+        </td>
+        <td style="width:120px">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="dash-progress-wrap" title="${pctTop1.toFixed(1)}% do líder" style="flex:1;height:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden;">
+              <div class="dash-progress-bar" style="width:${Math.min(100, pctTop1)}%;background:${barColor};height:100%;border-radius:5px;"></div>
+            </div>
+            <span style="font-size:10.5px;font-weight:700;color:var(--mu);min-width:32px;text-align:right">${pctTop1.toFixed(0)}%</span>
+          </div>
+        </td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn outline" style="padding:2px 6px;font-size:10px;line-height:1.2" onclick="dashJumpToStock('${item.code}')" title="Ver detalhes deste produto na aba de Estoque">
             🔍 Estoque
           </button>
         </td>
@@ -9318,7 +9147,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
     <tr>
       <td colspan="10" style="text-align:center;padding:32px;color:var(--mu);font-size:13px">
         Nenhum produto encontrado com os filtros selecionados.
-        ${hasAnyDashColFilterActive ? `<button class="btn outline" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="dashClearAllColFilters(event)">✕ Limpar Filtros das Colunas</button>` : ''}
+        ${hasDescFilterActive ? `<button class="btn outline" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="clearSingleDashColFilter('desc', event)">✕ Limpar Filtro de Descrição</button>` : ''}
       </td>
     </tr>
   `;
@@ -9334,7 +9163,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
             <span class="dash-kpi-title">Itens Analisados (${locDisplay})</span>
             <span class="dash-kpi-icon">📦</span>
           </div>
-          <div class="dash-kpi-val">${processed.filteredList.length.toLocaleString('pt-BR')} SKUs${hasAnyDashColFilterActive ? ` <span style="font-size:12px;font-weight:normal;color:var(--mu)">(${processed.armazemAllItemCount} total)</span>` : ''}</div>
+          <div class="dash-kpi-val">${processed.filteredList.length.toLocaleString('pt-BR')} SKUs${hasDescFilterActive ? ` <span style="font-size:12px;font-weight:normal;color:var(--mu)">(${processed.armazemAllItemCount} total)</span>` : ''}</div>
           <div class="dash-kpi-sub">${processed.isEmbalagens ? 'Embalagens' : 'Insumos'} com código iniciando em "${dashFilterState.codigoPrefix || 'Todos'}"</div>
         </div>
 
@@ -9385,7 +9214,7 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
       </div>
 
       <!-- Linha com Ranking Principal (Layout Consulta de Saldo de Estoque) e Gráfico de Rosca/Concentração -->
-      <div class="dash-charts-row ${dashFilterState.cardViewMode === 'table' ? 'table-view-active' : ''}">
+      <div class="dash-charts-row">
         <!-- Card Ranking Top N Itens com Maior Valor e Quantidade -->
         <div class="dash-chart-card">
           <div class="dash-chart-header">
@@ -9405,7 +9234,38 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
             <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:none;overflow-y:visible;overflow-x:auto;border:1px solid var(--bd);">
               <table class="stock-table" style="width:100%;">
                 <thead>
-                  ${renderDashTableHeader(false)}
+                  <tr>
+                    <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
+                    <th style="white-space:nowrap">Código</th>
+                    <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
+                    <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
+                    <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
+                    <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
+                    <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
+                    <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
+                    <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
+                    <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
+                  </tr>
+                  <tr class="stock-filter-row">
+                    <th style="text-align:center;width:34px"></th>
+                    <th></th>
+                    <th>
+                      <div class="stock-th-filter">
+                        <input type="text" id="dash-col-filter-desc" class="stock-col-input ${(curDescVal||hasDescMulti)?'active':''}" placeholder="${descPlaceholder}" value="${esc(curDescVal)}" data-col="desc" oninput="handleDashColFilter(this, event)">
+                        <button type="button" class="stock-excel-filter-trigger ${hasDescMulti?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
+                          ${hasDescMulti ? `✓ ${descMultiCount}` : '▾'}
+                        </button>
+                        ${(curDescVal || hasDescMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+                      </div>
+                    </th>
+                    <th style="text-align:center;width:70px"></th>
+                    <th style="text-align:center;width:50px"></th>
+                    <th class="stock-col-qty" style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                    <th style="width:75px;text-align:center"></th>
+                    <th style="text-align:center;width:55px"></th>
+                  </tr>
                 </thead>
                 <tbody>
                   ${tableRowsHtml}
@@ -9456,7 +9316,38 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
           <div class="stock-table-wrap" style="box-shadow:none;border-radius:8px;max-height:none;overflow-y:visible;overflow-x:auto;border:1px solid var(--bd);">
             <table class="stock-table" style="width:100%;">
               <thead>
-                ${renderDashTableHeader(true)}
+                <tr>
+                  <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
+                  <th style="white-space:nowrap">Código</th>
+                  <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
+                  <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
+                  <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
+                  <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
+                  <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
+                  <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
+                  <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
+                  <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
+                </tr>
+                <tr class="stock-filter-row">
+                  <th style="text-align:center;width:34px"></th>
+                  <th></th>
+                  <th>
+                    <div class="stock-th-filter">
+                      <input type="text" id="dash-col-filter-desc-detailed" class="stock-col-input ${(curDescVal||hasDescMulti)?'active':''}" placeholder="${descPlaceholder}" value="${esc(curDescVal)}" data-col="desc" oninput="handleDashColFilter(this, event)">
+                      <button type="button" class="stock-excel-filter-trigger ${hasDescMulti?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
+                        ${hasDescMulti ? `✓ ${descMultiCount}` : '▾'}
+                      </button>
+                      ${(curDescVal || hasDescMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+                    </div>
+                  </th>
+                  <th style="text-align:center;width:70px"></th>
+                  <th style="text-align:center;width:50px"></th>
+                  <th class="stock-col-qty" style="text-align:right"></th>
+                  <th style="text-align:right"></th>
+                  <th style="text-align:right"></th>
+                  <th style="width:75px;text-align:center"></th>
+                  <th style="text-align:center;width:55px"></th>
+                </tr>
               </thead>
               <tbody>
                 ${tableRowsHtml}
