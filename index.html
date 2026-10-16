@@ -4267,7 +4267,7 @@ let efpCurrentCol = null;
 let efpDistinctValues = []; // [{ val, count }]
 let efpVisibleValues = [];  // [{ val, count }]
 let efpSelectedSet = new Set();
-let efpContext = 'stock'; // 'stock', 'mp' or 'ibc'
+let efpContext = 'stock'; // 'stock', 'mp', 'ibc' or 'dash'
 
 function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
   if (ev) { ev.stopPropagation(); ev.preventDefault(); }
@@ -4276,20 +4276,35 @@ function openExcelFilterPopover(colName, btnEl, ev, context = 'stock') {
   let currentFilterState = stockFilterState;
   if (efpContext === 'mp') { currentData = MP_DATA; currentFilterState = mpFilterState; }
   else if (efpContext === 'ibc') { currentData = IBC_DATA; currentFilterState = ibcFilterState; }
-  if (!currentData || !currentData.rows) return;
+  else if (efpContext === 'dash') { currentFilterState = dashFilterState; }
+  if (efpContext !== 'dash' && (!currentData || !currentData.rows)) return;
 
   efpCurrentCol = colName;
   const titleEl = document.getElementById('efp-title-col');
-  if (titleEl) titleEl.textContent = `${colName}`;
+  if (titleEl) titleEl.textContent = (colName === 'desc' ? 'Descrição do Produto' : `${colName}`);
 
   // Gather distinct values and occurrences for this column
   const counts = new Map();
-  currentData.rows.forEach(r => {
-    let v = r[colName];
-    v = (v !== undefined && v !== null) ? String(v).trim() : '';
-    if (v === '') v = '(Vazio)';
-    counts.set(v, (counts.get(v) || 0) + 1);
-  });
+  if (efpContext === 'dash') {
+    const dataset = getDashboardDataset();
+    const cols = detectDashColumns(dataset.headers, dataset.rows[0]);
+    const unconstrainedFilters = Object.assign({}, dashFilterState, { colFilters: {}, colMultiFilters: {}, search: '' });
+    const processed = processDashboardData(dataset.rows, cols, unconstrainedFilters);
+    const items = (processed && processed.allItems) ? processed.allItems : [];
+    items.forEach(it => {
+      let v = it.desc;
+      v = (v !== undefined && v !== null) ? String(v).trim() : '';
+      if (v === '') v = '(Vazio)';
+      counts.set(v, (counts.get(v) || 0) + (it.lotCount || 1));
+    });
+  } else {
+    currentData.rows.forEach(r => {
+      let v = r[colName];
+      v = (v !== undefined && v !== null) ? String(v).trim() : '';
+      if (v === '') v = '(Vazio)';
+      counts.set(v, (counts.get(v) || 0) + 1);
+    });
+  }
 
   efpDistinctValues = Array.from(counts.entries()).map(([val, count]) => ({ val, count }));
   efpDistinctValues.sort((a, b) => {
@@ -4436,7 +4451,7 @@ function updateExcelPopoverFooter() {
 
 function efpSortCol(dir) {
   if (!efpCurrentCol) return;
-  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : stockFilterState);
+  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dash' ? dashFilterState : stockFilterState));
   currentFilterState.sortCol = efpCurrentCol;
   currentFilterState.sortDir = dir;
   closeExcelFilterPopover();
@@ -4444,6 +4459,8 @@ function efpSortCol(dir) {
     renderMpView();
   } else if (efpContext === 'ibc') {
     renderIbcView();
+  } else if (efpContext === 'dash') {
+    renderDashboardView();
   } else {
     renderStockView();
   }
@@ -4451,7 +4468,7 @@ function efpSortCol(dir) {
 
 function applyExcelFilterPopover() {
   if (!efpCurrentCol) return;
-  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : stockFilterState);
+  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dash' ? dashFilterState : stockFilterState));
   if (!currentFilterState.colMultiFilters) currentFilterState.colMultiFilters = {};
 
   if (efpSelectedSet.size === efpDistinctValues.length) {
@@ -4461,12 +4478,14 @@ function applyExcelFilterPopover() {
     currentFilterState.colMultiFilters[efpCurrentCol] = Array.from(efpSelectedSet);
   }
 
-  currentFilterState.page = 1;
+  if (currentFilterState.page !== undefined) currentFilterState.page = 1;
   closeExcelFilterPopover();
   if (efpContext === 'mp') {
     renderMpView();
   } else if (efpContext === 'ibc') {
     renderIbcView();
+  } else if (efpContext === 'dash') {
+    renderDashboardView();
   } else {
     renderStockView();
   }
@@ -4475,16 +4494,18 @@ function applyExcelFilterPopover() {
 
 function clearCurrentColumnMultiFilter() {
   if (!efpCurrentCol) return;
-  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : stockFilterState);
+  let currentFilterState = (efpContext === 'mp') ? mpFilterState : (efpContext === 'ibc' ? ibcFilterState : (efpContext === 'dash' ? dashFilterState : stockFilterState));
   if (currentFilterState.colMultiFilters) {
     delete currentFilterState.colMultiFilters[efpCurrentCol];
   }
-  currentFilterState.page = 1;
+  if (currentFilterState.page !== undefined) currentFilterState.page = 1;
   closeExcelFilterPopover();
   if (efpContext === 'mp') {
     renderMpView();
   } else if (efpContext === 'ibc') {
     renderIbcView();
+  } else if (efpContext === 'dash') {
+    renderDashboardView();
   } else {
     renderStockView();
   }
@@ -8255,11 +8276,16 @@ let dashFilterState = {
   chartType: 'bar-h',     // 'bar-h' (barras horizontais), 'bar-v' (colunas verticais)
   cardViewMode: 'table',  // Padrão: 'table' (layout igual ao da aba consulta de saldo de estoque)
   groupByCode: true,      // Agrupar e somar lotes do mesmo código de produto
-  search: ''
+  search: '',
+  colFilters: {},
+  colMultiFilters: {},
+  sortCol: null,
+  sortDir: null
 };
 
 let dashChartInstance = null;
 let dashDonutInstance = null;
+let dashChartsRenderTimeout = null;
 
 function isEmbalagensDashboard(armazem, prefix) {
   const arm = String(armazem !== undefined && armazem !== null ? armazem : (typeof dashFilterState !== 'undefined' ? dashFilterState.armazem : '')).trim();
@@ -8641,13 +8667,42 @@ function processDashboardData(rows, cols, filters) {
   });
 
   const allItems = Array.from(groupedMap.values());
-  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU)
-  allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
+  // Ordenação decrescente pelos produtos com MAIORES VALORES EM ESTOQUE (R$ - SLD.ATU) ou pela coluna selecionada
+  if (filters.sortCol === 'desc') {
+    if (filters.sortDir === 'asc') {
+      allItems.sort((a, b) => (a.desc || '').localeCompare(b.desc || '', 'pt-BR'));
+    } else {
+      allItems.sort((a, b) => (b.desc || '').localeCompare(a.desc || '', 'pt-BR'));
+    }
+  } else {
+    allItems.sort((a, b) => (b.saldoValor || 0) - (a.saldoValor || 0));
+  }
 
   let filteredList = allItems;
   if (filters.search) {
     const q = norm(filters.search);
     filteredList = allItems.filter(item => norm(item.code + ' ' + item.desc).includes(q));
+  }
+
+  // Filtro de Coluna: Descrição do Produto (Texto)
+  const descFilter = filters.colFilters && (filters.colFilters.desc || filters.colFilters['Descrição do Produto']);
+  if (descFilter && descFilter.trim()) {
+    const term = norm(descFilter.trim());
+    filteredList = filteredList.filter(item => {
+      const dNorm = norm(item.desc || '');
+      return dNorm.includes(term) || (typeof cmp === 'function' && cmp(dNorm).includes(cmp(term)));
+    });
+  }
+
+  // Filtro de Coluna: Descrição do Produto (Checklist Múltiplo estilo Excel)
+  const multiDesc = filters.colMultiFilters && (filters.colMultiFilters.desc || filters.colMultiFilters['Descrição do Produto']);
+  if (Array.isArray(multiDesc) && multiDesc.length > 0) {
+    const allowedSet = new Set(multiDesc);
+    filteredList = filteredList.filter(item => {
+      let val = String(item.desc || '').trim();
+      if (!val) val = '(Vazio)';
+      return allowedSet.has(val);
+    });
   }
 
   const topN = Math.max(1, parseInt(filters.topN, 10) || 10);
@@ -8668,6 +8723,7 @@ function processDashboardData(rows, cols, filters) {
 
   return {
     allItems,
+    filteredList,
     topItems,
     uniqueArmazens: Array.from(uniqueArmazens).sort(),
     armazemTotalQty,
@@ -8762,7 +8818,7 @@ function generateAiDashboardInsights(data) {
   `;
 }
 
-function renderDashboardView(preserveFocus = false) {
+function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPosition = null) {
   const container = document.getElementById('view-dashboard');
   if (!container) return;
 
@@ -8904,8 +8960,8 @@ function renderDashboardView(preserveFocus = false) {
     </div>
   `;
 
-  // Se nenhum item foi localizado com os filtros atuais, mantém a barra de controles ativa!
-  if (!processed || !processed.topItems.length) {
+  // Se nenhum item foi localizado no armazém/prefixo geral, mantém a barra de controles ativa!
+  if (!processed || !processed.allItems.length) {
     container.innerHTML = `
       <div class="dash-container">
         ${headerHtml}
@@ -8941,8 +8997,18 @@ function renderDashboardView(preserveFocus = false) {
     return;
   }
 
+  const curDescVal = (dashFilterState.colFilters && (dashFilterState.colFilters.desc || dashFilterState.colFilters['Descrição do Produto'])) || '';
+  const multiDescVals = dashFilterState.colMultiFilters && (dashFilterState.colMultiFilters.desc || dashFilterState.colMultiFilters['Descrição do Produto']);
+  const hasDescMulti = Array.isArray(multiDescVals);
+  const descMultiCount = hasDescMulti ? multiDescVals.length : 0;
+  const descPlaceholder = hasDescMulti ? `(${descMultiCount} sel.)` : 'Filtrar...';
+  const descMultiBadge = hasDescMulti ? `<span style="display:inline-block;background:#1d5fd1;color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle;font-weight:700" title="${descMultiCount} valor(es) selecionados no checklist">✓ ${descMultiCount}</span>` : '';
+  const isDescSorted = dashFilterState.sortCol === 'desc';
+  const descSortArrow = isDescSorted ? (dashFilterState.sortDir === 'asc' ? ' 🔼' : ' 🔽') : '';
+  const hasDescFilterActive = Boolean((curDescVal && curDescVal.trim()) || hasDescMulti);
+
   // Gera as linhas da tabela
-  const tableRowsHtml = processed.topItems.map((item, idx) => {
+  const tableRowsHtml = processed.topItems.length ? processed.topItems.map((item, idx) => {
     const rankNum = idx + 1;
     let rankBadgeClass = 'dash-rank-other';
     let medal = `${rankNum}º`;
@@ -9012,7 +9078,14 @@ function renderDashboardView(preserveFocus = false) {
         </td>
       </tr>
     `;
-  }).join('');
+  }).join('') : `
+    <tr>
+      <td colspan="10" style="text-align:center;padding:32px;color:var(--mu);font-size:13px">
+        Nenhum produto encontrado com os filtros selecionados.
+        ${hasDescFilterActive ? `<button class="btn outline" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="clearSingleDashColFilter('desc', event)">✕ Limpar Filtro de Descrição</button>` : ''}
+      </td>
+    </tr>
+  `;
 
   container.innerHTML = `
     <div class="dash-container">
@@ -9025,7 +9098,7 @@ function renderDashboardView(preserveFocus = false) {
             <span class="dash-kpi-title">Itens Analisados (${locDisplay})</span>
             <span class="dash-kpi-icon">📦</span>
           </div>
-          <div class="dash-kpi-val">${processed.armazemAllItemCount.toLocaleString('pt-BR')} SKUs</div>
+          <div class="dash-kpi-val">${processed.filteredList.length.toLocaleString('pt-BR')} SKUs${hasDescFilterActive ? ` <span style="font-size:12px;font-weight:normal;color:var(--mu)">(${processed.armazemAllItemCount} total)</span>` : ''}</div>
           <div class="dash-kpi-sub">${processed.isEmbalagens ? 'Embalagens' : 'Insumos'} com código iniciando em "${dashFilterState.codigoPrefix || 'Todos'}"</div>
         </div>
 
@@ -9099,7 +9172,7 @@ function renderDashboardView(preserveFocus = false) {
                   <tr>
                     <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
                     <th style="white-space:nowrap">Código</th>
-                    <th style="white-space:nowrap">Descrição do Produto</th>
+                    <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
                     <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
                     <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
                     <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
@@ -9107,6 +9180,26 @@ function renderDashboardView(preserveFocus = false) {
                     <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
                     <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
                     <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
+                  </tr>
+                  <tr class="stock-filter-row">
+                    <th style="text-align:center;width:34px"></th>
+                    <th></th>
+                    <th>
+                      <div class="stock-th-filter">
+                        <input type="text" id="dash-col-filter-desc" class="stock-col-input ${(curDescVal||hasDescMulti)?'active':''}" placeholder="${descPlaceholder}" value="${esc(curDescVal)}" data-col="desc" oninput="handleDashColFilter(this, event)">
+                        <button type="button" class="stock-excel-filter-trigger ${hasDescMulti?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
+                          ${hasDescMulti ? `✓ ${descMultiCount}` : '▾'}
+                        </button>
+                        ${(curDescVal || hasDescMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+                      </div>
+                    </th>
+                    <th style="text-align:center;width:70px"></th>
+                    <th style="text-align:center;width:50px"></th>
+                    <th class="stock-col-qty" style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                    <th style="width:75px;text-align:center"></th>
+                    <th style="text-align:center;width:55px"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -9161,7 +9254,7 @@ function renderDashboardView(preserveFocus = false) {
                 <tr>
                   <th style="text-align:center;width:34px;white-space:nowrap">Rank</th>
                   <th style="white-space:nowrap">Código</th>
-                  <th style="white-space:nowrap">Descrição do Produto</th>
+                  <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
                   <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
                   <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
                   <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
@@ -9169,6 +9262,26 @@ function renderDashboardView(preserveFocus = false) {
                   <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
                   <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
                   <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
+                </tr>
+                <tr class="stock-filter-row">
+                  <th style="text-align:center;width:34px"></th>
+                  <th></th>
+                  <th>
+                    <div class="stock-th-filter">
+                      <input type="text" id="dash-col-filter-desc-detailed" class="stock-col-input ${(curDescVal||hasDescMulti)?'active':''}" placeholder="${descPlaceholder}" value="${esc(curDescVal)}" data-col="desc" oninput="handleDashColFilter(this, event)">
+                      <button type="button" class="stock-excel-filter-trigger ${hasDescMulti?'active':''}" onclick="openExcelFilterPopover('desc', this, event, 'dash')" title="Abrir checklist de seleção múltipla estilo Excel">
+                        ${hasDescMulti ? `✓ ${descMultiCount}` : '▾'}
+                      </button>
+                      ${(curDescVal || hasDescMulti) ? `<button class="stock-col-clear" onclick="clearSingleDashColFilter('desc', event)" title="Limpar filtros desta coluna">×</button>` : ''}
+                    </div>
+                  </th>
+                  <th style="text-align:center;width:70px"></th>
+                  <th style="text-align:center;width:50px"></th>
+                  <th class="stock-col-qty" style="text-align:right"></th>
+                  <th style="text-align:right"></th>
+                  <th style="text-align:right"></th>
+                  <th style="width:75px;text-align:center"></th>
+                  <th style="text-align:center;width:55px"></th>
                 </tr>
               </thead>
               <tbody>
@@ -9189,10 +9302,19 @@ function renderDashboardView(preserveFocus = false) {
         try { el.setSelectionRange(selStart, selEnd); } catch (e) {}
       }
     }
+  } else if (focusedCol) {
+    const el = container.querySelector(`input.stock-col-input[data-col="${focusedCol}"]`);
+    if (el) {
+      el.focus();
+      if (typeof cursorPosition === 'number' && typeof el.setSelectionRange === 'function') {
+        try { el.setSelectionRange(cursorPosition, cursorPosition); } catch(e) {}
+      }
+    }
   }
 
   // Renderiza os gráficos via Chart.js ou Native SVG Fallback
-  setTimeout(() => {
+  if (dashChartsRenderTimeout) clearTimeout(dashChartsRenderTimeout);
+  dashChartsRenderTimeout = setTimeout(() => {
     renderDashCharts(processed);
   }, 50);
 }
@@ -9559,12 +9681,51 @@ function dashOnSearch(term) {
   renderDashboardView();
 }
 
+function handleDashColFilter(el, e) {
+  const col = el.dataset.col || 'desc';
+  const val = el.value;
+  if (!dashFilterState.colFilters) dashFilterState.colFilters = {};
+  dashFilterState.colFilters[col] = val;
+  const pos = el.selectionStart;
+  renderDashboardView(true, col, pos);
+}
+
+function clearSingleDashColFilter(col, e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (dashFilterState.colFilters) {
+    delete dashFilterState.colFilters[col];
+  }
+  if (dashFilterState.colMultiFilters) {
+    delete dashFilterState.colMultiFilters[col];
+  }
+  renderDashboardView(true);
+}
+
+function dashSortCol(col) {
+  if (dashFilterState.sortCol === col) {
+    if (dashFilterState.sortDir === 'asc') {
+      dashFilterState.sortDir = 'desc';
+    } else {
+      dashFilterState.sortCol = null;
+      dashFilterState.sortDir = null;
+    }
+  } else {
+    dashFilterState.sortCol = col;
+    dashFilterState.sortDir = 'asc';
+  }
+  renderDashboardView();
+}
+
 function dashResetFilters() {
   if (dashPrefixDebounceTimer) clearTimeout(dashPrefixDebounceTimer);
   dashFilterState.armazem = '01';
   dashFilterState.codigoPrefix = '01';
   dashFilterState.topN = 10;
   dashFilterState.search = '';
+  dashFilterState.colFilters = {};
+  dashFilterState.colMultiFilters = {};
+  dashFilterState.sortCol = null;
+  dashFilterState.sortDir = null;
   renderDashboardView();
 }
 
