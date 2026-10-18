@@ -9131,13 +9131,13 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
           ${item.mpTag ? `<span class="mp-desc-int-tag" style="font-size:11px;font-weight:700;cursor:pointer" onclick="copyText('${esc(item.mpTag)}')" title="Matéria-Prima: ${esc(item.mpTag)} (clique para copiar)">${esc(item.mpTag)}</span>` : '<span style="color:var(--mu);font-size:11px">-</span>'}
         </td>
         <td style="text-align:center;font-weight:700;color:var(--ac);white-space:nowrap">${esc(item.armazem)}</td>
-        <td class="stock-col-qty" style="text-align:right;white-space:nowrap">
-          <span style="color:#000000; font-weight:800; font-size:13px">${sldKgFormatted}</span>
+        <td style="text-align:right;white-space:nowrap">
+          <span style="color:var(--tx); font-weight:700; font-size:13px">${sldKgFormatted}</span>
         </td>
         <td style="text-align:right;white-space:nowrap">
           <span style="font-weight:600;color:#92400e;font-size:12.5px">${custoUnitStr}</span>
         </td>
-        <td style="text-align:right;white-space:nowrap">
+        <td class="stock-col-qty" style="text-align:right;white-space:nowrap">
           <strong style="color:#0f766e;font-size:13px">${totalValorStr}</strong>
         </td>
         <td style="width:120px">
@@ -9418,9 +9418,9 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
                     <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
                     <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
                     <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
-                    <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
+                    <th style="text-align:right;white-space:nowrap">Saldo Atual</th>
                     <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
-                    <th style="text-align:right;white-space:nowrap;background:rgba(15,118,110,0.06);">Saldo Total (R$)</th>
+                    <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
                     <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
                     <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
                   </tr>
@@ -9438,9 +9438,9 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
                     </th>
                     <th style="text-align:center;width:70px"></th>
                     <th style="text-align:center;width:50px"></th>
+                    <th style="text-align:right"></th>
+                    <th style="text-align:right"></th>
                     <th class="stock-col-qty" style="text-align:right"></th>
-                    <th style="text-align:right"></th>
-                    <th style="text-align:right"></th>
                     <th style="width:75px;text-align:center"></th>
                     <th style="text-align:center;width:55px"></th>
                   </tr>
@@ -9500,9 +9500,9 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
                   <th style="white-space:nowrap" onclick="dashSortCol('desc')" title="Clique para ordenar por Descrição do Produto"><span>Descrição do Produto${descSortArrow}${descMultiBadge}</span></th>
                   <th style="text-align:center;white-space:nowrap;width:70px">MP</th>
                   <th style="text-align:center;white-space:nowrap;width:50px">Armazém</th>
-                  <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Atual</th>
+                  <th style="text-align:right;white-space:nowrap">Saldo Atual</th>
                   <th style="text-align:right;white-space:nowrap">Custo Unit. (R$)</th>
-                  <th style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
+                  <th class="stock-col-qty" style="text-align:right;white-space:nowrap">Saldo Total (R$)</th>
                   <th style="width:75px;text-align:center;white-space:nowrap">Proporção</th>
                   <th style="text-align:center;white-space:nowrap;width:55px">Ação</th>
                 </tr>
@@ -9520,9 +9520,9 @@ function renderDashboardView(preserveFocus = false, focusedCol = null, cursorPos
                   </th>
                   <th style="text-align:center;width:70px"></th>
                   <th style="text-align:center;width:50px"></th>
+                  <th style="text-align:right"></th>
+                  <th style="text-align:right"></th>
                   <th class="stock-col-qty" style="text-align:right"></th>
-                  <th style="text-align:right"></th>
-                  <th style="text-align:right"></th>
                   <th style="width:75px;text-align:center"></th>
                   <th style="text-align:center;width:55px"></th>
                 </tr>
