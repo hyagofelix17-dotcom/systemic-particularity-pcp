@@ -299,8 +299,7 @@
             <input type="text" 
                    id="expandedSearchInput"
                    placeholder="Pesquisar..." 
-                   oninput="document.getElementById('searchInput').value = this.value; renderTable();
-    updateDelayedKPIsOnly();" 
+                   oninput="document.getElementById('searchInput').value = this.value; renderTable();" 
                    class="h-7 w-full rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-pg focus:ring-1 focus:ring-pg">
           </div>
 
@@ -4111,13 +4110,9 @@
                   <i data-lucide="copy" class="h-3 w-3"></i>
                 </button>
                 <input type="text"
-                       class="table-cell-input font-semibold text-zinc-900 whitespace-nowrap py-0.5 block w-full text-[11px] bg-transparent tracking-tight focus:bg-white focus:ring-1 focus:ring-pg cursor-pointer hover:bg-emerald-50/50"
+                       class="table-cell-input font-semibold text-zinc-900 whitespace-nowrap py-0.5 block w-full text-[11px] bg-transparent tracking-tight focus:bg-white focus:ring-1 focus:ring-pg"
                        value="${escapeHtml(r.materiaPrima)}"
-                       title="Passe o mouse para ver Código e MP cadastrados"
-                       data-mp="${escapeHtml(r.materiaPrima || '')}"
-                       onmouseenter="showProductTooltip(event, this)"
-                       onmousemove="moveProductTooltip(event)"
-                       onmouseleave="hideProductTooltip()"
+                       title="${escapeHtml(r.materiaPrima)}"
                        onchange="updateCell(${idx}, 'materiaPrima', this.value)">
               </div>
             </td>
