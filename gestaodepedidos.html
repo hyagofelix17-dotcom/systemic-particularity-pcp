@@ -159,7 +159,7 @@
     <div class="mx-auto flex max-w-[1780px] items-center justify-between px-4 sm:px-6">
       <nav class="flex space-x-2" aria-label="Abas do Sistema">
         
-        <!-- Aba 1: Gestão de Pedidos (Tabela Operacional + Dashboard Executivo) -->
+        <!-- Aba 1: Gestão de Pedidos (Tudo o que criamos + Coluna Número da Solicitação) -->
         <button type="button" 
                 id="tab-btn-pedidos" 
                 onclick="switchAppTab('pedidos')" 
@@ -645,7 +645,6 @@
 
     
 
-
     <!-- =======================================================================
          ABA 2: PAINEL DE PEDIDOS CRÍTICOS & TRATATIVA DE COMPRAS (MODO HÍBRIDO)
          ======================================================================= -->
@@ -874,7 +873,6 @@
       </div>
 
     </div> <!-- FIM DO #view-criticos -->
-
 
     <!-- =======================================================================
          ABA 3: GESTÃO DE PEDIDOS IBC'S (CRIADA E NÃO MODIFICADA AINDA)
@@ -2982,6 +2980,659 @@
 ];
     const today = new Date();
 
+    // Função para mapear cor da fonte com base exata na planilha enviada pelo usuário
+    function getInitialPedidoColor(row) {
+      if (row.pedidoColor && row.pedidoColor !== '#27272a') {
+        return row.pedidoColor;
+      }
+      if (row.materiaPrima && row.materiaPrima.includes('CONTAINER PAPELAO')) {
+        return '#dc2626'; // Vermelho da planilha
+      }
+      return '#27272a'; // Padrão grafite
+    }
+
+    // Carregamento de dados com persistência local
+    let rows = [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) rows = JSON.parse(saved);
+    } catch (e) {
+      console.warn('Erro ao ler localStorage', e);
+    }
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      rows = JSON.parse(JSON.stringify(INITIAL_DATA));
+      // Aplica imediatamente as cores da planilha na inicialização
+      rows.forEach(r => {
+        r.pedidoColor = getInitialPedidoColor(r);
+      });
+      saveState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+      } catch (e) {
+        console.warn('Erro ao salvar no localStorage', e);
+      }
+    }
+
+    function resetToOriginalData() {
+      if (confirm('Deseja restaurar a base original de dados da planilha? Todas as alterações e cores manuais serão redefinidas.')) {
+        rows = JSON.parse(JSON.stringify(INITIAL_DATA));
+        rows.forEach(r => {
+          r.pedidoColor = getInitialPedidoColor(r);
+        });
+        saveState();
+        activeColumnFilters = {};
+        activePedidoColorFilter = null;
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = '';
+        renderTable();
+        showToast('Dados originais restaurados', 'rotate-ccw');
+      }
+    }
+
+    document.getElementById('currentDateDisplay').innerText = today.toLocaleDateString('pt-BR');
+
+    // Estado dos Filtros de Coluna Estilo Excel
+    let activeColumnFilters = {};
+    let activePedidoColorFilter = null;
+    let currentFilterField = null;
+    let currentSortField = null;
+    let currentSortDirection = null;
+
+    // Estado do Seletor de Cores da Fonte do Pedido
+    let activeColorPickerRowIndex = null;
+
+    function openFontColorPicker(rowIndex, event) {
+      event.stopPropagation();
+      closeFilterDropdown();
+
+      const popover = document.getElementById('fontColorPickerPopover');
+      if (activeColorPickerRowIndex === rowIndex && !popover.classList.contains('hidden')) {
+        closeColorPicker();
+        return;
+      }
+
+      activeColorPickerRowIndex = rowIndex;
+      const btn = event.currentTarget;
+      const rect = btn.getBoundingClientRect();
+
+      popover.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      popover.style.left = Math.min(Math.max(10, rect.left + window.scrollX - 90), window.innerWidth - 240) + 'px';
+
+      const currentColor = rows[rowIndex].pedidoColor || '#27272a';
+      const customInput = document.getElementById('customColorPicker');
+      if (customInput) {
+        customInput.value = (currentColor.startsWith('#') && currentColor.length === 7) ? currentColor : '#27272a';
+      }
+
+      popover.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeColorPicker() {
+      const popover = document.getElementById('fontColorPickerPopover');
+      if (popover) popover.classList.add('hidden');
+      activeColorPickerRowIndex = null;
+    }
+
+    function applyPedidoColor(color) {
+      if (activeColorPickerRowIndex === null || activeColorPickerRowIndex < 0 || activeColorPickerRowIndex >= rows.length) return;
+
+      rows[activeColorPickerRowIndex].pedidoColor = color;
+      saveState();
+      closeColorPicker();
+      renderTable();
+      showToast('Cor da fonte do pedido atualizada', 'palette');
+    }
+
+    // Instâncias dos Gráficos Chart.js
+    let delayBarChartInstance = null;
+    let statusPieChartInstance = null;
+
+    // Cálculo dos Dias de Atraso
+    function calculateDelayDays(row) {
+      if (!row.previsaoEntrega || row.previsaoEntrega.trim() === '') {
+        return 0;
+      }
+
+      const jDate = new Date(row.previsaoEntrega + 'T00:00:00');
+      if (isNaN(jDate.getTime())) return 0;
+
+      if (row.dataChegada && row.dataChegada.trim() !== '') {
+        const nDate = new Date(row.dataChegada + 'T00:00:00');
+        if (!isNaN(nDate.getTime()) && nDate > jDate) {
+          return Math.round((nDate - jDate) / (1000 * 60 * 60 * 24));
+        }
+        return 0;
+      }
+
+      const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (todayZero > jDate) {
+        return Math.round((todayZero - jDate) / (1000 * 60 * 60 * 24));
+      }
+      return 0;
+    }
+
+    // Live Status Evaluation Function
+    function computeStatus(row) {
+      if (!row.materiaPrima || row.materiaPrima.trim() === '') {
+        return '';
+      }
+
+      if (row.dataChegada && row.dataChegada.trim() !== '') {
+        return 'OK';
+      }
+
+      const delay = calculateDelayDays(row);
+      const isLate = delay > 0;
+      const hasOrder = (row.pedido && row.pedido.trim() !== '');
+
+      if (isLate) {
+        return hasOrder ? 'COM PEDIDO - PORÉM ATRASADO' : 'ATRASADO';
+      } else {
+        return hasOrder ? 'PEDIDO' : 'SEM PEDIDO';
+      }
+    }
+
+    function getBadgeClass(status) {
+      switch (status) {
+        case 'OK': return 'bg-blue-50 text-blue-700 border-blue-200/80';
+        case 'PEDIDO': return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
+        case 'SEM PEDIDO':
+        case 'S/PEDIDO': return 'bg-amber-50 text-amber-700 border-amber-200/80';
+        case 'COM PEDIDO - PORÉM ATRASADO': return 'bg-orange-50 text-orange-700 border-orange-200/80';
+        case 'ATRASADO': return 'bg-rose-50 text-rose-700 border-rose-200/80';
+        default: return 'bg-zinc-50 text-zinc-600 border-zinc-200';
+      }
+    }
+
+    function getDotClass(status) {
+      switch (status) {
+        case 'OK': return 'bg-blue-500';
+        case 'PEDIDO': return 'bg-indigo-500';
+        case 'SEM PEDIDO':
+        case 'S/PEDIDO': return 'bg-amber-500';
+        case 'COM PEDIDO - PORÉM ATRASADO': return 'bg-orange-500';
+        case 'ATRASADO': return 'bg-rose-500';
+        default: return 'bg-zinc-400';
+      }
+    }
+
+    function showToast(message, icon = 'check-circle-2') {
+      const toast = document.getElementById('systemToast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      if (!toast) return;
+
+      toastMsg.innerText = message;
+      toastIcon.setAttribute('data-lucide', icon);
+      lucide.createIcons();
+
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-2');
+      }, 2200);
+    }
+
+    // =========================================================================
+    // ATUALIZAÇÃO DOS KPIS E GRÁFICOS (CHART.JS)
+    // =========================================================================
+    function updateKPIs() {
+      let total = 0, ok = 0, pedido = 0, semPedido = 0, atrasado = 0, comPedidoAtrasado = 0;
+
+      rows.forEach(r => {
+        if (!r.materiaPrima) return;
+        total++;
+        const st = computeStatus(r);
+        if (st === 'OK') ok++;
+        else if (st === 'PEDIDO') pedido++;
+        else if (st === 'SEM PEDIDO' || st === 'S/PEDIDO') semPedido++;
+        else if (st === 'ATRASADO') atrasado++;
+        else if (st === 'COM PEDIDO - PORÉM ATRASADO') comPedidoAtrasado++;
+      });
+
+      document.getElementById('kpiTotal').innerText = total;
+      document.getElementById('kpiOk').innerText = ok;
+      document.getElementById('kpiPedido').innerText = pedido;
+      document.getElementById('kpiSemPedido').innerText = semPedido;
+      document.getElementById('kpiAtrasado').innerText = atrasado;
+      document.getElementById('kpiComPedidoAtrasado').innerText = comPedidoAtrasado;
+
+      renderExecutiveDashboard(ok, pedido, semPedido, atrasado, comPedidoAtrasado);
+    }
+
+    function renderExecutiveDashboard(ok, pedido, semPedido, atrasado, comPedidoAtrasado) {
+      const container = document.getElementById('criticalDelayedList');
+      const totalLateBadge = document.getElementById('execTotalDelayedBadge');
+      const totalVolumeBadge = document.getElementById('execTotalVolumeBadge');
+      const maxDelayDaysEl = document.getElementById('execMaxDelayDays');
+      const maxDelayMPEl = document.getElementById('execMaxDelayMP');
+      const avgDelayDaysEl = document.getElementById('execAvgDelayDays');
+      const criticalCountEl = document.getElementById('execCriticalCount');
+      const noOrderCountEl = document.getElementById('execNoOrderCount');
+
+      if (!container) return;
+
+      const lateItems = rows
+        .map((r, originalIdx) => ({
+          ...r,
+          originalIndex: originalIdx,
+          delay: calculateDelayDays(r),
+          status: computeStatus(r)
+        }))
+        .filter(r => r.delay > 0 && (!r.dataChegada || r.dataChegada.trim() === ''))
+        .sort((a, b) => b.delay - a.delay);
+
+      let totalVolume = 0;
+      let totalDelaySum = 0;
+      let criticalCount = 0;
+      let noOrderCount = 0;
+
+      lateItems.forEach(item => {
+        const qtyNum = parseFloat(String(item.quantidade).replace(/\./g, '').replace(',', '.')) || 0;
+        totalVolume += qtyNum;
+        totalDelaySum += item.delay;
+        if (item.delay >= 30) criticalCount++;
+        if (!item.pedido || item.pedido.trim() === '') noOrderCount++;
+      });
+
+      totalLateBadge.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span> ${lateItems.length} matérias-primas em atraso`;
+      totalVolumeBadge.innerText = `Volume em Aberto: ${totalVolume.toLocaleString('pt-BR')} KG`;
+
+      if (lateItems.length > 0) {
+        maxDelayDaysEl.innerText = lateItems[0].delay;
+        maxDelayMPEl.innerText = lateItems[0].materiaPrima;
+        avgDelayDaysEl.innerText = Math.round(totalDelaySum / lateItems.length);
+      } else {
+        maxDelayDaysEl.innerText = '0';
+        maxDelayMPEl.innerText = 'Nenhum atraso';
+        avgDelayDaysEl.innerText = '0';
+      }
+
+      criticalCountEl.innerText = criticalCount;
+      noOrderCountEl.innerText = noOrderCount;
+
+      // Cards do Top 6
+      if (lateItems.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-3 text-center text-xs text-emerald-600 bg-emerald-50/50 rounded border border-emerald-200/50">
+            Excelente! Todas as matérias-primas estão rigorosamente em dia.
+          </div>
+        `;
+      } else {
+        const topList = lateItems.slice(0, 6);
+        let html = '';
+
+        topList.forEach((item, rank) => {
+          const isWithOrder = (item.pedido && item.pedido.trim() !== '');
+
+          html += `
+            <div onclick="focusItem('${escapeHtml(item.materiaPrima)}')" class="group flex flex-col justify-between rounded border border-zinc-200/80 bg-zinc-50/60 p-2 transition-all hover:bg-white hover:border-zinc-300 hover:shadow-subtle cursor-pointer">
+              <div>
+                <div class="flex items-center justify-between text-[10px] mb-1">
+                  <span class="font-bold text-zinc-400 uppercase tracking-wider">#${rank + 1} MAIOR ATRASO</span>
+                  <span class="inline-flex items-center rounded bg-rose-50 px-1.5 py-0.2 font-bold text-rose-700 border border-rose-200/60 tabular-nums">
+                    +${item.delay} dias
+                  </span>
+                </div>
+                <p class="text-[11px] font-semibold text-zinc-900 line-clamp-2 leading-snug group-hover:text-pg transition-colors">
+                  ${escapeHtml(item.materiaPrima)}
+                </p>
+              </div>
+              
+              <div class="mt-2 pt-1.5 border-t border-zinc-200/60 flex items-center justify-between text-[11px]">
+                <span class="font-mono font-bold text-zinc-800 tabular-nums text-[11px]">
+                  ${escapeHtml(item.quantidade) || '0'} <span class="text-[9px] font-sans font-medium text-zinc-400">${escapeHtml(item.unidade) || 'KG'}</span>
+                </span>
+                <span class="text-[10px]">
+                  ${isWithOrder ? '<span class="font-mono text-zinc-600">Ped: ' + escapeHtml(item.pedido) + '</span>' : '<span class="text-rose-600 font-semibold">S/ Pedido</span>'}
+                </span>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
+      // Atualiza os Gráficos Visuais Chart.js
+      renderCharts(lateItems, ok, pedido, semPedido, atrasado, comPedidoAtrasado);
+      lucide.createIcons();
+    }
+
+    function renderCharts(lateItems, ok, pedido, semPedido, atrasado, comPedidoAtrasado) {
+      if (typeof Chart === 'undefined') return;
+
+      // 1. Gráfico de Barras Horizontais (Top 10 Atrasados com Quantidade Solicitada)
+      const top10 = lateItems.slice(0, 10);
+      const barLabels = top10.map(i => i.materiaPrima.length > 25 ? i.materiaPrima.substring(0, 25) + '...' : i.materiaPrima);
+      const barData = top10.map(i => i.delay);
+      const barQuantities = top10.map(i => (i.quantidade || '0') + ' ' + (i.unidade || 'KG'));
+      const barSuppliers = top10.map(i => i.fornecedor || 'Fornecedor não inf.');
+
+      const ctxBar = document.getElementById('delayBarChart');
+      if (ctxBar) {
+        if (delayBarChartInstance) delayBarChartInstance.destroy();
+
+        delayBarChartInstance = new Chart(ctxBar, {
+          type: 'bar',
+          data: {
+            labels: barLabels,
+            datasets: [{
+              label: 'Dias em Atraso',
+              data: barData,
+              backgroundColor: top10.map(i => i.delay >= 30 ? '#ef4444' : '#f97316'),
+              borderRadius: 4,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const idx = context.dataIndex;
+                    return [
+                      ` Atraso: ${context.raw} dias`,
+                      ` Qtd Solicitada: ${barQuantities[idx]}`,
+                      ` Fornecedor: ${barSuppliers[idx]}`
+                    ];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#f4f4f5' },
+                ticks: { font: { family: 'Inter', size: 10 }, color: '#71717a' },
+                title: { display: true, text: 'Dias Decorridos de Atraso', font: { size: 10 } }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { font: { family: 'Inter', size: 10 }, color: '#27272a' }
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Gráfico de Rosca (Status Geral)
+      const ctxPie = document.getElementById('statusPieChart');
+      if (ctxPie) {
+        if (statusPieChartInstance) statusPieChartInstance.destroy();
+
+        statusPieChartInstance = new Chart(ctxPie, {
+          type: 'doughnut',
+          data: {
+            labels: ['Entregue (OK)', 'No Prazo', 'Sem Pedido', 'Pedido Atrasado', 'Atrasado s/ Pedido'],
+            datasets: [{
+              data: [ok, pedido, semPedido, comPedidoAtrasado, atrasado],
+              backgroundColor: ['#3b82f6', '#4f46e5', '#eab308', '#f97316', '#ef4444'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 10, font: { family: 'Inter', size: 10 }, color: '#52525b', padding: 8 }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function focusItem(materiaPrima) {
+      document.getElementById('searchInput').value = materiaPrima;
+      renderTable();
+      showToast(`Filtrando por: ${materiaPrima}`, 'search');
+    }
+
+    // =========================================================================
+    // FILTROS ESTILO EXCEL NAS COLUNAS
+    // =========================================================================
+    function toggleColumnFilter(field, event) {
+      event.stopPropagation();
+      const popover = document.getElementById('excelFilterDropdown');
+
+      if (currentFilterField === field && !popover.classList.contains('hidden')) {
+        closeFilterDropdown();
+        return;
+      }
+
+      currentFilterField = field;
+      const th = event.currentTarget.closest('th');
+      const rect = th.getBoundingClientRect();
+
+      popover.style.top = (rect.bottom + window.scrollY + 2) + 'px';
+      popover.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 270) + 'px';
+
+      const fieldTitles = {
+        materiaPrima: 'Matéria-Prima',
+        fornecedor: 'Fornecedor',
+        pedido: 'Número do Pedido',
+        urgencia: 'Nível de Urgência',
+        status: 'Status do Pedido'
+      };
+
+      document.getElementById('filterDropdownTitle').innerText = `Filtro: ${fieldTitles[field] || field}`;
+      document.getElementById('filterSearchInput').value = '';
+
+      // Mostra a seção de filtrar por cor apenas na coluna Pedido
+      const colorSection = document.getElementById('filterByColorSection');
+      if (field === 'pedido') {
+        colorSection.classList.remove('hidden');
+        populateFilterColors();
+      } else {
+        colorSection.classList.add('hidden');
+      }
+
+      populateFilterCheckboxes(field);
+      popover.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function populateFilterColors() {
+      const container = document.getElementById('filterColorSwatches');
+      const distinctColors = new Set();
+      
+      rows.forEach(r => {
+        if (r.pedidoColor && r.pedidoColor !== '#27272a') {
+          distinctColors.add(r.pedidoColor);
+        }
+      });
+
+      let html = `
+        <button type="button" onclick="filterByPedidoColor(null)" class="inline-flex items-center gap-1 rounded border border-zinc-200 px-1.5 py-0.5 text-[10px] text-zinc-600 hover:bg-zinc-100 ${!activePedidoColorFilter ? 'bg-zinc-100 font-bold' : ''}">
+          Todas
+        </button>
+      `;
+
+      const colorLabels = {
+        '#2e7d32': 'Verde (67 pedidos - #92D050 da Planilha)',
+        '#b45309': 'Amarelo (4 pedidos - #FFFF00 da Planilha)',
+        '#dc2626': 'Vermelho (Crítico da Planilha)',
+        '#27272a': 'Padrão (Sem cor na Planilha)'
+      };
+
+      distinctColors.forEach(color => {
+        const isSelected = activePedidoColorFilter === color;
+        const label = colorLabels[color] || color;
+        html += `
+          <button type="button" onclick="filterByPedidoColor('${color}')" class="h-4 w-4 rounded-full border border-black/20 shadow-2xs transition-transform hover:scale-125 ${isSelected ? 'ring-2 ring-pg ring-offset-1 scale-110' : ''}" style="background-color: ${color};" title="Filtrar: ${label}"></button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterByPedidoColor(color) {
+      activePedidoColorFilter = color;
+      closeFilterDropdown();
+      renderTable();
+      if (color) {
+        showToast('Filtrado pela cor da fonte selecionada', 'palette');
+      } else {
+        showToast('Filtro de cor removido', 'palette');
+      }
+    }
+
+    function populateFilterCheckboxes(field) {
+      const container = document.getElementById('filterCheckboxContainer');
+      const uniqueVals = new Set();
+
+      rows.forEach(r => {
+        let val = '';
+        if (field === 'status') val = computeStatus(r);
+        else val = r[field] ? String(r[field]).trim() : '';
+        uniqueVals.add(val || '(Vazio)');
+      });
+
+      const sortedVals = Array.from(uniqueVals).sort();
+      const currentActive = activeColumnFilters[field];
+
+      let html = `
+        <label class="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-800 hover:bg-zinc-100 p-0.5 rounded cursor-pointer border-b border-zinc-100 pb-1">
+          <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllCheckboxes(this)" class="rounded text-pg focus:ring-pg h-3.5 w-3.5" ${!currentActive ? 'checked' : ''}>
+          <span>(Selecionar Tudo)</span>
+        </label>
+      `;
+
+      sortedVals.forEach((val) => {
+        const isChecked = !currentActive || currentActive.has(val);
+        html += `
+          <label class="filter-item-label flex items-center gap-1.5 text-[11px] text-zinc-700 hover:bg-zinc-100 p-0.5 rounded cursor-pointer">
+            <input type="checkbox" value="${escapeHtml(val)}" class="filter-col-checkbox rounded text-pg focus:ring-pg h-3.5 w-3.5" ${isChecked ? 'checked' : ''} onchange="updateSelectAllState()">
+            <span class="truncate">${escapeHtml(val)}</span>
+          </label>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterCheckboxList() {
+      const q = document.getElementById('filterSearchInput').value.toLowerCase();
+      const labels = document.querySelectorAll('.filter-item-label');
+      labels.forEach(l => {
+        const text = l.innerText.toLowerCase();
+        l.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    function toggleSelectAllCheckboxes(masterCheckbox) {
+      const cbs = document.querySelectorAll('.filter-col-checkbox');
+      cbs.forEach(cb => cb.checked = masterCheckbox.checked);
+    }
+
+    function updateSelectAllState() {
+      const cbs = Array.from(document.querySelectorAll('.filter-col-checkbox'));
+      const master = document.getElementById('selectAllCheckbox');
+      const allChecked = cbs.every(cb => cb.checked);
+      if (master) master.checked = allChecked;
+    }
+
+    function applyFilterFromDropdown() {
+      if (!currentFilterField) return;
+      const cbs = Array.from(document.querySelectorAll('.filter-col-checkbox'));
+      const selected = new Set();
+      let allSelected = true;
+
+      cbs.forEach(cb => {
+        if (cb.checked) selected.add(cb.value);
+        else allSelected = false;
+      });
+
+      if (allSelected) {
+        delete activeColumnFilters[currentFilterField];
+      } else {
+        activeColumnFilters[currentFilterField] = selected;
+      }
+
+      closeFilterDropdown();
+      renderTable();
+      showToast('Filtro aplicado na coluna', 'filter');
+    }
+
+    function clearCurrentFilter() {
+      if (currentFilterField && activeColumnFilters[currentFilterField]) {
+        delete activeColumnFilters[currentFilterField];
+      }
+      closeFilterDropdown();
+      renderTable();
+      showToast('Filtro removido da coluna', 'filter-x');
+    }
+
+    function clearAllFilters() {
+      activeColumnFilters = {};
+      activePedidoColorFilter = null;
+      currentSortField = null;
+      currentSortDirection = null;
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      renderTable();
+      showToast('Todos os filtros foram redefinidos', 'filter-x');
+    }
+
+    function closeFilterDropdown() {
+      const popover = document.getElementById('excelFilterDropdown');
+      if (popover) popover.classList.add('hidden');
+      currentFilterField = null;
+    }
+
+    document.addEventListener('click', (e) => {
+      const filterPopover = document.getElementById('excelFilterDropdown');
+      if (filterPopover && !filterPopover.contains(e.target) && !e.target.closest('.column-filter-btn')) {
+        closeFilterDropdown();
+      }
+
+      const colorPopover = document.getElementById('fontColorPickerPopover');
+      if (colorPopover && !colorPopover.contains(e.target) && !e.target.closest('[data-color-btn="true"]')) {
+        closeColorPicker();
+      }
+    });
+
+    // Ordenação Estilo Excel
+    function toggleSort(field) {
+      if (currentSortField === field) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : (currentSortDirection === 'desc' ? null : 'asc');
+        if (!currentSortDirection) currentSortField = null;
+      } else {
+        currentSortField = field;
+        currentSortDirection = 'asc';
+      }
+      renderTable();
+      if (currentSortDirection) {
+        showToast(`Ordenado por ${field} (${currentSortDirection.toUpperCase()})`, 'arrow-up-down');
+      }
+    }
+
+    function applySortFromDropdown(direction) {
+      if (!currentFilterField) return;
+      currentSortField = currentFilterField;
+      currentSortDirection = direction;
+      closeFilterDropdown();
+      renderTable();
+      showToast(`Coluna ordenada (${direction.toUpperCase()})`, 'arrow-up-down');
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO DA TABELA (INCLUINDO COLUNA: DATA SOLICITADA)
+    // =========================================================================
+
     // =========================================================================
     // RELÓGIO AO VIVO COM SEGUNDOS EM TEMPO REAL NO CABEÇALHO
     // =========================================================================
@@ -3848,6 +4499,7 @@
     }
 
 
+
     // =========================================================================
     // RECURSO: COPIAR DESCRIÇÃO DO PRODUTO (MATÉRIA-PRIMA)
     // =========================================================================
@@ -4540,10 +5192,6 @@
     // Inicialização
     renderTable();
   </script>
-
-  <!-- TOOLTIP FLUTUANTE DE PRODUTO (CÓDIGO E CÓDIGO MP) -->
-  <div id="product-hover-tooltip" class="fixed pointer-events-none z-50 hidden transition-opacity duration-150 bg-slate-900/95 text-white backdrop-blur border border-slate-700/90 rounded-xl shadow-2xl p-3 text-xs max-w-sm ring-1 ring-white/10" style="left: -9999px; top: -9999px;">
-  </div>
-
+<div id="product-hover-tooltip" style="display:none; position:fixed; z-index:999999;"></div>
 </body>
 </html>
