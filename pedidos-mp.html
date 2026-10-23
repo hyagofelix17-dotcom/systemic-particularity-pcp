@@ -264,7 +264,7 @@
               <th class="w-8 px-1 py-1.5 text-center text-zinc-400">#</th>
 
               <!-- Matéria-Prima (Largura estendida para caber toda a descrição sem cortes) -->
-              <th class="relative min-w-[380px] max-w-[500px] px-2.5 py-1.5">
+              <th class="relative min-w-[560px] px-2.5 py-1.5">
                 <div class="flex items-center justify-between gap-1">
                   <span>Matéria-Prima</span>
                   <button type="button" onclick="toggleColumnFilter('materiaPrima', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Matéria-Prima">
@@ -3603,21 +3603,21 @@
               </div>
             </td>
             <td class="px-1 py-1 text-center font-mono text-[10px] text-zinc-400 tabular-nums">${idx + 1}</td>
-            <!-- Coluna Matéria-Prima: descrição 100% visível, quebra de linha automática sem cortes -->
-            <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[380px] max-w-[500px] whitespace-normal">
-              <div class="flex items-start gap-1.5 group/mp">
+            <!-- Coluna Matéria-Prima: toda a descrição na frente na mesma linha horizontal (sem quebrar para baixo) -->
+            <td class="px-2.5 py-1 font-medium text-zinc-900 min-w-[560px] whitespace-nowrap">
+              <div class="flex items-center gap-1.5 group/mp w-full">
                 <!-- Botão de Copiar na frente da descrição do produto -->
                 <button type="button" 
                         onclick="copyProductDescription(${idx}, this)" 
-                        class="mt-0.5 h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-pg hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all shrink-0 opacity-50 group-hover/mp:opacity-100 cursor-pointer shadow-2xs"
+                        class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-pg hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all shrink-0 opacity-50 group-hover/mp:opacity-100 cursor-pointer shadow-2xs"
                         title="Copiar descrição da matéria-prima">
                   <i data-lucide="copy" class="h-3 w-3"></i>
                 </button>
-                <textarea rows="1"
-                          class="table-cell-input font-semibold text-zinc-900 leading-snug resize-none overflow-hidden whitespace-normal break-words py-1 block w-full text-[11px] bg-transparent"
-                          style="min-height: 26px; height: auto;"
-                          oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
-                          onchange="updateCell(${idx}, 'materiaPrima', this.value)">${escapeHtml(r.materiaPrima)}</textarea>
+                <input type="text"
+                       class="table-cell-input font-semibold text-zinc-900 whitespace-nowrap py-0.5 block w-full text-[11px] bg-transparent tracking-tight focus:bg-white focus:ring-1 focus:ring-pg"
+                       value="${escapeHtml(r.materiaPrima)}"
+                       title="${escapeHtml(r.materiaPrima)}"
+                       onchange="updateCell(${idx}, 'materiaPrima', this.value)">
               </div>
             </td>
             <td class="px-1 py-1">
@@ -3712,13 +3712,7 @@
       tbody.innerHTML = html;
       document.getElementById('filteredCount').innerText = `${displayRows.length} de ${rows.length} registros`;
       
-      // Ajusta altura das textareas para que toda a descrição fique perfeitamente visível
-      setTimeout(() => {
-        document.querySelectorAll('textarea.table-cell-input').forEach(t => {
-          t.style.height = 'auto';
-          t.style.height = t.scrollHeight + 'px';
-        });
-      }, 0);
+      
 
       updateKPIs();
       lucide.createIcons();
