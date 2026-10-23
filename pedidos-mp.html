@@ -140,13 +140,13 @@
   </header>
 
   <!-- =========================================================================
-       BARRA DE NAVEGAÇÃO POR ABAS: GESTÃO DE PEDIDOS | NÚMERO DA SOLICITAÇÃO | GESTÃO DE PEDIDOS IBC'S
+       BARRA DE NAVEGAÇÃO POR ABAS: GESTÃO DE PEDIDOS | GESTÃO DE PEDIDOS IBC'S
        ========================================================================= -->
   <div class="border-b border-zinc-200/80 bg-white sticky top-12 z-30 shadow-2xs">
     <div class="mx-auto flex max-w-[1780px] items-center justify-between px-3 sm:px-5">
       <nav class="flex space-x-1" aria-label="Abas do Sistema">
         
-        <!-- Aba 1: Gestão de Pedidos (Tudo o que criamos) -->
+        <!-- Aba 1: Gestão de Pedidos (Tudo o que criamos + Coluna Número da Solicitação) -->
         <button type="button" 
                 id="tab-btn-pedidos" 
                 onclick="switchAppTab('pedidos')" 
@@ -156,17 +156,7 @@
           <span class="rounded-full bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-mono font-bold tabular-nums" id="badgeTotalPedidos">91</span>
         </button>
 
-        <!-- Aba 2: Número da Solicitação -->
-        <button type="button" 
-                id="tab-btn-solicitacao" 
-                onclick="switchAppTab('solicitacao')" 
-                class="flex items-center gap-2 border-b-2 border-transparent px-4 py-2.5 text-xs font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 transition-all cursor-pointer">
-          <i data-lucide="hash" class="h-4 w-4"></i>
-          <span>Número da Solicitação</span>
-          <span class="rounded-full bg-zinc-100 text-zinc-600 px-1.5 py-0.2 text-[10px] font-mono font-medium tabular-nums" id="badgeTotalSolicitacoes">-</span>
-        </button>
-
-        <!-- Aba 3: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
+        <!-- Aba 2: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
         <button type="button" 
                 id="tab-btn-ibcs" 
                 onclick="switchAppTab('ibcs')" 
@@ -303,15 +293,15 @@
 
               <th class="w-12 px-1 py-1.5 text-center">Unid</th>
               
-              <!-- Coluna Nº Solicitação (Filtro e Ordenação Excel) -->
-              <th class="relative w-28 px-1.5 py-1.5 text-center">
+              <!-- Coluna: Número da Solicitação (Filtro e Ordenação Excel) -->
+              <th class="relative min-w-[130px] px-1.5 py-1.5 text-center">
                 <div class="flex items-center justify-between gap-1">
-                  <span>Nº Solicitação</span>
+                  <span class="whitespace-nowrap">Número da Solicitação</span>
                   <div class="flex items-center gap-0.5">
-                    <button type="button" onclick="toggleSort('solicitacao')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Solicitação">
+                    <button type="button" onclick="toggleSort('solicitacao')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Número da Solicitação">
                       <i data-lucide="arrow-up-down" class="h-3 w-3"></i>
                     </button>
-                    <button type="button" onclick="toggleColumnFilter('solicitacao', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Solicitação">
+                    <button type="button" onclick="toggleColumnFilter('solicitacao', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtrar Número da Solicitação">
                       <i data-lucide="filter" class="h-3 w-3"></i>
                     </button>
                   </div>
@@ -546,86 +536,7 @@
     </section>
     </div> <!-- FIM DO #view-pedidos -->
 
-    <!-- =======================================================================
-         ABA 2: NÚMERO DA SOLICITAÇÃO (PAINEL AGRUPADO POR SOLICITAÇÃO)
-         ======================================================================= -->
-    <div id="view-solicitacao" class="hidden flex-col gap-3.5">
-      
-      <!-- Cabeçalho e Controles da Aba Solicitação -->
-      <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200/80 bg-white px-3 py-2 shadow-card">
-        <div class="flex flex-1 items-center gap-2 max-w-md min-w-[260px]">
-          <div class="relative w-full">
-            <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400"></i>
-            <input type="text" id="searchSolicitacaoInput" placeholder="Buscar por número de solicitação ou matéria-prima..." oninput="renderSolicitacoesView()" class="h-7 w-full rounded-md border border-zinc-200 bg-zinc-50/70 pl-8 pr-3 text-xs text-zinc-800 placeholder-zinc-400 transition-all focus:bg-white focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none">
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <select id="solicitacaoStatusFilter" onchange="renderSolicitacoesView()" class="h-7 rounded-md border border-zinc-200 bg-white pl-2 pr-7 text-xs font-medium text-zinc-700 shadow-subtle hover:bg-zinc-50 focus:border-pg focus:outline-none cursor-pointer">
-            <option value="">Todas as Solicitações</option>
-            <option value="COM_ATRASO">Apenas com Itens Atrasados</option>
-            <option value="ENTREGUE">Apenas 100% Entregues</option>
-            <option value="PENDENTE">Apenas Em Aberto / No Prazo</option>
-          </select>
-
-          <span id="solicitacoesCountBadge" class="rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600 tabular-nums">
-            0 solicitações
-          </span>
-        </div>
-      </div>
-
-      <!-- Métricas Resumidas das Solicitações -->
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
-          <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Total Solicitações</span>
-          <span id="kpiTotalSolic" class="text-lg font-bold tracking-tight text-zinc-900 tabular-nums">0</span>
-        </div>
-        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
-          <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Solicitações 100% OK</span>
-          <span id="kpiOkSolic" class="text-lg font-bold tracking-tight text-emerald-700 tabular-nums">0</span>
-        </div>
-        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
-          <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Em Andamento (No Prazo)</span>
-          <span id="kpiPendenteSolic" class="text-lg font-bold tracking-tight text-indigo-700 tabular-nums">0</span>
-        </div>
-        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
-          <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Com Itens Atrasados</span>
-          <span id="kpiAtrasoSolic" class="text-lg font-bold tracking-tight text-rose-700 tabular-nums">0</span>
-        </div>
-      </div>
-
-      <!-- Tabela Agrupada por Número de Solicitação -->
-      <div class="rounded-lg border border-zinc-200/80 bg-white shadow-card overflow-hidden">
-        <div class="border-b border-zinc-100 px-4 py-2 bg-zinc-50/50 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i data-lucide="hash" class="h-3.5 w-3.5 text-pg"></i>
-            <span class="text-[11px] font-bold text-zinc-800 uppercase tracking-wide">Relação de Ordens e Solicitações de Compras</span>
-          </div>
-          <span class="text-[10px] text-zinc-400">Clique em "Ver Pedidos" para filtrar a tabela operacional</span>
-        </div>
-
-        <div class="overflow-x-auto max-h-[66vh]">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead class="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 backdrop-blur-xs text-[11px] font-semibold text-zinc-600">
-              <tr>
-                <th class="w-16 px-2 py-1.5 text-center">Ações</th>
-                <th class="w-28 px-2 py-1.5 text-center">Nº Solicitação</th>
-                <th class="w-20 px-2 py-1.5 text-center">Qtd Itens</th>
-                <th class="min-w-[280px] px-2 py-1.5">Matérias-Primas Solicitadas</th>
-                <th class="w-28 px-2 py-1.5 text-center">Data Solicitada</th>
-                <th class="w-28 px-2 py-1.5 text-center">Previsão</th>
-                <th class="w-36 px-2 py-1.5 text-center">Status Geral</th>
-                <th class="w-28 px-2 py-1.5 text-center">Situação</th>
-              </tr>
-            </thead>
-            <tbody id="solicitacoesTableBody" class="divide-y divide-zinc-200/60 bg-white text-zinc-700">
-              <!-- Linhas inseridas via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div> <!-- FIM DO #view-solicitacao -->
+    
 
     <!-- =======================================================================
          ABA 3: GESTÃO DE PEDIDOS IBC'S (CRIADA E NÃO MODIFICADA AINDA)
@@ -3387,13 +3298,13 @@
     // =========================================================================
 
     // =========================================================================
-    // NAVEGAÇÃO DE ABAS PRINCIPAIS: PEDIDOS | SOLICITAÇÃO | IBC'S
+    // NAVEGAÇÃO DE ABAS PRINCIPAIS: GESTÃO DE PEDIDOS | GESTÃO DE PEDIDOS IBC'S
     // =========================================================================
     let currentAppTab = 'pedidos';
 
     function switchAppTab(tabId) {
       currentAppTab = tabId;
-      const tabs = ['pedidos', 'solicitacao', 'ibcs'];
+      const tabs = ['pedidos', 'ibcs'];
       
       tabs.forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
@@ -3417,160 +3328,12 @@
         }
       });
 
-      if (tabId === 'solicitacao') {
-        renderSolicitacoesView();
-      } else if (tabId === 'pedidos') {
+      if (tabId === 'pedidos') {
         if (chartCriticosInstance) chartCriticosInstance.resize();
         if (chartStatusInstance) chartStatusInstance.resize();
       }
 
       if (window.lucide) lucide.createIcons();
-    }
-
-    // =========================================================================
-    // ABA NÚMERO DA SOLICITAÇÃO: AGRUPAMENTO & RENDERIZAÇÃO
-    // =========================================================================
-    function getSolicitacoesGrouped() {
-      const groups = {};
-      rows.forEach((r, originalIndex) => {
-        const num = (r.solicitacao || '').trim() || 'Sem Nº';
-        if (!groups[num]) {
-          groups[num] = {
-            solicitacao: num,
-            items: [],
-            dataSolicitada: r.dataSolicitada || '',
-            previsaoEntrega: r.previsaoEntrega || '',
-          };
-        }
-        groups[num].items.push({
-          ...r,
-          originalIndex,
-          computedStatus: computeStatus(r),
-          delayDays: calculateDelayDays(r)
-        });
-      });
-
-      return Object.values(groups);
-    }
-
-    function renderSolicitacoesView() {
-      const tbody = document.getElementById('solicitacoesTableBody');
-      if (!tbody) return;
-
-      const search = (document.getElementById('searchSolicitacaoInput')?.value || '').toLowerCase();
-      const statusFilter = document.getElementById('solicitacaoStatusFilter')?.value || '';
-
-      const groups = getSolicitacoesGrouped();
-      
-      // Contadores Globais
-      let totalSolic = groups.length;
-      let okCount = 0;
-      let pendenteCount = 0;
-      let atrasoCount = 0;
-
-      groups.forEach(g => {
-        const hasDelay = g.items.some(i => i.delayDays > 0 && !i.dataChegada);
-        const allOk = g.items.every(i => i.computedStatus === 'OK');
-        if (allOk) okCount++;
-        else if (hasDelay) atrasoCount++;
-        else pendenteCount++;
-      });
-
-      // Atualizar KPIs
-      if (document.getElementById('kpiTotalSolic')) document.getElementById('kpiTotalSolic').innerText = totalSolic;
-      if (document.getElementById('kpiOkSolic')) document.getElementById('kpiOkSolic').innerText = okCount;
-      if (document.getElementById('kpiPendenteSolic')) document.getElementById('kpiPendenteSolic').innerText = pendenteCount;
-      if (document.getElementById('kpiAtrasoSolic')) document.getElementById('kpiAtrasoSolic').innerText = atrasoCount;
-      if (document.getElementById('badgeTotalSolicitacoes')) document.getElementById('badgeTotalSolicitacoes').innerText = totalSolic;
-
-      let filteredGroups = groups.filter(g => {
-        const matchSearch = g.solicitacao.toLowerCase().includes(search) || 
-          g.items.some(i => (i.materiaPrima || '').toLowerCase().includes(search) || (i.fornecedor || '').toLowerCase().includes(search));
-
-        if (!matchSearch) return false;
-
-        const hasDelay = g.items.some(i => i.delayDays > 0 && !i.dataChegada);
-        const allOk = g.items.every(i => i.computedStatus === 'OK');
-
-        if (statusFilter === 'COM_ATRASO') return hasDelay;
-        if (statusFilter === 'ENTREGUE') return allOk;
-        if (statusFilter === 'PENDENTE') return !allOk && !hasDelay;
-
-        return true;
-      });
-
-      if (document.getElementById('solicitacoesCountBadge')) {
-        document.getElementById('solicitacoesCountBadge').innerText = filteredGroups.length + ' solicitações';
-      }
-
-      if (filteredGroups.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-zinc-400 text-xs">Nenhuma solicitação encontrada com os filtros aplicados.</td></tr>';
-        return;
-      }
-
-      let html = '';
-      filteredGroups.forEach(g => {
-        const hasDelay = g.items.some(i => i.delayDays > 0 && !i.dataChegada);
-        const allOk = g.items.every(i => i.computedStatus === 'OK');
-        const maxDelay = Math.max(0, ...g.items.map(i => i.delayDays || 0));
-
-        let situacaoBadge = '';
-        if (allOk) {
-          situacaoBadge = '<span class="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Entregue</span>';
-        } else if (hasDelay) {
-          situacaoBadge = `<span class="inline-flex items-center gap-1 rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700"><span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>Atrasado (+${maxDelay}d)</span>`;
-        } else {
-          situacaoBadge = '<span class="inline-flex items-center gap-1 rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700"><span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>No Prazo</span>';
-        }
-
-        const mpNames = g.items.map(i => escapeHtml(i.materiaPrima)).join(', ');
-
-        html += `
-          <tr class="hover:bg-zinc-50/80 transition-colors">
-            <td class="px-2 py-1.5 text-center">
-              <button type="button" 
-                      onclick="filterBySpecificSolicitacao('${g.solicitacao}')" 
-                      class="inline-flex items-center gap-1 rounded border border-zinc-200 bg-white px-2 py-1 text-[10px] font-medium text-zinc-700 hover:bg-pg hover:text-white hover:border-pg transition-all shadow-2xs"
-                      title="Filtrar e editar na Gestão de Pedidos">
-                <i data-lucide="external-link" class="h-3 w-3"></i>
-                <span>Ver Pedidos</span>
-              </button>
-            </td>
-            <td class="px-2 py-1.5 text-center font-mono font-bold text-xs text-zinc-900 tabular-nums">
-              ${g.solicitacao !== 'Sem Nº' ? '#' + g.solicitacao : '<span class="text-zinc-400 font-normal">S/ Nº</span>'}
-            </td>
-            <td class="px-2 py-1.5 text-center font-mono text-xs text-zinc-600 tabular-nums">
-              <span class="rounded bg-zinc-100 px-1.5 py-0.5 font-semibold text-zinc-700">${g.items.length}</span>
-            </td>
-            <td class="px-2 py-1.5 text-zinc-800 text-xs font-medium max-w-[340px] truncate" title="${mpNames}">
-              ${mpNames}
-            </td>
-            <td class="px-2 py-1.5 text-center font-mono text-[11px] text-zinc-600 tabular-nums">
-              ${g.dataSolicitada || '-'}
-            </td>
-            <td class="px-2 py-1.5 text-center font-mono text-[11px] text-zinc-600 tabular-nums">
-              ${g.previsaoEntrega || '-'}
-            </td>
-            <td class="px-2 py-1.5 text-center">
-              <span class="text-[11px] font-medium text-zinc-600">${g.items.length > 1 ? g.items.length + ' itens agrupados' : g.items[0].computedStatus}</span>
-            </td>
-            <td class="px-2 py-1.5 text-center">
-              ${situacaoBadge}
-            </td>
-          </tr>
-        `;
-      });
-
-      tbody.innerHTML = html;
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function filterBySpecificSolicitacao(solicNum) {
-      if (solicNum === 'Sem Nº') solicNum = '';
-      switchAppTab('pedidos');
-      document.getElementById('searchInput').value = solicNum;
-      renderTable();
-      showToast(`Filtrando pedidos da Solicitação ${solicNum ? '#' + solicNum : 'sem número'}`, 'search');
     }
 
     function renderTable() {
