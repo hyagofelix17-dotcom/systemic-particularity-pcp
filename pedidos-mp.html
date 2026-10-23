@@ -151,7 +151,7 @@
     <div class="mx-auto flex max-w-[1780px] items-center justify-between px-4 sm:px-6">
       <nav class="flex space-x-2" aria-label="Abas do Sistema">
         
-        <!-- Aba 1: Gestão de Pedidos (Tudo o que criamos + Coluna Número da Solicitação) -->
+        <!-- Aba 1: Gestão de Pedidos (Tabela Operacional + Dashboard Executivo) -->
         <button type="button" 
                 id="tab-btn-pedidos" 
                 onclick="switchAppTab('pedidos')" 
@@ -161,7 +161,17 @@
           <span class="rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200/80 px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs" id="badgeTotalPedidos">91</span>
         </button>
 
-        <!-- Aba 2: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
+        <!-- Aba 2: Painel de Visualização - ATRASADOS (SOLICITADO) -->
+        <button type="button" 
+                id="tab-btn-atrasados" 
+                onclick="switchAppTab('atrasados')" 
+                class="flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-rose-700 hover:border-rose-300 hover:text-rose-800 transition-all cursor-pointer">
+          <i data-lucide="alert-octagon" class="h-4.5 w-4.5 text-rose-600"></i>
+          <span>Painel de Visualização - ATRASADOS</span>
+          <span class="rounded-full bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs" id="badgeTotalAtrasados">34</span>
+        </button>
+
+        <!-- Aba 3: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
         <button type="button" 
                 id="tab-btn-ibcs" 
                 onclick="switchAppTab('ibcs')" 
@@ -281,7 +291,8 @@
             <input type="text" 
                    id="expandedSearchInput"
                    placeholder="Pesquisar..." 
-                   oninput="document.getElementById('searchInput').value = this.value; renderTable();" 
+                   oninput="document.getElementById('searchInput').value = this.value; renderTable();
+    updateDelayedKPIsOnly();" 
                    class="h-7 w-full rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-pg focus:ring-1 focus:ring-pg">
           </div>
 
@@ -3387,13 +3398,13 @@
     // =========================================================================
 
     // =========================================================================
-    // NAVEGAÇÃO DE ABAS PRINCIPAIS: GESTÃO DE PEDIDOS | GESTÃO DE PEDIDOS IBC'S
+    // NAVEGAÇÃO DE ABAS PRINCIPAIS: PEDIDOS | ATRASADOS | IBC'S
     // =========================================================================
     let currentAppTab = 'pedidos';
 
     function switchAppTab(tabId) {
       currentAppTab = tabId;
-      const tabs = ['pedidos', 'ibcs'];
+      const tabs = ['pedidos', 'atrasados', 'ibcs'];
       
       tabs.forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
@@ -3403,26 +3414,461 @@
         if (view) {
           if (isActive) {
             view.classList.remove('hidden');
+            view.classList.add('flex');
           } else {
             view.classList.add('hidden');
+            view.classList.remove('flex');
           }
         }
 
         if (btn) {
-          if (isActive) {
-            btn.className = 'flex items-center gap-2.5 border-b-2 border-pg px-5 py-3 text-sm font-bold text-pg transition-all cursor-pointer';
+          if (t === 'atrasados') {
+            if (isActive) {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-rose-600 px-5 py-3 text-sm font-bold text-rose-700 bg-rose-50/50 transition-all cursor-pointer';
+            } else {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-rose-700/80 hover:border-rose-300 hover:text-rose-900 transition-all cursor-pointer';
+            }
           } else {
-            btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-zinc-500 hover:border-zinc-300 hover:text-zinc-800 transition-all cursor-pointer';
+            if (isActive) {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-pg px-5 py-3 text-sm font-bold text-pg transition-all cursor-pointer';
+            } else {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-zinc-500 hover:border-zinc-300 hover:text-zinc-800 transition-all cursor-pointer';
+            }
           }
         }
       });
 
-      if (tabId === 'pedidos') {
+      if (tabId === 'atrasados') {
+        renderPainelAtrasados();
+      } else if (tabId === 'pedidos') {
         if (chartCriticosInstance) chartCriticosInstance.resize();
         if (chartStatusInstance) chartStatusInstance.resize();
       }
 
       if (window.lucide) lucide.createIcons();
+    }
+
+    // =========================================================================
+    // LÓGICA E RENDERIZAÇÃO DO PAINEL DE VISUALIZAÇÃO - ATRASADOS
+    // =========================================================================
+    let delayedFilterSeverity = 'TODOS';
+    let delayedSortField = 'delay_desc';
+    let delayedSearchQuery = '';
+
+    function getDelayedItems() {
+      const delayed = [];
+      rows.forEach((r, originalIndex) => {
+        const delay = calculateDelayDays(r);
+        if (delay > 0 && (!r.dataChegada || r.dataChegada.trim() === '')) {
+          let qtyNum = 0;
+          if (r.quantidade !== undefined && r.quantidade !== '') {
+            qtyNum = parseFloat(String(r.quantidade).replace(/\./g, '').replace(',', '.')) || 0;
+          }
+          delayed.push({
+            ...r,
+            originalIndex,
+            delayDays: delay,
+            qtyNum: qtyNum,
+            computedStatus: computeStatus(r)
+          });
+        }
+      });
+      return delayed;
+    }
+
+    function onAtrasadosSearch(val) {
+      delayedSearchQuery = (val || '').toLowerCase().trim();
+      renderPainelAtrasados();
+    }
+
+    function setDelayedFilter(filterType) {
+      delayedFilterSeverity = filterType;
+      
+      // Atualizar botões de filtro
+      document.querySelectorAll('.delayed-filter-btn').forEach(b => {
+        b.className = 'delayed-filter-btn px-3 py-1.5 text-xs font-semibold rounded-md border border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 shadow-2xs transition-all cursor-pointer';
+      });
+
+      const activeBtn = document.getElementById('filter-btn-' + filterType);
+      if (activeBtn) {
+        if (filterType === 'SEM_JUSTIFICATIVA') {
+          activeBtn.className = 'delayed-filter-btn px-3 py-1.5 text-xs font-bold rounded-md border border-amber-300 bg-amber-500 text-white shadow-xs transition-all cursor-pointer';
+        } else if (filterType === 'CRITICOS_30D') {
+          activeBtn.className = 'delayed-filter-btn px-3 py-1.5 text-xs font-bold rounded-md border border-rose-300 bg-rose-600 text-white shadow-xs transition-all cursor-pointer';
+        } else {
+          activeBtn.className = 'delayed-filter-btn px-3 py-1.5 text-xs font-bold rounded-md border border-zinc-900 bg-zinc-900 text-white shadow-xs transition-all cursor-pointer';
+        }
+      }
+
+      renderPainelAtrasados();
+    }
+
+    function setDelayedSort(sortType) {
+      delayedSortField = sortType;
+      renderPainelAtrasados();
+    }
+
+    function updateDelayedReason(originalIndex, reasonText) {
+      if (rows[originalIndex]) {
+        rows[originalIndex].motivoAtraso = reasonText;
+        saveState();
+
+        const indicator = document.getElementById('saved-indicator-' + originalIndex);
+        if (indicator) {
+          indicator.classList.remove('hidden');
+          indicator.classList.add('inline-flex');
+          clearTimeout(indicator._timeout);
+          indicator._timeout = setTimeout(() => {
+            indicator.classList.remove('inline-flex');
+            indicator.classList.add('hidden');
+          }, 2000);
+        }
+
+        updateDelayedKPIsOnly();
+      }
+    }
+
+    function goToItemInMainTable(originalIndex) {
+      switchAppTab('pedidos');
+      const r = rows[originalIndex];
+      if (r && r.materiaPrima) {
+        document.getElementById('searchInput').value = r.materiaPrima;
+        renderTable();
+        showToast('Localizado na Gestão de Pedidos', 'search');
+      }
+    }
+
+    function updateDelayedKPIsOnly() {
+      const allDelayed = getDelayedItems();
+      const total = allDelayed.length;
+      const comJustificativa = allDelayed.filter(d => d.motivoAtraso && d.motivoAtraso.trim() !== '').length;
+      const pendentes = total - comJustificativa;
+
+      const justEl = document.getElementById('atrasadosKpiJustificadas');
+      if (justEl) justEl.innerText = comJustificativa;
+      
+      const bar = document.getElementById('atrasadosProgressBar');
+      if (bar) {
+        const pct = total > 0 ? Math.round((comJustificativa / total) * 100) : 0;
+        bar.style.width = pct + '%';
+      }
+
+      const pCount = document.getElementById('countFilterPendentes');
+      if (pCount) pCount.innerText = pendentes;
+    }
+
+    function renderPainelAtrasados() {
+      const allDelayed = getDelayedItems();
+      const container = document.getElementById('atrasadosCardsContainer');
+      if (!container) return;
+
+      // 1. Atualizar KPIs do Topo
+      const total = allDelayed.length;
+      let totalVolume = 0;
+      let maxDelay = 0;
+      let somaDias = 0;
+      let comPedidoCount = 0;
+      let semPedidoCount = 0;
+      let comJustificativa = 0;
+      let criticosCount = 0;
+
+      allDelayed.forEach(d => {
+        totalVolume += d.qtyNum;
+        if (d.delayDays > maxDelay) maxDelay = d.delayDays;
+        somaDias += d.delayDays;
+
+        if (d.pedido && d.pedido.trim() !== '' && d.pedido !== '-') {
+          comPedidoCount++;
+        } else {
+          semPedidoCount++;
+        }
+
+        if (d.motivoAtraso && d.motivoAtraso.trim() !== '') {
+          comJustificativa++;
+        }
+
+        if (d.delayDays >= 30) {
+          criticosCount++;
+        }
+      });
+
+      const mediaDias = total > 0 ? Math.round(somaDias / total) : 0;
+      const pendentesCount = total - comJustificativa;
+
+      if (document.getElementById('badgeTotalAtrasados')) document.getElementById('badgeTotalAtrasados').innerText = total;
+      if (document.getElementById('atrasadosKpiTotal')) document.getElementById('atrasadosKpiTotal').innerText = total;
+      if (document.getElementById('atrasadosKpiComPedido')) document.getElementById('atrasadosKpiComPedido').innerText = comPedidoCount;
+      if (document.getElementById('atrasadosKpiSemPedido')) document.getElementById('atrasadosKpiSemPedido').innerText = semPedidoCount;
+      if (document.getElementById('atrasadosKpiVolume')) document.getElementById('atrasadosKpiVolume').innerText = totalVolume.toLocaleString('pt-BR');
+      if (document.getElementById('atrasadosKpiMaxDias')) document.getElementById('atrasadosKpiMaxDias').innerText = '+' + maxDelay;
+      if (document.getElementById('atrasadosKpiMediaDias')) document.getElementById('atrasadosKpiMediaDias').innerText = mediaDias + ' dias';
+      if (document.getElementById('atrasadosKpiJustificadas')) document.getElementById('atrasadosKpiJustificadas').innerText = comJustificativa;
+      if (document.getElementById('atrasadosKpiTotalBase')) document.getElementById('atrasadosKpiTotalBase').innerText = total;
+      
+      const bar = document.getElementById('atrasadosProgressBar');
+      if (bar) {
+        const pct = total > 0 ? Math.round((comJustificativa / total) * 100) : 0;
+        bar.style.width = pct + '%';
+      }
+
+      if (document.getElementById('countFilterTodos')) document.getElementById('countFilterTodos').innerText = total;
+      if (document.getElementById('countFilterPendentes')) document.getElementById('countFilterPendentes').innerText = pendentesCount;
+      if (document.getElementById('countFilterCriticos')) document.getElementById('countFilterCriticos').innerText = criticosCount;
+      if (document.getElementById('countFilterSemPedido')) document.getElementById('countFilterSemPedido').innerText = semPedidoCount;
+
+      // 2. Filtrar
+      let filtered = allDelayed.filter(d => {
+        if (delayedSearchQuery) {
+          const matchMP = (d.materiaPrima || '').toLowerCase().includes(delayedSearchQuery);
+          const matchForn = (d.fornecedor || '').toLowerCase().includes(delayedSearchQuery);
+          const matchPed = (d.pedido || '').toLowerCase().includes(delayedSearchQuery);
+          const matchSolic = (d.solicitacao || '').toLowerCase().includes(delayedSearchQuery);
+          const matchMotivo = (d.motivoAtraso || '').toLowerCase().includes(delayedSearchQuery);
+          if (!matchMP && !matchForn && !matchPed && !matchSolic && !matchMotivo) return false;
+        }
+
+        if (delayedFilterSeverity === 'SEM_JUSTIFICATIVA') {
+          return !d.motivoAtraso || d.motivoAtraso.trim() === '';
+        }
+        if (delayedFilterSeverity === 'CRITICOS_30D') {
+          return d.delayDays >= 30;
+        }
+        if (delayedFilterSeverity === 'SEM_PEDIDO') {
+          return !d.pedido || d.pedido.trim() === '' || d.pedido === '-';
+        }
+
+        return true;
+      });
+
+      // 3. Ordenar
+      filtered.sort((a, b) => {
+        if (delayedSortField === 'delay_desc') return b.delayDays - a.delayDays;
+        if (delayedSortField === 'delay_asc') return a.delayDays - b.delayDays;
+        if (delayedSortField === 'qty_desc') return b.qtyNum - a.qtyNum;
+        if (delayedSortField === 'name_asc') return (a.materiaPrima || '').localeCompare(b.materiaPrima || '');
+        if (delayedSortField === 'forn_asc') return (a.fornecedor || '').localeCompare(b.fornecedor || '');
+        return 0;
+      });
+
+      // 4. Renderizar Cards Didáticos
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="rounded-xl border border-zinc-200 bg-white p-12 text-center shadow-card">
+            <div class="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+              <i data-lucide="check-circle-2" class="h-6 w-6"></i>
+            </div>
+            <h3 class="text-sm font-bold text-zinc-800 uppercase tracking-tight">Nenhum Pedido Atrasado Encontrado</h3>
+            <p class="mt-1 text-xs text-zinc-500 max-w-md mx-auto">
+              Nenhuma matéria-prima atende aos filtros atuais selecionados. Todos os pedidos estão dentro do prazo ou justificados.
+            </p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      let html = '';
+      filtered.forEach((item, idx) => {
+        const badgeClass = getBadgeClass(item.computedStatus);
+        const hasMotivo = item.motivoAtraso && item.motivoAtraso.trim() !== '';
+
+        let delayTagColor = 'bg-rose-50 text-rose-800 border-rose-300';
+        if (item.delayDays >= 40) {
+          delayTagColor = 'bg-red-100 text-red-900 border-red-400';
+        } else if (item.delayDays < 15) {
+          delayTagColor = 'bg-orange-50 text-orange-800 border-orange-300';
+        }
+
+        html += `
+          <div class="rounded-xl border border-zinc-200/90 bg-white shadow-card p-4 transition-all hover:shadow-md hover:border-zinc-300 flex flex-col gap-3">
+            
+            <!-- Linha 1: Identificação, Nome da Matéria-Prima e Badges -->
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-100 pb-3">
+              <div class="flex items-start gap-3 flex-1 min-w-[280px]">
+                <span class="rounded-md bg-zinc-100 text-zinc-700 px-2.5 py-1 font-mono text-xs font-bold tabular-nums shrink-0">#${idx + 1}</span>
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-zinc-900 tracking-tight leading-snug">${escapeHtml(item.materiaPrima)}</h3>
+                  <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span class="text-xs text-zinc-500">Fornecedor: <strong class="text-zinc-800 font-semibold">${escapeHtml(item.fornecedor || 'Não informado')}</strong></span>
+                    <span class="text-zinc-300">&bull;</span>
+                    <span class="text-xs text-zinc-500">Nº Solicitação: <strong class="font-mono text-zinc-900 font-bold">${item.solicitacao ? '#' + escapeHtml(item.solicitacao) : 'S/ Nº'}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Badges de Severidade & Status -->
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="inline-flex items-center gap-1.5 rounded-full border ${delayTagColor} px-3 py-1 text-xs font-black font-mono tabular-nums shadow-2xs">
+                  <span class="h-2 w-2 rounded-full bg-rose-600 animate-pulse"></span>
+                  +${item.delayDays} DIAS EM ATRASO
+                </span>
+                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass}">
+                  ${item.computedStatus}
+                </span>
+              </div>
+            </div>
+
+            <!-- Linha 2: Informações Didáticas de Prazo e Quantidade -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs bg-zinc-50/70 rounded-lg p-3 border border-zinc-100">
+              <div>
+                <span class="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Qtd Solicitada</span>
+                <strong class="text-xs sm:text-sm text-zinc-900 font-mono font-bold tabular-nums">${escapeHtml(item.quantidade)} ${escapeHtml(item.unidade || 'KG')}</strong>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Data da Solicitação</span>
+                <span class="text-xs font-mono font-medium text-zinc-700 tabular-nums">${item.dataSolicitada || '-'}</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-rose-500 block tracking-wider font-semibold">Previsão Prometida</span>
+                <strong class="text-xs font-mono text-rose-700 font-bold line-through tabular-nums">${item.previsaoEntrega || '-'}</strong>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Nº do Pedido</span>
+                <span class="text-xs font-mono font-bold" style="color: ${item.pedidoColor || '#27272a'}">${escapeHtml(item.pedido || 'SEM PEDIDO')}</span>
+              </div>
+            </div>
+
+            <!-- Linha 3: CAMPO DIDÁTICO PARA COMPRAS DIGITAR O MOTIVO DO ATRASO -->
+            <div class="mt-1 rounded-xl border ${hasMotivo ? 'border-emerald-200/90 bg-emerald-50/30' : 'border-amber-300 bg-amber-50/40'} p-3.5 flex flex-col gap-2.5 transition-all">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="message-square" class="h-4 w-4 ${hasMotivo ? 'text-emerald-700' : 'text-amber-700'}"></i>
+                  <label for="motivo-input-${item.originalIndex}" class="text-xs sm:text-sm font-bold ${hasMotivo ? 'text-emerald-950' : 'text-amber-950'}">
+                    Motivo do Atraso &bull; Apontamento do Setor de Compras:
+                  </label>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span id="saved-indicator-${item.originalIndex}" class="text-[11px] font-semibold text-emerald-700 hidden items-center gap-1">
+                    <i data-lucide="check" class="h-3.5 w-3.5"></i> Salvo automaticamente
+                  </span>
+                  ${hasMotivo 
+                    ? '<span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full"><span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>Justificativa Registrada</span>' 
+                    : '<span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full"><span class="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse"></span>Pendente de Preenchimento</span>'}
+                </div>
+              </div>
+
+              <textarea id="motivo-input-${item.originalIndex}"
+                        rows="2"
+                        oninput="updateDelayedReason(${item.originalIndex}, this.value)"
+                        class="w-full text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 p-3 rounded-lg border ${hasMotivo ? 'border-emerald-300 bg-white' : 'border-amber-300 bg-white'} focus:ring-2 focus:ring-pg/20 focus:border-pg focus:outline-none transition-all resize-none shadow-2xs leading-relaxed"
+                        placeholder="Digite aqui o motivo do atraso informado pelo fornecedor (ex: atraso no desembaraço aduaneiro, atraso no faturamento pelo fornecedor com nova previsão para DD/MM, problemas logísticos de transporte)...">${escapeHtml(item.motivoAtraso || '')}</textarea>
+              
+              <div class="flex items-center justify-between text-xs text-zinc-500 pt-0.5 flex-wrap gap-2">
+                <span class="text-zinc-400 text-[11px]">Sincronizado em tempo real com a coluna "Motivo do Atraso" do Excel (.xlsx).</span>
+                <button type="button" 
+                        onclick="goToItemInMainTable(${item.originalIndex})" 
+                        class="inline-flex items-center gap-1.5 text-xs font-bold text-pg hover:text-[#08381c] hover:underline cursor-pointer">
+                  <span>Ver na Gestão de Pedidos</span>
+                  <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function exportAtrasadosToExcel() {
+      if (typeof ExcelJS === 'undefined') {
+        showToast('Carregando biblioteca Excel...', 'clock');
+        return;
+      }
+
+      const delayed = getDelayedItems();
+      if (delayed.length === 0) {
+        showToast('Nenhum pedido em atraso para exportar!', 'alert-circle');
+        return;
+      }
+
+      showToast('Exportando relatório de pedidos em atraso...', 'clock');
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'PG Química - PCP';
+      const ws = wb.addWorksheet('Atrasados - Compras', { views: [{ showGridLines: true }] });
+
+      ws.columns = [
+        { header: 'Matéria-prima', key: 'materiaPrima', width: 70 },
+        { header: 'Fornecedor', key: 'fornecedor', width: 20 },
+        { header: 'Pedido', key: 'pedido', width: 14 },
+        { header: 'Nº Solicitação', key: 'solicitacao', width: 16 },
+        { header: 'Qtd Solicitada', key: 'quantidade', width: 16 },
+        { header: 'Unidade', key: 'unidade', width: 12 },
+        { header: 'Data Solicitada', key: 'dataSolicitada', width: 16 },
+        { header: 'Previsão Entrega', key: 'previsaoEntrega', width: 16 },
+        { header: 'Dias em Atraso', key: 'diasAtraso', width: 16 },
+        { header: 'Status do Pedido', key: 'status', width: 28 },
+        { header: 'Motivo do Atraso (Compras)', key: 'motivoAtraso', width: 50 }
+      ];
+
+      // Cabeçalho Vermelho / Vinho corporativo para atrasados
+      const headerRow = ws.getRow(1);
+      headerRow.height = 28;
+      headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B0000' } };
+        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+
+      const thinBorder = {
+        top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
+      };
+
+      delayed.forEach(d => {
+        const row = ws.addRow({
+          materiaPrima: d.materiaPrima || '',
+          fornecedor: d.fornecedor || '',
+          pedido: d.pedido || '',
+          solicitacao: d.solicitacao || '',
+          quantidade: d.qtyNum || d.quantidade,
+          unidade: d.unidade || 'KG',
+          dataSolicitada: d.dataSolicitada || '',
+          previsaoEntrega: d.previsaoEntrega || '',
+          diasAtraso: d.delayDays,
+          status: d.computedStatus,
+          motivoAtraso: d.motivoAtraso || ''
+        });
+
+        row.height = 22;
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          cell.border = thinBorder;
+          cell.font = { name: 'Calibri', size: 10 };
+          cell.alignment = { vertical: 'middle' };
+
+          if (colNumber === 1 || colNumber === 11) cell.alignment = { horizontal: 'left', vertical: 'middle' };
+          else if (colNumber === 5) {
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            if (typeof cell.value === 'number') cell.numFmt = '#,##0.00';
+          }
+          else cell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          if (colNumber === 9) {
+            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFF0000' } };
+          }
+        });
+      });
+
+      ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: delayed.length + 1, column: 11 } };
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'PG_Quimica_Relatorio_Atrasados_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Relatório de atrasados exportado!', 'file-spreadsheet');
     }
 
 
