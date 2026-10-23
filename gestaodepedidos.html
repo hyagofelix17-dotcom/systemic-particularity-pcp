@@ -255,10 +255,62 @@
     <!-- =======================================================================
          2. TABELA OPERACIONAL PRINCIPAL (NO TOPO, VISÃO COMPLETA)
          ======================================================================= -->
-    <div class="rounded-lg border border-zinc-200/80 bg-white shadow-card overflow-hidden">
-      <div class="table-container overflow-x-auto max-h-[66vh]">
+    <div id="mainTableCard" class="rounded-lg border border-zinc-200/80 bg-white shadow-card overflow-hidden transition-all duration-200">
+      
+      <!-- BARRA SUPERIOR EXCLUSIVA DO MODO EXPANDIDO (TELA CHEIA) -->
+      <div id="expandedTableToolbar" class="hidden items-center justify-between border-b border-zinc-200/90 bg-zinc-50/95 px-3.5 py-2 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="flex h-6 w-6 items-center justify-center rounded bg-pg text-white shadow-xs">
+            <i data-lucide="table" class="h-3.5 w-3.5"></i>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-zinc-900 tracking-tight">Tabela Operacional &bull; Modo Expandido</span>
+            <span class="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+              Tela Cheia Ativa
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <!-- Atalho de Busca Rápida no Modo Expandido -->
+          <div class="relative w-64">
+            <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400"></i>
+            <input type="text" 
+                   id="expandedSearchInput"
+                   placeholder="Pesquisar..." 
+                   oninput="document.getElementById('searchInput').value = this.value; renderTable();" 
+                   class="h-7 w-full rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-pg focus:ring-1 focus:ring-pg">
+          </div>
+
+          <!-- Controles de Zoom no Modo Expandido -->
+          <div class="inline-flex h-7 items-center rounded-md border border-zinc-200 bg-white px-1 shadow-subtle gap-0.5">
+            <button type="button" onclick="changeTableZoom(-0.1)" class="h-5 w-5 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer" title="Diminuir Zoom">
+              <i data-lucide="zoom-out" class="h-3 w-3"></i>
+            </button>
+            <button type="button" onclick="resetTableZoom()" class="px-1.5 text-[11px] font-mono font-semibold text-zinc-700 hover:text-pg hover:bg-zinc-50 rounded transition-colors tabular-nums cursor-pointer" title="Redefinir Zoom para 100%">
+              <span id="expandedZoomDisplay">100%</span>
+            </button>
+            <button type="button" onclick="changeTableZoom(0.1)" class="h-5 w-5 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer" title="Aumentar Zoom">
+              <i data-lucide="zoom-in" class="h-3 w-3"></i>
+            </button>
+          </div>
+
+          <!-- BOTÃO PROEMINENTE: VOLTAR À VERSÃO NORMAL -->
+          <button type="button" 
+                  onclick="toggleTableFullscreen()" 
+                  class="inline-flex h-7 items-center gap-1.5 rounded-md bg-zinc-900 px-3 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-all cursor-pointer"
+                  title="Voltar à visualização normal da página (ou pressione ESC)">
+            <i data-lucide="minimize-2" class="h-3.5 w-3.5 text-zinc-200"></i>
+            <span>Voltar ao Normal</span>
+            <span class="rounded bg-zinc-800 px-1 py-0.2 text-[9px] font-mono text-zinc-300">ESC</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container overflow-auto max-h-[66vh]">
         <table id="mainTable" class="w-full text-left border-collapse text-xs">
-          <thead class="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 backdrop-blur-xs text-[11px] font-semibold text-zinc-600">
+          <thead class="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/95 backdrop-blur-md text-[11px] font-semibold text-zinc-600 shadow-xs">
             <tr>
               <th class="w-14 px-1.5 py-1.5 text-center">Ações</th>
               <th class="w-8 px-1 py-1.5 text-center text-zinc-400">#</th>
@@ -3442,37 +3494,57 @@
 
     function applyTableZoom() {
       const table = document.getElementById('mainTable');
-      const display = document.getElementById('tableZoomDisplay');
-      if (display) display.innerText = Math.round(currentTableZoom * 100) + '%';
+      const display1 = document.getElementById('tableZoomDisplay');
+      const display2 = document.getElementById('expandedZoomDisplay');
+      const txt = Math.round(currentTableZoom * 100) + '%';
+      if (display1) display1.innerText = txt;
+      if (display2) display2.innerText = txt;
       if (table) {
         table.style.zoom = currentTableZoom;
       }
     }
 
     function toggleTableFullscreen() {
-      const container = document.querySelector('.table-container')?.parentElement;
+      const container = document.getElementById('mainTableCard');
+      const toolbar = document.getElementById('expandedTableToolbar');
       const btn = document.getElementById('fullscreenToggleBtn');
-      if (!container) return;
+      const scrollArea = container ? container.querySelector('.table-container') : null;
+      if (!container || !scrollArea) return;
 
       isTableFullscreen = !isTableFullscreen;
       if (isTableFullscreen) {
-        container.classList.add('fixed', 'inset-3', 'z-50', 'bg-white', 'p-3', 'shadow-2xl', 'flex', 'flex-col');
-        const scrollArea = container.querySelector('.table-container');
-        if (scrollArea) {
-          scrollArea.classList.remove('max-h-[66vh]');
-          scrollArea.classList.add('flex-1', 'h-full');
+        // Modo Expandido: ocupa tela cheia com cabeçalho fixo e toolbar no topo
+        container.classList.add('fixed', 'inset-2', 'z-50', 'bg-white', 'rounded-xl', 'shadow-2xl', 'flex', 'flex-col', 'overflow-hidden', 'border', 'border-zinc-300');
+        container.classList.remove('rounded-lg', 'shadow-card');
+        
+        if (toolbar) {
+          toolbar.classList.remove('hidden');
+          toolbar.classList.add('flex');
+          const searchVal = document.getElementById('searchInput')?.value || '';
+          const expInput = document.getElementById('expandedSearchInput');
+          if (expInput) expInput.value = searchVal;
         }
+
+        scrollArea.classList.remove('max-h-[66vh]');
+        scrollArea.classList.add('flex-1', 'h-full', 'overflow-auto');
+        
         if (btn) btn.innerHTML = '<i data-lucide="minimize-2" class="h-3 w-3 text-pg"></i>';
-        showToast('Modo Foco Expandido ativado (Pressione ESC ou clique para sair)', 'maximize-2');
+        showToast('Tabela expandida! Clique em "Voltar ao Normal" ou pressione ESC para restaurar', 'maximize-2');
       } else {
-        container.classList.remove('fixed', 'inset-3', 'z-50', 'bg-white', 'p-3', 'shadow-2xl', 'flex', 'flex-col');
-        const scrollArea = container.querySelector('.table-container');
-        if (scrollArea) {
-          scrollArea.classList.remove('flex-1', 'h-full');
-          scrollArea.classList.add('max-h-[66vh]');
+        // Restaurar modo normal
+        container.classList.remove('fixed', 'inset-2', 'z-50', 'bg-white', 'rounded-xl', 'shadow-2xl', 'flex', 'flex-col', 'overflow-hidden', 'border', 'border-zinc-300');
+        container.classList.add('rounded-lg', 'shadow-card');
+        
+        if (toolbar) {
+          toolbar.classList.add('hidden');
+          toolbar.classList.remove('flex');
         }
+
+        scrollArea.classList.remove('flex-1', 'h-full');
+        scrollArea.classList.add('max-h-[66vh]');
+        
         if (btn) btn.innerHTML = '<i data-lucide="maximize-2" class="h-3 w-3"></i>';
-        showToast('Modo Foco desativado', 'minimize-2');
+        showToast('Visualização restaurada para o modo normal', 'minimize-2');
       }
       if (window.lucide) lucide.createIcons();
     }
