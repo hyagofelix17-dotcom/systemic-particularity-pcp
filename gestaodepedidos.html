@@ -1064,7 +1064,7 @@
        JAVASCRIPT FUNCIONAL E GRÁFICOS (CHART.JS)
        ========================================================================= -->
   <script>
-    const STORAGE_KEY = 'pg_pedidos_dataset_v5';
+    const STORAGE_KEY = 'pg_pedidos_dataset_v6';
     let INITIAL_DATA = [
   {
     "id": 2,
@@ -2994,19 +2994,57 @@
     // Carregamento de dados com persistência local
     let rows = [];
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) rows = JSON.parse(saved);
+      const savedV6 = localStorage.getItem(STORAGE_KEY);
+      if (savedV6) {
+        rows = JSON.parse(savedV6);
+      } else {
+        const savedV5 = localStorage.getItem('pg_pedidos_dataset_v5');
+        if (savedV5) rows = JSON.parse(savedV5);
+      }
     } catch (e) {
       console.warn('Erro ao ler localStorage', e);
     }
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       rows = JSON.parse(JSON.stringify(INITIAL_DATA));
-      // Aplica imediatamente as cores da planilha na inicialização
-      rows.forEach(r => {
-        r.pedidoColor = getInitialPedidoColor(r);
-      });
-      saveState();
     }
+
+    // Default Purchasing tratativas for delayed items to show immediately on first load
+    const defaultDelayedTratativas = {
+      'SOLUCAO DE SULFIDRATO 42 % - GR (MP)': {
+        causaRaiz: 'Transporte / Logística',
+        novaPrevisao: '2026-10-28',
+        statusCobranca: 'Em Trânsito',
+        motivoAtraso: 'Material carregado na carreta placa ABC-1234 em rota para PG Química. Chegada prevista para 28/10.',
+        dataTratativa: '23/10/2026 18:30'
+      },
+      'AMQZ 400 QTZ ROCHA - GR (MP)': {
+        causaRaiz: 'Capacidade Fornecedor',
+        novaPrevisao: '2026-10-27',
+        statusCobranca: 'Em Cobrança',
+        motivoAtraso: 'Fornecedor finalizando processo de moagem. Aguardando liberação e envio de laudo de qualidade.',
+        dataTratativa: '23/10/2026 17:15'
+      },
+      'MEG - MONOETILENO GLICOL - GR (MP)': {
+        causaRaiz: 'Fiscal / Faturamento',
+        novaPrevisao: '2026-10-26',
+        statusCobranca: 'Em Trânsito',
+        motivoAtraso: 'Nota Fiscal emitida hoje pela manhã. Material já em poder da transportadora.',
+        dataTratativa: '23/10/2026 16:45'
+      }
+    };
+
+    rows.forEach(r => {
+      if (!r.pedidoColor) r.pedidoColor = getInitialPedidoColor(r);
+      const def = defaultDelayedTratativas[r.materiaPrima];
+      if (def && (!r.motivoAtraso || r.motivoAtraso.trim() === '')) {
+        r.causaRaiz = def.causaRaiz;
+        r.novaPrevisao = def.novaPrevisao;
+        r.statusCobranca = def.statusCobranca;
+        r.motivoAtraso = def.motivoAtraso;
+        r.dataTratativa = def.dataTratativa;
+      }
+    });
+    saveState();
 
     function saveState() {
       try {
@@ -4939,6 +4977,9 @@
         const badgeClass = getBadgeClass(currentStatus);
         const dotClass = getDotClass(currentStatus);
 
+        // Informações de Código e MP do Catálogo
+        const pInfo = getProductInfo(r.materiaPrima);
+
         // Alerta de Retorno de Compras preenchido em Pedidos Críticos
         const tratativa = getPurchasingTratativa(r);
         let tratativaAlertHtml = '';
@@ -5008,8 +5049,8 @@
               </div>
             </td>
             <td class="px-1 py-1 text-center font-mono text-[10px] text-zinc-400 tabular-nums">${idx + 1}</td>
-            <!-- Coluna Matéria-Prima: com Passe o Mouse para ver Código e MP + Alerta de Retorno de Compras -->
-            <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[560px]">
+            <!-- Coluna Matéria-Prima: com Passe o Mouse para ver Código e MP + Badges Visuais + Alerta de Retorno de Compras -->
+            <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[580px]">
               <div class="flex items-center gap-1.5 group/mp w-full"
                    data-mp="${escapeHtml(r.materiaPrima)}"
                    onmouseenter="showProductTooltip(event, this)"
@@ -5022,6 +5063,11 @@
                         title="Copiar descrição da matéria-prima">
                   <i data-lucide="copy" class="h-3 w-3"></i>
                 </button>
+
+                <!-- Badges Visuais Compactos de Código e MP para identificação rápida -->
+                ${pInfo.codigo ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200 shrink-0 cursor-help shadow-2xs" title="Código do Produto (Saldo Diário)" data-mp="${escapeHtml(r.materiaPrima)}" onmouseenter="showProductTooltip(event, this)">${escapeHtml(pInfo.codigo)}</span>` : ''}
+                ${pInfo.mp ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 cursor-help shadow-2xs" title="Código MP (Sistema)" data-mp="${escapeHtml(r.materiaPrima)}" onmouseenter="showProductTooltip(event, this)">${escapeHtml(pInfo.mp)}</span>` : ''}
+
                 <div class="flex-1 min-w-0">
                   <input type="text"
                          class="table-cell-input font-semibold text-zinc-900 whitespace-nowrap py-0.5 block w-full text-[11px] bg-transparent tracking-tight focus:bg-white focus:ring-1 focus:ring-pg cursor-help"
