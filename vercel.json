@@ -3,6 +3,9 @@
   "name": "systemic-particularity-pcp",
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/gestaodepedidos", "destination": "/gestaodepedidos.html" },
+    { "source": "/gestãodepedidos", "destination": "/gestaodepedidos.html" },
+    { "source": "/pedidos-mp", "destination": "/gestaodepedidos.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

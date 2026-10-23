@@ -1,0 +1,3827 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-zinc-50/70 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCP &bull; Gestão de Pedidos e Matérias-Primas | PG Química</title>
+  
+  <link rel="icon" type="image/png" href="assets/favicon-pgquimica.png">
+  
+  <!-- Fontes: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            pg: {
+              DEFAULT: '#0b4d26',
+              deep: '#054020',
+              accent: '#2fac68',
+              surface: '#f0fdf4',
+              border: '#bbf7d0',
+            }
+          },
+          boxShadow: {
+            'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            'card': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
+            'popover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js para os Gráficos Executivos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f4f4f5; }
+    ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+    .table-cell-input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 0.2rem 0.35rem;
+      border-radius: 0.25rem;
+      font-size: 0.72rem;
+      color: #27272a;
+      transition: all 0.12s ease-in-out;
+      outline: none;
+    }
+    .table-cell-input:hover { background: #ffffff; border-color: #e4e4e7; }
+    .table-cell-input:focus {
+      background: #ffffff;
+      border-color: #0b4d26;
+      box-shadow: 0 0 0 1px #0b4d26;
+    }
+
+    /* Popover estilo Excel */
+    .excel-filter-popover {
+      position: absolute;
+      top: 100%;
+      z-index: 50;
+      width: 250px;
+      border-radius: 0.375rem;
+      border: 1px solid #e4e4e7;
+      background: #ffffff;
+      padding: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      font-size: 0.75rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen flex-col text-zinc-900 bg-zinc-50/70">
+
+  <!-- =========================================================================
+       TOPBAR / HEADER INSTITUCIONAL (FOCADO E COMPACTO)
+       ========================================================================= -->
+  <header class="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-sm">
+    <div class="mx-auto flex h-12 max-w-[1780px] items-center justify-between px-4 sm:px-6">
+      
+      <div class="flex items-center gap-3">
+        <img src="assets/logo-pgquimica.png" alt="PG Química" class="h-6 w-auto object-contain" onerror="this.onerror=null; this.src='https://pgquimica.com.br/wp-content/uploads/2024/03/Logo-PG-Quimica-Colorida-1.png';">
+        <div class="h-3.5 w-px bg-zinc-200"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold tracking-tight text-zinc-900">PCP &bull; Gestão de Pedidos</span>
+          <span class="inline-flex items-center gap-1 rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.2 text-[10px] font-medium text-zinc-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            Operacional
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="hidden items-center gap-1.5 text-xs text-zinc-500 sm:flex">
+          <i data-lucide="calendar" class="h-3.5 w-3.5 text-zinc-400"></i>
+          <span>Data-base:</span>
+          <span id="currentDateDisplay" class="font-medium text-zinc-800 tabular-nums"></span>
+        </div>
+
+        <div class="h-4 w-px bg-zinc-200 hidden sm:block"></div>
+
+        <button onclick="exportToCSV()" class="inline-flex h-7 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 text-xs font-medium text-zinc-700 shadow-subtle hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 transition-all">
+          <i data-lucide="download" class="h-3.5 w-3.5 text-zinc-500"></i>
+          <span>Exportar</span>
+        </button>
+
+        <button onclick="resetToOriginalData()" class="inline-flex h-7 items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 text-xs font-medium text-zinc-500 shadow-subtle hover:bg-zinc-50 hover:text-zinc-800 transition-all" title="Restaurar dados originais da planilha">
+          <i data-lucide="rotate-ccw" class="h-3 w-3 text-zinc-400"></i>
+          <span class="hidden md:inline">Restaurar</span>
+        </button>
+
+        <button onclick="addNewRow()" class="inline-flex h-7 items-center gap-1.5 rounded-md bg-pg px-3 text-xs font-medium text-white shadow-sm hover:bg-[#08381c] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pg transition-all">
+          <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+          <span>Nova Solicitação</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       BARRA DE NAVEGAÇÃO POR ABAS: GESTÃO DE PEDIDOS | GESTÃO DE PEDIDOS IBC'S
+       ========================================================================= -->
+  <div class="border-b border-zinc-200/80 bg-white sticky top-12 z-30 shadow-2xs">
+    <div class="mx-auto flex max-w-[1780px] items-center justify-between px-3 sm:px-5">
+      <nav class="flex space-x-1" aria-label="Abas do Sistema">
+        
+        <!-- Aba 1: Gestão de Pedidos (Tudo o que criamos + Coluna Número da Solicitação) -->
+        <button type="button" 
+                id="tab-btn-pedidos" 
+                onclick="switchAppTab('pedidos')" 
+                class="flex items-center gap-2 border-b-2 border-pg px-4 py-2.5 text-xs font-semibold text-pg transition-all cursor-pointer">
+          <i data-lucide="clipboard-list" class="h-4 w-4"></i>
+          <span>Gestão de Pedidos</span>
+          <span class="rounded-full bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-mono font-bold tabular-nums" id="badgeTotalPedidos">91</span>
+        </button>
+
+        <!-- Aba 2: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
+        <button type="button" 
+                id="tab-btn-ibcs" 
+                onclick="switchAppTab('ibcs')" 
+                class="flex items-center gap-2 border-b-2 border-transparent px-4 py-2.5 text-xs font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 transition-all cursor-pointer">
+          <i data-lucide="boxes" class="h-4 w-4"></i>
+          <span>Gestão de Pedidos IBC's</span>
+          <span class="rounded border border-dashed border-amber-300 bg-amber-50 text-amber-700 px-1.5 py-0.2 text-[9px] font-semibold">Novo</span>
+        </button>
+
+      </nav>
+
+      <div class="hidden sm:flex items-center gap-2 text-[11px] text-zinc-400">
+        <span class="h-1.5 w-1.5 rounded-full bg-pg"></span>
+        <span class="font-medium text-zinc-600">PG Química &bull; PCP Integrado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================= -->
+  <main class="mx-auto flex w-full max-w-[1780px] flex-1 flex-col gap-3.5 p-3 sm:px-5">
+
+    <!-- =======================================================================
+         ABA 1: GESTÃO DE PEDIDOS (TABELA COMPLETA, FILTROS E DASHBOARD EXECUTIVO)
+         ======================================================================= -->
+    <div id="view-pedidos" class="flex flex-col gap-3.5">
+
+    <!-- =======================================================================
+         1. BARRA DE CONTROLE & BUSCA RÁPIDA (DIRETO NO TOPO, SEM BLOQUEIOS)
+         ======================================================================= -->
+    <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200/80 bg-white px-3 py-2 shadow-card">
+      <div class="flex flex-1 items-center gap-2 max-w-md min-w-[260px]">
+        <div class="relative w-full">
+          <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400"></i>
+          <input type="text" id="searchInput" placeholder="Pesquisar matéria-prima, fornecedor, pedido..." oninput="renderTable()" class="h-7 w-full rounded-md border border-zinc-200 bg-zinc-50/70 pl-8 pr-3 text-xs text-zinc-800 placeholder-zinc-400 transition-all focus:bg-white focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <select id="statusFilter" onchange="renderTable()" class="h-7 rounded-md border border-zinc-200 bg-white pl-2 pr-7 text-xs font-medium text-zinc-700 shadow-subtle hover:bg-zinc-50 focus:border-pg focus:outline-none cursor-pointer">
+          <option value="">Filtro Rápido: Todos os Status</option>
+          <option value="OK">Entregue (OK)</option>
+          <option value="PEDIDO">No Prazo (PEDIDO)</option>
+          <option value="SEM PEDIDO">Sem Pedido</option>
+          <option value="COM PEDIDO - PORÉM ATRASADO">Com Pedido - Porém Atrasado</option>
+          <option value="ATRASADO">Atrasado s/ Pedido</option>
+        </select>
+
+        <button onclick="clearAllFilters()" class="inline-flex h-7 items-center gap-1 rounded border border-zinc-200 bg-zinc-50 px-2 text-[11px] font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors" title="Limpar todos os filtros">
+          <i data-lucide="filter-x" class="h-3 w-3"></i>
+          <span>Limpar Filtros</span>
+        </button>
+
+        <!-- BOTÃO DE ZOOM AO LADO DO LIMPAR FILTROS -->
+        <div class="inline-flex h-7 items-center rounded-md border border-zinc-200 bg-white px-1 shadow-subtle gap-0.5" title="Controle de Zoom da Tabela">
+          <button type="button" 
+                  onclick="changeTableZoom(-0.1)" 
+                  class="h-5 w-5 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
+                  title="Diminuir Zoom (-10%)">
+            <i data-lucide="zoom-out" class="h-3 w-3"></i>
+          </button>
+          
+          <button type="button" 
+                  onclick="resetTableZoom()" 
+                  class="px-1.5 text-[11px] font-mono font-semibold text-zinc-700 hover:text-pg hover:bg-zinc-50 rounded transition-colors tabular-nums cursor-pointer"
+                  title="Clique para redefinir o zoom para 100%">
+            <span id="tableZoomDisplay">100%</span>
+          </button>
+
+          <button type="button" 
+                  onclick="changeTableZoom(0.1)" 
+                  class="h-5 w-5 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
+                  title="Aumentar Zoom (+10%)">
+            <i data-lucide="zoom-in" class="h-3 w-3"></i>
+          </button>
+
+          <button type="button" 
+                  onclick="toggleTableFullscreen()" 
+                  id="fullscreenToggleBtn"
+                  class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 border-l border-zinc-200 ml-0.5 transition-colors cursor-pointer"
+                  title="Expandir Tabela (Modo Foco / Tela Cheia)">
+            <i data-lucide="maximize-2" class="h-3 w-3"></i>
+          </button>
+        </div>
+
+        <span id="filteredCount" class="rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600 tabular-nums">
+          0 registros
+        </span>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         2. TABELA OPERACIONAL PRINCIPAL (NO TOPO, VISÃO COMPLETA)
+         ======================================================================= -->
+    <div class="rounded-lg border border-zinc-200/80 bg-white shadow-card overflow-hidden">
+      <div class="table-container overflow-x-auto max-h-[66vh]">
+        <table id="mainTable" class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 backdrop-blur-xs text-[11px] font-semibold text-zinc-600">
+            <tr>
+              <th class="w-14 px-1.5 py-1.5 text-center">Ações</th>
+              <th class="w-8 px-1 py-1.5 text-center text-zinc-400">#</th>
+
+              <!-- Matéria-Prima (Largura estendida para caber toda a descrição sem cortes) -->
+              <th class="relative min-w-[380px] max-w-[500px] px-2.5 py-1.5">
+                <div class="flex items-center justify-between gap-1">
+                  <span>Matéria-Prima</span>
+                  <button type="button" onclick="toggleColumnFilter('materiaPrima', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Matéria-Prima">
+                    <i data-lucide="filter" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Fornecedor (Filtro Excel) -->
+              <th class="relative min-w-[130px] px-2 py-1.5">
+                <div class="flex items-center justify-between gap-1">
+                  <span>Fornecedor</span>
+                  <button type="button" onclick="toggleColumnFilter('fornecedor', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Fornecedor">
+                    <i data-lucide="filter" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Pedido (Filtro Excel) -->
+              <th class="relative min-w-[135px] w-36 px-1.5 py-1.5">
+                <div class="flex items-center justify-between gap-1">
+                  <div class="flex items-center gap-1">
+                    <span>Pedido</span>
+                    <span class="text-[9px] text-zinc-400 font-normal" title="Cor da fonte editável por linha">(Cor)</span>
+                  </div>
+                  <button type="button" onclick="toggleColumnFilter('pedido', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Pedido e Cor">
+                    <i data-lucide="filter" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Urgência (Filtro Excel) -->
+              <th class="relative w-24 px-1.5 py-1.5">
+                <div class="flex items-center justify-between gap-1">
+                  <span>Urgência</span>
+                  <button type="button" onclick="toggleColumnFilter('urgencia', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Urgência">
+                    <i data-lucide="filter" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Status do Pedido (Filtro Excel) -->
+              <th class="relative min-w-[190px] px-2 py-1.5 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <span>Status do Pedido</span>
+                  <button type="button" onclick="toggleColumnFilter('status', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtro de Status">
+                    <i data-lucide="filter" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Qtd Solicitada (Ordenação Excel) -->
+              <th class="relative w-28 px-2 py-1.5 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <span>Qtd Solicitada</span>
+                  <button type="button" onclick="toggleSort('quantidade')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Quantidade">
+                    <i data-lucide="arrow-up-down" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <th class="w-12 px-1 py-1.5 text-center">Unid</th>
+              
+              <!-- Coluna: Número da Solicitação (Filtro e Ordenação Excel) -->
+              <th class="relative min-w-[130px] px-1.5 py-1.5 text-center">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="whitespace-nowrap">Número da Solicitação</span>
+                  <div class="flex items-center gap-0.5">
+                    <button type="button" onclick="toggleSort('solicitacao')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Número da Solicitação">
+                      <i data-lucide="arrow-up-down" class="h-3 w-3"></i>
+                    </button>
+                    <button type="button" onclick="toggleColumnFilter('solicitacao', event)" class="column-filter-btn rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Filtrar Número da Solicitação">
+                      <i data-lucide="filter" class="h-3 w-3"></i>
+                    </button>
+                  </div>
+                </div>
+              </th>
+              
+              <!-- NOVA COLUNA: Data Solicitada (Filtro / Ordenação Excel) -->
+              <th class="relative w-28 px-1.5 py-1.5">
+                <div class="flex items-center justify-between gap-1">
+                  <span>Data Solicitada</span>
+                  <button type="button" onclick="toggleSort('dataSolicitada')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Data Solicitada">
+                    <i data-lucide="arrow-up-down" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Previsão Entrega (Ordenação Excel) -->
+              <th class="relative w-28 px-1.5 py-1.5">
+                <div class="flex items-center justify-between gap-1">
+                  <span>Previsão Entrega</span>
+                  <button type="button" onclick="toggleSort('previsaoEntrega')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Previsão">
+                    <i data-lucide="arrow-up-down" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <!-- Dias em Atraso (Ordenação Excel) -->
+              <th class="relative w-28 px-1.5 py-1.5 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <span>Dias em Atraso</span>
+                  <button type="button" onclick="toggleSort('diasAtraso')" class="rounded p-0.5 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-800 transition-colors" title="Ordenar por Dias de Atraso">
+                    <i data-lucide="arrow-up-down" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </th>
+
+              <th class="w-28 px-1.5 py-1.5">Data Chegada</th>
+              <th class="min-w-[180px] px-2 py-1.5">Observações</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-zinc-200/60 bg-white text-zinc-700">
+            <!-- Linhas Inseridas via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         3. DASHBOARD EXECUTIVO & GRÁFICOS (ABAIXO DA TABELA CONFORME SOLICITADO)
+         ======================================================================= -->
+    <section class="mt-2 flex flex-col gap-3.5">
+      
+      <!-- Cabeçalho da Seção de Analytics -->
+      <div class="flex items-center justify-between border-t border-zinc-200/80 pt-3">
+        <div class="flex items-center gap-2">
+          <div class="flex h-5 w-5 items-center justify-center rounded bg-pg text-white text-[11px] font-bold">
+            <i data-lucide="bar-chart-3" class="h-3.5 w-3.5"></i>
+          </div>
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-tight text-zinc-900">Painel Executivo &bull; Indicadores e Gráficos do PCP</h2>
+            <p class="text-[10px] text-zinc-400">Consolidação analítica de pedidos, matérias-primas críticas e prazos</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span id="execTotalDelayedBadge" class="inline-flex items-center gap-1 rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 tabular-nums">
+            <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+            0 itens em atraso
+          </span>
+          <span id="execTotalVolumeBadge" class="inline-flex items-center gap-1 rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-700 font-mono tabular-nums">
+            Volume: 0 KG
+          </span>
+        </div>
+      </div>
+
+      <!-- Fita de KPIs Gerais -->
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Total Itens</span>
+            <i data-lucide="package" class="h-3 w-3 text-zinc-400"></i>
+          </div>
+          <div class="mt-0.5 flex items-baseline gap-1">
+            <span id="kpiTotal" class="text-lg font-bold tracking-tight text-zinc-900 tabular-nums">0</span>
+            <span class="text-[10px] text-zinc-400">ativos</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Entregues (OK)</span>
+            <i data-lucide="check-circle-2" class="h-3 w-3 text-blue-500"></i>
+          </div>
+          <div class="mt-0.5 flex items-baseline gap-1">
+            <span id="kpiOk" class="text-lg font-bold tracking-tight text-blue-700 tabular-nums">0</span>
+            <span class="text-[10px] text-zinc-400">concluídos</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">No Prazo</span>
+            <i data-lucide="clock" class="h-3 w-3 text-indigo-500"></i>
+          </div>
+          <div class="mt-0.5 flex items-baseline gap-1">
+            <span id="kpiPedido" class="text-lg font-bold tracking-tight text-indigo-700 tabular-nums">0</span>
+            <span class="text-[10px] text-zinc-400">em dia</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Sem Pedido</span>
+            <i data-lucide="alert-circle" class="h-3 w-3 text-amber-500"></i>
+          </div>
+          <div class="mt-0.5 flex items-baseline gap-1">
+            <span id="kpiSemPedido" class="text-lg font-bold tracking-tight text-amber-700 tabular-nums">0</span>
+            <span class="text-[10px] text-zinc-400">pendente</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Atrasado s/ Ped</span>
+            <i data-lucide="shield-alert" class="h-3 w-3 text-rose-500"></i>
+          </div>
+          <div class="mt-0.5 flex items-baseline gap-1">
+            <span id="kpiAtrasado" class="text-lg font-bold tracking-tight text-rose-700 tabular-nums">0</span>
+            <span class="text-[10px] text-zinc-400">urgente</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col rounded-lg border border-zinc-200/80 bg-white p-2.5 shadow-card">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] font-semibold tracking-tight uppercase text-zinc-500">Pedido Atrasado</span>
+            <i data-lucide="hourglass" class="h-3 w-3 text-orange-500"></i>
+          </div>
+          <div class="mt-0.5 flex items-baseline gap-1">
+            <span id="kpiComPedidoAtrasado" class="text-lg font-bold tracking-tight text-orange-700 tabular-nums">0</span>
+            <span class="text-[10px] text-zinc-400">follow-up</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas Executivas de Severidade -->
+      <div class="grid grid-cols-2 rounded-lg border border-zinc-200/80 bg-white sm:grid-cols-4 divide-x divide-zinc-100 text-center shadow-card">
+        <div class="p-2.5">
+          <span class="text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">Maior Atraso Registrado</span>
+          <div class="mt-0.5 flex items-baseline justify-center gap-1">
+            <span id="execMaxDelayDays" class="text-lg font-bold text-rose-700 tabular-nums">0</span>
+            <span class="text-xs text-rose-600 font-medium">dias</span>
+          </div>
+          <span id="execMaxDelayMP" class="text-[10px] text-zinc-500 truncate block px-2">-</span>
+        </div>
+
+        <div class="p-2.5">
+          <span class="text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">Média de Dias em Atraso</span>
+          <div class="mt-0.5 flex items-baseline justify-center gap-1">
+            <span id="execAvgDelayDays" class="text-lg font-bold text-orange-700 tabular-nums">0</span>
+            <span class="text-xs text-orange-600 font-medium">dias</span>
+          </div>
+          <span class="text-[10px] text-zinc-400">Média dos itens em aberto</span>
+        </div>
+
+        <div class="p-2.5">
+          <span class="text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">Itens Críticos (&ge; 30 dias)</span>
+          <div class="mt-0.5 flex items-baseline justify-center gap-1">
+            <span id="execCriticalCount" class="text-lg font-bold text-rose-700 tabular-nums">0</span>
+            <span class="text-xs text-zinc-400">itens</span>
+          </div>
+          <span class="text-[10px] text-rose-600 font-medium">Prioridade máxima de suprimentos</span>
+        </div>
+
+        <div class="p-2.5">
+          <span class="text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">Atraso Sem Pedido Colocado</span>
+          <div class="mt-0.5 flex items-baseline justify-center gap-1">
+            <span id="execNoOrderCount" class="text-lg font-bold text-amber-700 tabular-nums">0</span>
+            <span class="text-xs text-zinc-400">itens</span>
+          </div>
+          <span class="text-[10px] text-amber-600 font-medium">Sem emissão de pedido</span>
+        </div>
+      </div>
+
+      <!-- SEÇÃO DE GRÁFICOS VISUAIS EXECUTIVOS -->
+      <div class="grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+        
+        <!-- Gráfico 1: Top MPs com Maior Atraso (Barras Horizontais) -->
+        <div class="col-span-2 rounded-lg border border-zinc-200/80 bg-white p-3.5 shadow-card">
+          <div class="flex items-center justify-between border-b border-zinc-100 pb-2 mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="bar-chart-horizontal" class="h-4 w-4 text-rose-600"></i>
+              <span class="text-xs font-bold uppercase tracking-tight text-zinc-900">Top 10 Matérias-Primas Mais Atrasadas (Dias em Atraso & Qtd)</span>
+            </div>
+            <span class="text-[10px] text-zinc-400 font-mono">Passe o mouse para ver fornecedor e quantidade</span>
+          </div>
+          <div class="relative h-64 w-full">
+            <canvas id="delayBarChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico 2: Distribuição de Status dos Pedidos (Donut) -->
+        <div class="rounded-lg border border-zinc-200/80 bg-white p-3.5 shadow-card">
+          <div class="flex items-center justify-between border-b border-zinc-100 pb-2 mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="pie-chart" class="h-4 w-4 text-blue-600"></i>
+              <span class="text-xs font-bold uppercase tracking-tight text-zinc-900">Distribuição de Status</span>
+            </div>
+            <span class="text-[10px] text-zinc-400">Proporção Geral</span>
+          </div>
+          <div class="relative h-64 w-full flex items-center justify-center">
+            <canvas id="statusPieChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabela / Cards das MPs Mais Atrasadas (Interativo) -->
+      <div class="rounded-lg border border-zinc-200/80 bg-white shadow-card overflow-hidden">
+        <div class="border-b border-zinc-100 px-4 py-2 bg-zinc-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="alert-circle" class="h-3.5 w-3.5 text-rose-600"></i>
+            <span class="text-[11px] font-bold text-zinc-800 uppercase tracking-wide">Top 6 Casos Críticos de Suprimento (Clique para filtrar na tabela)</span>
+          </div>
+          <span class="text-[10px] text-zinc-400">Atraso real e quantidade solicitada</span>
+        </div>
+
+        <div id="criticalDelayedList" class="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <!-- Cards Executivos Inseridos Dinamicamente -->
+        </div>
+      </div>
+
+    </section>
+    </div> <!-- FIM DO #view-pedidos -->
+
+    
+
+    <!-- =======================================================================
+         ABA 3: GESTÃO DE PEDIDOS IBC'S (CRIADA E NÃO MODIFICADA AINDA)
+         ======================================================================= -->
+    <div id="view-ibcs" class="hidden flex-col gap-3.5">
+      
+      <!-- Banner Institucional de Boas-Vindas da Aba IBC's -->
+      <div class="rounded-lg border border-emerald-200/60 bg-emerald-50/50 p-4 shadow-subtle">
+        <div class="flex items-start gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-pg text-white shadow-sm">
+            <i data-lucide="boxes" class="h-5 w-5"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-semibold text-zinc-900">Gestão de Pedidos IBC's</h2>
+              <span class="inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                Aba Criada &bull; Aguardando Parametrização
+              </span>
+            </div>
+            <p class="mt-1 text-xs text-zinc-600 leading-relaxed">
+              Módulo exclusivo reservado para o controle operacional de <strong>Contentores Intermediários para Granel (IBCs)</strong> da PG Química.
+              Conforme solicitado, esta aba foi criada com a mesma arquitetura de ponta e identidade visual da PG Química, permanecendo intacta e limpa, pronta para receber sua base de dados e regras de negócio.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estrutura de Tabela em Branco (Placeholder Limpo para IBCs) -->
+      <div class="rounded-lg border border-zinc-200/80 bg-white shadow-card overflow-hidden">
+        <div class="border-b border-zinc-100 px-4 py-2.5 bg-zinc-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="package" class="h-4 w-4 text-zinc-400"></i>
+            <span class="text-xs font-semibold text-zinc-800">Tabela de Pedidos de IBC's (Estrutura Inicial)</span>
+          </div>
+          <button type="button" class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-400 cursor-not-allowed">
+            <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+            <span>Adicionar Pedido IBC</span>
+          </button>
+        </div>
+
+        <div class="p-12 text-center flex flex-col items-center justify-center">
+          <div class="h-12 w-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
+            <i data-lucide="inbox" class="h-6 w-6"></i>
+          </div>
+          <h3 class="text-xs font-bold text-zinc-800 uppercase tracking-wide">Nenhum Pedido de IBC Cadastrado Ainda</h3>
+          <p class="mt-1 max-w-md text-xs text-zinc-500">
+            Esta aba está preparada e aguardando as informações e colunas específicas de IBC's (como tipo, capacidade, devolução ou fornecedor) para ser ativada operacionalmente.
+          </p>
+        </div>
+      </div>
+
+    </div> <!-- FIM DO #view-ibcs -->
+
+  </main>
+
+  <!-- =========================================================================
+       EXCEL FILTER POPOVER ELEMENT (Flutuante dinâmico)
+       ========================================================================= -->
+  <div id="excelFilterDropdown" class="excel-filter-popover hidden shadow-popover" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-zinc-100 pb-1.5 mb-1.5">
+      <span id="filterDropdownTitle" class="text-[11px] font-bold text-zinc-800 uppercase tracking-wide">Filtro de Coluna</span>
+      <button onclick="closeFilterDropdown()" class="text-zinc-400 hover:text-zinc-700"><i data-lucide="x" class="h-3 w-3"></i></button>
+    </div>
+
+    <div class="space-y-0.5 border-b border-zinc-100 pb-1.5 mb-1.5">
+      <button type="button" onclick="applySortFromDropdown('asc')" class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs text-zinc-700 hover:bg-zinc-100">
+        <i data-lucide="arrow-down-a-z" class="h-3 w-3 text-zinc-500"></i>
+        <span>Classificar de A a Z</span>
+      </button>
+      <button type="button" onclick="applySortFromDropdown('desc')" class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs text-zinc-700 hover:bg-zinc-100">
+        <i data-lucide="arrow-up-z-a" class="h-3 w-3 text-zinc-500"></i>
+        <span>Classificar de Z a A</span>
+      </button>
+    </div>
+
+    <!-- SEÇÃO ESPECÍFICA PARA PEDIDO: FILTRAR POR COR DA FONTE -->
+    <div id="filterByColorSection" class="hidden border-b border-zinc-100 pb-2 mb-2">
+      <div class="flex items-center justify-between text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">
+        <span>Filtrar por Cor da Fonte:</span>
+      </div>
+      <div id="filterColorSwatches" class="flex flex-wrap items-center gap-1.5">
+        <!-- Injetado dinamicamente -->
+      </div>
+    </div>
+
+    <div class="mb-1.5">
+      <input type="text" id="filterSearchInput" placeholder="Pesquisar opções..." oninput="filterCheckboxList()" class="h-6 w-full rounded border border-zinc-200 bg-zinc-50 px-2 text-[11px] focus:bg-white focus:outline-none focus:border-pg">
+    </div>
+
+    <div class="max-h-36 overflow-y-auto space-y-1 border border-zinc-100 rounded p-1.5 bg-zinc-50/50" id="filterCheckboxContainer">
+      <!-- Inserido dinamicamente -->
+    </div>
+
+    <div class="mt-2 flex items-center justify-between pt-1 border-t border-zinc-100">
+      <button type="button" onclick="clearCurrentFilter()" class="text-[11px] text-zinc-500 hover:text-zinc-800">Limpar</button>
+      <div class="flex gap-1.5">
+        <button type="button" onclick="closeFilterDropdown()" class="rounded px-2 py-0.5 text-[11px] text-zinc-600 hover:bg-zinc-100">Cancelar</button>
+        <button type="button" onclick="applyFilterFromDropdown()" class="rounded bg-pg px-2.5 py-0.5 text-[11px] font-medium text-white hover:bg-[#08381c]">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       COLOR PICKER POPOVER ELEMENT (Para a Coluna Pedido)
+       ========================================================================= -->
+  <div id="fontColorPickerPopover" class="excel-filter-popover hidden shadow-popover" style="width: 220px;" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-zinc-100 pb-1.5 mb-2">
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="palette" class="h-3.5 w-3.5 text-zinc-600"></i>
+        <span class="text-[11px] font-bold text-zinc-800 uppercase tracking-wide">Cor da Fonte &bull; Pedido</span>
+      </div>
+      <button onclick="closeColorPicker()" class="text-zinc-400 hover:text-zinc-700">
+        <i data-lucide="x" class="h-3 w-3"></i>
+      </button>
+    </div>
+
+    <div class="text-[10px] text-zinc-500 mb-2">Particularidades do seu processo PCP:</div>
+
+    <!-- Paleta de Cores Rápidas com Cores Exatas da Planilha -->
+    <div class="grid grid-cols-4 gap-1.5 mb-2.5">
+      <button type="button" onclick="applyPedidoColor('#2e7d32')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-emerald-200/80 bg-emerald-50/20 transition-colors" title="Verde do Excel (#92D050)">
+        <span class="h-5 w-5 rounded-full border border-black/20 shadow-2xs" style="background-color: #92D050;"></span>
+        <span class="text-[9px] text-emerald-800 font-bold">Verde</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#b45309')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-amber-200/80 bg-amber-50/20 transition-colors" title="Amarelo do Excel (#FFFF00)">
+        <span class="h-5 w-5 rounded-full border border-black/20 shadow-2xs" style="background-color: #FFFF00;"></span>
+        <span class="text-[9px] text-amber-800 font-bold">Amarelo</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#dc2626')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-rose-200/80 bg-rose-50/20 transition-colors" title="Vermelho da Planilha">
+        <span class="h-5 w-5 rounded-full border border-black/20 shadow-2xs" style="background-color: #dc2626;"></span>
+        <span class="text-[9px] text-rose-800 font-bold">Vermelho</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#27272a')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-zinc-200 transition-colors" title="Padrão Sem Cor (Grafite)">
+        <span class="h-5 w-5 rounded-full border border-zinc-300 shadow-2xs" style="background-color: #27272a;"></span>
+        <span class="text-[9px] text-zinc-600 font-medium">Padrão</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#2563eb')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-zinc-100 transition-colors" title="Azul">
+        <span class="h-5 w-5 rounded-full border border-blue-300 shadow-2xs" style="background-color: #2563eb;"></span>
+        <span class="text-[9px] text-blue-700 font-medium">Azul</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#9333ea')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-zinc-100 transition-colors" title="Roxo">
+        <span class="h-5 w-5 rounded-full border border-purple-300 shadow-2xs" style="background-color: #9333ea;"></span>
+        <span class="text-[9px] text-purple-700 font-medium">Roxo</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#ea580c')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-zinc-100 transition-colors" title="Laranja">
+        <span class="h-5 w-5 rounded-full border border-orange-300 shadow-2xs" style="background-color: #ea580c;"></span>
+        <span class="text-[9px] text-orange-700 font-medium">Laranja</span>
+      </button>
+      <button type="button" onclick="applyPedidoColor('#0891b2')" class="group flex flex-col items-center gap-1 rounded p-1.5 hover:bg-zinc-100 border border-zinc-100 transition-colors" title="Ciano">
+        <span class="h-5 w-5 rounded-full border border-cyan-300 shadow-2xs" style="background-color: #0891b2;"></span>
+        <span class="text-[9px] text-cyan-700 font-medium">Ciano</span>
+      </button>
+    </div>
+
+    <!-- Seletor Livre Hex/Nativo -->
+    <div class="border-t border-zinc-100 pt-2 flex items-center justify-between">
+      <label class="flex items-center gap-1.5 text-[11px] text-zinc-600 cursor-pointer hover:text-zinc-900">
+        <input type="color" id="customColorPicker" onchange="applyPedidoColor(this.value)" class="h-6 w-6 rounded border border-zinc-200 cursor-pointer p-0 bg-transparent">
+        <span class="font-medium">Outra cor...</span>
+      </label>
+      <button type="button" onclick="applyPedidoColor('#27272a')" class="text-[10px] text-zinc-400 hover:text-zinc-700 underline">Redefinir</button>
+    </div>
+  </div>
+
+  <!-- Footer Corporativo -->
+  <footer class="border-t border-zinc-200/80 bg-white px-4 py-2 text-xs text-zinc-500 mt-auto">
+    <div class="mx-auto flex max-w-[1780px] items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="font-medium text-zinc-700">PG Química &bull; PCP</span>
+        <span class="text-zinc-300">|</span>
+        <span class="text-zinc-500 text-[11px]">Planejamento e Controle da Produção</span>
+      </div>
+      <div class="text-[11px] text-zinc-400">
+        Sistema Operacional v2.7 &bull; Outubro/2026
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div class="fixed bottom-4 right-4 z-50 pointer-events-none">
+    <div id="systemToast" class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-900 px-3 py-2 text-xs font-medium text-white shadow-lg opacity-0 translate-y-2 transition-all duration-200 ease-out pointer-events-auto">
+      <i id="toastIcon" data-lucide="check-circle-2" class="h-3.5 w-3.5 text-emerald-400"></i>
+      <span id="toastMessage">Operação realizada</span>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       JAVASCRIPT FUNCIONAL E GRÁFICOS (CHART.JS)
+       ========================================================================= -->
+  <script>
+    const STORAGE_KEY = 'pg_pedidos_dataset_v5';
+    let INITIAL_DATA = [
+  {
+    "id": 2,
+    "materiaPrima": "SOLUCAO DE SULFIDRATO 42 % - GR (MP)",
+    "fornecedor": "",
+    "pedido": "10992",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "33800",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-09",
+    "solicitacao": "3196",
+    "dataSolicitada": "2026-08-31",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 3,
+    "materiaPrima": "AMQZ 400 QTZ ROCHA - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11414",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "6000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-09",
+    "solicitacao": "3282",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-05",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 4,
+    "materiaPrima": "MEG - MONOETILENO GLICOL - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11404",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "30000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-10",
+    "solicitacao": "3277",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-06",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 5,
+    "materiaPrima": "WANCER 200 (CT-1000R) - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11426",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "15000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-10",
+    "solicitacao": "3284",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-08",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 6,
+    "materiaPrima": "WANFOAM CR 25 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11426",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "540",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-10",
+    "solicitacao": "3283",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-08",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 7,
+    "materiaPrima": "ALCOOL POLIVINILICO ALTA VISCOSIDADE 088-50 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11502",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "10000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-22",
+    "solicitacao": "3280",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-06",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 8,
+    "materiaPrima": "PRAIDMUL PEG 600 DO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11147",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "250",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-14",
+    "solicitacao": "3210",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "2026-09-30",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 9,
+    "materiaPrima": "W ACR-20 ANTICRISTAL - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11055",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "15000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-28",
+    "solicitacao": "3205",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-04",
+    "motivoAtraso": "",
+    "obs": "PREVISÃO DE ENTREGA 02/10/2026",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 10,
+    "materiaPrima": "SILICATO DE SODIO NEUTRO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11424",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "30000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3296",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-08",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 11,
+    "materiaPrima": "IPEL FBP 418 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11326",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "30",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3247",
+    "dataSolicitada": "2026-09-17",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-01",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 12,
+    "materiaPrima": "METABISSULFITO DE SODIO - GR (MP)",
+    "fornecedor": "CARBON",
+    "pedido": "11511",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "15000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-07",
+    "solicitacao": "3297",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-05",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 13,
+    "materiaPrima": "CMC INDUSKOL T-2000 - GR (MP)",
+    "fornecedor": "DENVER",
+    "pedido": "11232",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "2000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-07",
+    "solicitacao": "3247",
+    "dataSolicitada": "2026-09-17",
+    "statusEntrega": "",
+    "dataChegada": "2026-09-30",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 14,
+    "materiaPrima": "FO 4290 SSH - GR (MP)",
+    "fornecedor": "SNF",
+    "pedido": "11249",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "5000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-07",
+    "solicitacao": "3250",
+    "dataSolicitada": "2026-09-17",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-05",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 15,
+    "materiaPrima": "ALFOL 20 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11485",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "150",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-08",
+    "solicitacao": "3301",
+    "dataSolicitada": "2026-10-01",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-12",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 16,
+    "materiaPrima": "CMC INDUSCEL CR-4001B TECNICO - GR (MP)",
+    "fornecedor": "DENVER",
+    "pedido": "11284",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "5000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-09",
+    "solicitacao": "3255",
+    "dataSolicitada": "2026-09-20",
+    "statusEntrega": "",
+    "dataChegada": "2026-09-30",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 17,
+    "materiaPrima": "HOSTATINT VERMELHO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11325",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "50",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-12",
+    "solicitacao": "3260",
+    "dataSolicitada": "2026-09-21",
+    "statusEntrega": "",
+    "dataChegada": "2026-09-30",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 18,
+    "materiaPrima": "HOSTATINT AMARELO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11325",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "50",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-14",
+    "solicitacao": "3260",
+    "dataSolicitada": "2026-09-21",
+    "statusEntrega": "",
+    "dataChegada": "2026-09-30",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 19,
+    "materiaPrima": "WANCRIL E 10 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11401",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "400",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-14",
+    "solicitacao": "3273",
+    "dataSolicitada": "2026-09-28",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-06",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 20,
+    "materiaPrima": "WANCRIL 1019 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11401",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "400",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-18",
+    "solicitacao": "",
+    "dataSolicitada": "2026-09-28",
+    "statusEntrega": "",
+    "dataChegada": "2026-09-30",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 21,
+    "materiaPrima": "EX CELL 1001-XAROPE DE GLUCOSE - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11560",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "30000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-12",
+    "solicitacao": "3320",
+    "dataSolicitada": "2026-10-05",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-14",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 22,
+    "materiaPrima": "SILICATO DE SODIO NEUTRO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11424",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "30000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-15",
+    "solicitacao": "3296",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-13",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 23,
+    "materiaPrima": "SOLUCAO DE SULFIDRATO 42 % - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11438",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "33800",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-27",
+    "solicitacao": "3290",
+    "dataSolicitada": "2026-09-28",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-07",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 24,
+    "materiaPrima": "AQUASOL TH-308 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11474",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "10800",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-12",
+    "solicitacao": "3299",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-12",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 25,
+    "materiaPrima": "PERSULFATO DE SODIO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "10731",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "2000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-30",
+    "solicitacao": "3088",
+    "dataSolicitada": "2026-07-30",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-14",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 26,
+    "materiaPrima": "ANIDRIDO MALEICO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11630",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "2000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3288",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-18",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 27,
+    "materiaPrima": "FORMIATO DE CALCIO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11572",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "100",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-09",
+    "solicitacao": "3285",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-18",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 28,
+    "materiaPrima": "PEROXIDO DE HIDROGENIO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11613",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "1200",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3295",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-18",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 29,
+    "materiaPrima": "BORAX DECAH ETM - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11642",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "10000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-19",
+    "solicitacao": "3341",
+    "dataSolicitada": "2026-10-13",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-18",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 30,
+    "materiaPrima": "EX CELL 1001-XAROPE DE GLUCOSE - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11560",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "30000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-14",
+    "solicitacao": "3320",
+    "dataSolicitada": "2026-10-05",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-18",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 31,
+    "materiaPrima": "PROTECTOSIL SC CONCENTRATE - GR (MP)",
+    "fornecedor": "",
+    "pedido": "10008",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "OK",
+    "quantidade": "200",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-28",
+    "solicitacao": "2752",
+    "dataSolicitada": "2026-04-28",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-15",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 32,
+    "materiaPrima": "QUALICIM NA 40 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11561",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "20000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-20",
+    "solicitacao": "3318",
+    "dataSolicitada": "2026-10-05",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-19",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 33,
+    "materiaPrima": "QUALICIM NA 40 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11640",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "10000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-20",
+    "solicitacao": "3339",
+    "dataSolicitada": "2026-10-12",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-19",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 34,
+    "materiaPrima": "CORANTE VERDE - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11671",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "OK",
+    "quantidade": "100",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-20",
+    "solicitacao": "3367",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "2026-10-20",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 35,
+    "materiaPrima": "TRIGONOX AW 70 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "10709",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "25",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-08-13",
+    "solicitacao": "3086",
+    "dataSolicitada": "2026-07-30",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 36,
+    "materiaPrima": "ETIQUETA BOPP PG ROLO COM 200 UN 100MM X 250MM 51M",
+    "fornecedor": "",
+    "pedido": "11410",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "300",
+    "unidade": "ROLOS",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-13",
+    "solicitacao": "3316",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 37,
+    "materiaPrima": "SILRES BS-46 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11208",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "1000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-20",
+    "solicitacao": "3204",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "SEM DISPONIBILIDADE DO PRODUTO, PRAZO PARA CHEGAR 90 DIAS",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 38,
+    "materiaPrima": "ETIQUETA BOPP PG BRILHANTE IMPRESSAO 2 CORES RL COM 440 UN. 0,60 X 1,00M",
+    "fornecedor": "",
+    "pedido": "11413",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "50",
+    "unidade": "ROLOS",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-22",
+    "solicitacao": "3276",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 39,
+    "materiaPrima": "ETIQUETA BOPP SEM IMPRESSAO DE LOGO ROLO COM 200 UN 102MM X 220MM",
+    "fornecedor": "",
+    "pedido": "11413",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "70",
+    "unidade": "ROLOS",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-23",
+    "solicitacao": "3276",
+    "dataSolicitada": "2026-09-29",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 40,
+    "materiaPrima": "LATA COM TAMPA METALICA NATURAL SEM VERNIZ 900ML",
+    "fornecedor": "",
+    "pedido": "11053",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "2000",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-24",
+    "solicitacao": "3212",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 41,
+    "materiaPrima": "HEXAFOR 6400 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11634",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "150",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-11-22",
+    "solicitacao": "3203",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "SEM DISPONIBILIDADE DO PRODUTO, PRAZO PARA CHEGAR ENTRE 90 E 120 DIAS (FORNECEDOR ÚNICO)",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 42,
+    "materiaPrima": "HEXAFOR 6282 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "150",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-11-22",
+    "solicitacao": "3389",
+    "dataSolicitada": "2026-10-19",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 43,
+    "materiaPrima": "SACO VALVULADO TOPO LEITOSO IMP. 2 CORES 55M X 80CM X 0,25MM",
+    "fornecedor": "",
+    "pedido": "11057",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "10000",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-30",
+    "solicitacao": "3216",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 44,
+    "materiaPrima": "SACO VALVULADO TOPO AMARELO IMP. 1 COR 55M X 0,80CM X 0,25MM",
+    "fornecedor": "",
+    "pedido": "11057",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "10000",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-09-30",
+    "solicitacao": "3216",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 45,
+    "materiaPrima": "OXIPURITY 4060 UC-A - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "ATRASADO",
+    "quantidade": "2600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-08-20",
+    "solicitacao": "3152",
+    "dataSolicitada": "2026-08-16",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "SR. GUGU PEDIU PARA SEGURAR A COMPRA ATÉ SEGUNDA ORDEM",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 46,
+    "materiaPrima": "FRASCO RETANGULAR. PET BRANCO COM ALCA 1000ML",
+    "fornecedor": "",
+    "pedido": "11094",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "10000",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3211",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 47,
+    "materiaPrima": "ALUMIBART 30 M - GR (MP)",
+    "fornecedor": "HIDROBART",
+    "pedido": "11278",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "25",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3247",
+    "dataSolicitada": "2026-09-17",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 48,
+    "materiaPrima": "TAMPA PET BRANCA COM VEDANTE",
+    "fornecedor": "",
+    "pedido": "11094",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "10000",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-06",
+    "solicitacao": "3211",
+    "dataSolicitada": "2026-09-01",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 49,
+    "materiaPrima": "SILRES BS-16 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11506",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "56",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-12",
+    "solicitacao": "3308",
+    "dataSolicitada": "2026-10-05",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 50,
+    "materiaPrima": "SILRES BS-16 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11670",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "280",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-19",
+    "solicitacao": "3346",
+    "dataSolicitada": "2026-10-14",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 51,
+    "materiaPrima": "SILRES BS-3003 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11672",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "1800",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-19",
+    "solicitacao": "3345",
+    "dataSolicitada": "2026-10-14",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 52,
+    "materiaPrima": "MEG - MONOETILENO GLICOL - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11655",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "30000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-15",
+    "solicitacao": "3332",
+    "dataSolicitada": "2026-10-08",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#b45309",
+    "colorName": "Amarelo (#FFFF00 do Excel)"
+  },
+  {
+    "id": 53,
+    "materiaPrima": "HIPOFOSFITO DE SODIO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11628",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "700 KG",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-18",
+    "solicitacao": "3326",
+    "dataSolicitada": "2026-10-08",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 54,
+    "materiaPrima": "EX CELL 1001-XAROPE DE GLUCOSE - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11560",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "13000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-18",
+    "solicitacao": "3320",
+    "dataSolicitada": "2026-10-05",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 55,
+    "materiaPrima": "WANBAC WBT - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11639",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "3000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-18",
+    "solicitacao": "3319",
+    "dataSolicitada": "2026-10-05",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 56,
+    "materiaPrima": "SILFOAM SE 47 BR - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11601",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "COM PEDIDO - PORÉM ATRASADO",
+    "quantidade": "1600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-20",
+    "solicitacao": "3330",
+    "dataSolicitada": "2026-10-08",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 57,
+    "materiaPrima": "SILRES BS-1306 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11644",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "1600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3340",
+    "dataSolicitada": "2026-10-13",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 58,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 250X80X15X10 040 (EDING) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3354",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 59,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 250X80X15X10 050 (EDING) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3355",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 60,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 250X80X15X10 060 (EDING) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3356",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 61,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 250X80X15X10 080 (EDING) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3357",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 62,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 300X140X25X12 040 (KEDA) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3359",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 63,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 300X140X25X12 050 (KEDA) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3360",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 64,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 300X140X25X12 050 (KEDA) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3361",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 65,
+    "materiaPrima": "REBOLO METALICO DRY PARA RETIFICAR SEGMENTED 300X140X25X12 080 (KEDA) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3362",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 66,
+    "materiaPrima": "REBOLO RESINA PARA RETIFICAR 300X140X40X15 D01 (KEDA) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3363",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 67,
+    "materiaPrima": "REBOLO RESINA PARA RETIFICAR 250X80X40X12 UNIVERSAL D01 (EDING) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3364",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 68,
+    "materiaPrima": "REBOLO RESINA PARA RETIFICAR 300X140X40X15 D02 (KEDA) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3365",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 69,
+    "materiaPrima": "REBOLO RESINA PARA RETIFICAR 250X80X40X12 UNIVERSAL D02 (EDING) EXP",
+    "fornecedor": "",
+    "pedido": "11674",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "6",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-22",
+    "solicitacao": "3366",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 70,
+    "materiaPrima": "BOMBONA 50 L HOMOLOGADA",
+    "fornecedor": "",
+    "pedido": "11713",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "300",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-25",
+    "solicitacao": "3368",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#b45309",
+    "colorName": "Amarelo (#FFFF00 do Excel)"
+  },
+  {
+    "id": 71,
+    "materiaPrima": "BOMBONA 50 L HOMOLOGADA",
+    "fornecedor": "",
+    "pedido": "11713",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "300",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-25",
+    "solicitacao": "3368",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#b45309",
+    "colorName": "Amarelo (#FFFF00 do Excel)"
+  },
+  {
+    "id": 72,
+    "materiaPrima": "PASTA PROTETIVA TRANSPARENTE PPT 2100 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "12000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-25",
+    "solicitacao": "3401",
+    "dataSolicitada": "2026-10-22",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#b45309",
+    "colorName": "Amarelo (#FFFF00 do Excel)"
+  },
+  {
+    "id": 73,
+    "materiaPrima": "CONTAINER PAPELAO ONDULADO COM ACESSORIOS",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "170",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-26",
+    "solicitacao": "3344",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#dc2626",
+    "colorName": "Vermelho do Excel"
+  },
+  {
+    "id": 74,
+    "materiaPrima": "PALLET PARA CONTAINER PAPELAO EXPORTACAO 1,15X1,15 (FUMIGADO)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "150",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-26",
+    "solicitacao": "3347",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 75,
+    "materiaPrima": "SACO SANFONADO DE PEBD 2000X1650X0,15MM PARA PROTEGER CONTAINER DE PAPELAO",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "170",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-26",
+    "solicitacao": "3348",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 76,
+    "materiaPrima": "BOLSA OCTAGONAL DE 100L",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "170",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-26",
+    "solicitacao": "3349",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 77,
+    "materiaPrima": "FITA PET 2 13 X 0,80MM",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "15",
+    "unidade": "UN",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-26",
+    "solicitacao": "3350",
+    "dataSolicitada": "2026-10-15",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 78,
+    "materiaPrima": "PERSULFATO DE SODIO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "SEM PEDIDO",
+    "quantidade": "4000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-28",
+    "solicitacao": "3293",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 79,
+    "materiaPrima": "SOLUCAO DE SULFIDRATO 42 % - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "23000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-29",
+    "solicitacao": "3402",
+    "dataSolicitada": "2026-10-22",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 80,
+    "materiaPrima": "SOLUCAO DE SULFIDRATO 42 % - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "23000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-29",
+    "solicitacao": "3402",
+    "dataSolicitada": "2026-10-22",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 81,
+    "materiaPrima": "SOLUCAO DE SULFIDRATO 42 % - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "23000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-10-29",
+    "solicitacao": "3402",
+    "dataSolicitada": "2026-10-22",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 82,
+    "materiaPrima": "SILRES BS-1306 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11644",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "1600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-11-12",
+    "solicitacao": "3340",
+    "dataSolicitada": "2026-10-13",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 83,
+    "materiaPrima": "PERSULFATO DE SODIO - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "",
+    "status": "SEM PEDIDO",
+    "quantidade": "2000",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-11-22",
+    "solicitacao": "3293",
+    "dataSolicitada": "2026-09-30",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 84,
+    "materiaPrima": "SILRES BS-1306 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "11644",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "PEDIDO",
+    "quantidade": "1600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2026-12-03",
+    "solicitacao": "3340",
+    "dataSolicitada": "2026-10-13",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#2e7d32",
+    "colorName": "Verde (#92D050 do Excel)"
+  },
+  {
+    "id": 85,
+    "materiaPrima": "HEXAFOR 6282 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "200",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-04-04",
+    "solicitacao": "3390",
+    "dataSolicitada": "2026-10-19",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 86,
+    "materiaPrima": "HEXAFOR 6400 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "200",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-04-04",
+    "solicitacao": "3391",
+    "dataSolicitada": "2026-10-19",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 87,
+    "materiaPrima": "SILRES BS-1306 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "5600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-01-03",
+    "solicitacao": "3381",
+    "dataSolicitada": " ",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 88,
+    "materiaPrima": "SILRES BS-3003 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "5600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-01-03",
+    "solicitacao": "3382",
+    "dataSolicitada": "2026-10-18",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 89,
+    "materiaPrima": "SILRES BS-1306 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "5600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-02-04",
+    "solicitacao": "3383",
+    "dataSolicitada": "2026-10-18",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 90,
+    "materiaPrima": "SILRES BS-3003 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "5600",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-02-04",
+    "solicitacao": "3384",
+    "dataSolicitada": "2026-10-18",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 91,
+    "materiaPrima": "SILRES BS-1306 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "4800",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-03-04",
+    "solicitacao": "3385",
+    "dataSolicitada": "2026-10-18",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  },
+  {
+    "id": 92,
+    "materiaPrima": "SILRES BS-3003 - GR (MP)",
+    "fornecedor": "",
+    "pedido": "",
+    "dataPedido": "",
+    "urgencia": "ALTA",
+    "status": "SEM PEDIDO",
+    "quantidade": "4800",
+    "unidade": "KG",
+    "embalagem": "",
+    "previsaoEntrega": "2027-03-04",
+    "solicitacao": "3386",
+    "dataSolicitada": "2026-10-18",
+    "statusEntrega": "",
+    "dataChegada": "",
+    "motivoAtraso": "",
+    "obs": "",
+    "pedidoColor": "#27272a",
+    "colorName": "Padrão (Sem preenchimento no Excel)"
+  }
+];
+    const today = new Date();
+
+    // Função para mapear cor da fonte com base exata na planilha enviada pelo usuário
+    function getInitialPedidoColor(row) {
+      if (row.pedidoColor && row.pedidoColor !== '#27272a') {
+        return row.pedidoColor;
+      }
+      if (row.materiaPrima && row.materiaPrima.includes('CONTAINER PAPELAO')) {
+        return '#dc2626'; // Vermelho da planilha
+      }
+      return '#27272a'; // Padrão grafite
+    }
+
+    // Carregamento de dados com persistência local
+    let rows = [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) rows = JSON.parse(saved);
+    } catch (e) {
+      console.warn('Erro ao ler localStorage', e);
+    }
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      rows = JSON.parse(JSON.stringify(INITIAL_DATA));
+      // Aplica imediatamente as cores da planilha na inicialização
+      rows.forEach(r => {
+        r.pedidoColor = getInitialPedidoColor(r);
+      });
+      saveState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+      } catch (e) {
+        console.warn('Erro ao salvar no localStorage', e);
+      }
+    }
+
+    function resetToOriginalData() {
+      if (confirm('Deseja restaurar a base original de dados da planilha? Todas as alterações e cores manuais serão redefinidas.')) {
+        rows = JSON.parse(JSON.stringify(INITIAL_DATA));
+        rows.forEach(r => {
+          r.pedidoColor = getInitialPedidoColor(r);
+        });
+        saveState();
+        activeColumnFilters = {};
+        activePedidoColorFilter = null;
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = '';
+        renderTable();
+        showToast('Dados originais restaurados', 'rotate-ccw');
+      }
+    }
+
+    document.getElementById('currentDateDisplay').innerText = today.toLocaleDateString('pt-BR');
+
+    // Estado dos Filtros de Coluna Estilo Excel
+    let activeColumnFilters = {};
+    let activePedidoColorFilter = null;
+    let currentFilterField = null;
+    let currentSortField = null;
+    let currentSortDirection = null;
+
+    // Estado do Seletor de Cores da Fonte do Pedido
+    let activeColorPickerRowIndex = null;
+
+    function openFontColorPicker(rowIndex, event) {
+      event.stopPropagation();
+      closeFilterDropdown();
+
+      const popover = document.getElementById('fontColorPickerPopover');
+      if (activeColorPickerRowIndex === rowIndex && !popover.classList.contains('hidden')) {
+        closeColorPicker();
+        return;
+      }
+
+      activeColorPickerRowIndex = rowIndex;
+      const btn = event.currentTarget;
+      const rect = btn.getBoundingClientRect();
+
+      popover.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      popover.style.left = Math.min(Math.max(10, rect.left + window.scrollX - 90), window.innerWidth - 240) + 'px';
+
+      const currentColor = rows[rowIndex].pedidoColor || '#27272a';
+      const customInput = document.getElementById('customColorPicker');
+      if (customInput) {
+        customInput.value = (currentColor.startsWith('#') && currentColor.length === 7) ? currentColor : '#27272a';
+      }
+
+      popover.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeColorPicker() {
+      const popover = document.getElementById('fontColorPickerPopover');
+      if (popover) popover.classList.add('hidden');
+      activeColorPickerRowIndex = null;
+    }
+
+    function applyPedidoColor(color) {
+      if (activeColorPickerRowIndex === null || activeColorPickerRowIndex < 0 || activeColorPickerRowIndex >= rows.length) return;
+
+      rows[activeColorPickerRowIndex].pedidoColor = color;
+      saveState();
+      closeColorPicker();
+      renderTable();
+      showToast('Cor da fonte do pedido atualizada', 'palette');
+    }
+
+    // Instâncias dos Gráficos Chart.js
+    let delayBarChartInstance = null;
+    let statusPieChartInstance = null;
+
+    // Cálculo dos Dias de Atraso
+    function calculateDelayDays(row) {
+      if (!row.previsaoEntrega || row.previsaoEntrega.trim() === '') {
+        return 0;
+      }
+
+      const jDate = new Date(row.previsaoEntrega + 'T00:00:00');
+      if (isNaN(jDate.getTime())) return 0;
+
+      if (row.dataChegada && row.dataChegada.trim() !== '') {
+        const nDate = new Date(row.dataChegada + 'T00:00:00');
+        if (!isNaN(nDate.getTime()) && nDate > jDate) {
+          return Math.round((nDate - jDate) / (1000 * 60 * 60 * 24));
+        }
+        return 0;
+      }
+
+      const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (todayZero > jDate) {
+        return Math.round((todayZero - jDate) / (1000 * 60 * 60 * 24));
+      }
+      return 0;
+    }
+
+    // Live Status Evaluation Function
+    function computeStatus(row) {
+      if (!row.materiaPrima || row.materiaPrima.trim() === '') {
+        return '';
+      }
+
+      if (row.dataChegada && row.dataChegada.trim() !== '') {
+        return 'OK';
+      }
+
+      const delay = calculateDelayDays(row);
+      const isLate = delay > 0;
+      const hasOrder = (row.pedido && row.pedido.trim() !== '');
+
+      if (isLate) {
+        return hasOrder ? 'COM PEDIDO - PORÉM ATRASADO' : 'ATRASADO';
+      } else {
+        return hasOrder ? 'PEDIDO' : 'SEM PEDIDO';
+      }
+    }
+
+    function getBadgeClass(status) {
+      switch (status) {
+        case 'OK': return 'bg-blue-50 text-blue-700 border-blue-200/80';
+        case 'PEDIDO': return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
+        case 'SEM PEDIDO':
+        case 'S/PEDIDO': return 'bg-amber-50 text-amber-700 border-amber-200/80';
+        case 'COM PEDIDO - PORÉM ATRASADO': return 'bg-orange-50 text-orange-700 border-orange-200/80';
+        case 'ATRASADO': return 'bg-rose-50 text-rose-700 border-rose-200/80';
+        default: return 'bg-zinc-50 text-zinc-600 border-zinc-200';
+      }
+    }
+
+    function getDotClass(status) {
+      switch (status) {
+        case 'OK': return 'bg-blue-500';
+        case 'PEDIDO': return 'bg-indigo-500';
+        case 'SEM PEDIDO':
+        case 'S/PEDIDO': return 'bg-amber-500';
+        case 'COM PEDIDO - PORÉM ATRASADO': return 'bg-orange-500';
+        case 'ATRASADO': return 'bg-rose-500';
+        default: return 'bg-zinc-400';
+      }
+    }
+
+    function showToast(message, icon = 'check-circle-2') {
+      const toast = document.getElementById('systemToast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      if (!toast) return;
+
+      toastMsg.innerText = message;
+      toastIcon.setAttribute('data-lucide', icon);
+      lucide.createIcons();
+
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-2');
+      }, 2200);
+    }
+
+    // =========================================================================
+    // ATUALIZAÇÃO DOS KPIS E GRÁFICOS (CHART.JS)
+    // =========================================================================
+    function updateKPIs() {
+      let total = 0, ok = 0, pedido = 0, semPedido = 0, atrasado = 0, comPedidoAtrasado = 0;
+
+      rows.forEach(r => {
+        if (!r.materiaPrima) return;
+        total++;
+        const st = computeStatus(r);
+        if (st === 'OK') ok++;
+        else if (st === 'PEDIDO') pedido++;
+        else if (st === 'SEM PEDIDO' || st === 'S/PEDIDO') semPedido++;
+        else if (st === 'ATRASADO') atrasado++;
+        else if (st === 'COM PEDIDO - PORÉM ATRASADO') comPedidoAtrasado++;
+      });
+
+      document.getElementById('kpiTotal').innerText = total;
+      document.getElementById('kpiOk').innerText = ok;
+      document.getElementById('kpiPedido').innerText = pedido;
+      document.getElementById('kpiSemPedido').innerText = semPedido;
+      document.getElementById('kpiAtrasado').innerText = atrasado;
+      document.getElementById('kpiComPedidoAtrasado').innerText = comPedidoAtrasado;
+
+      renderExecutiveDashboard(ok, pedido, semPedido, atrasado, comPedidoAtrasado);
+    }
+
+    function renderExecutiveDashboard(ok, pedido, semPedido, atrasado, comPedidoAtrasado) {
+      const container = document.getElementById('criticalDelayedList');
+      const totalLateBadge = document.getElementById('execTotalDelayedBadge');
+      const totalVolumeBadge = document.getElementById('execTotalVolumeBadge');
+      const maxDelayDaysEl = document.getElementById('execMaxDelayDays');
+      const maxDelayMPEl = document.getElementById('execMaxDelayMP');
+      const avgDelayDaysEl = document.getElementById('execAvgDelayDays');
+      const criticalCountEl = document.getElementById('execCriticalCount');
+      const noOrderCountEl = document.getElementById('execNoOrderCount');
+
+      if (!container) return;
+
+      const lateItems = rows
+        .map((r, originalIdx) => ({
+          ...r,
+          originalIndex: originalIdx,
+          delay: calculateDelayDays(r),
+          status: computeStatus(r)
+        }))
+        .filter(r => r.delay > 0 && (!r.dataChegada || r.dataChegada.trim() === ''))
+        .sort((a, b) => b.delay - a.delay);
+
+      let totalVolume = 0;
+      let totalDelaySum = 0;
+      let criticalCount = 0;
+      let noOrderCount = 0;
+
+      lateItems.forEach(item => {
+        const qtyNum = parseFloat(String(item.quantidade).replace(/\./g, '').replace(',', '.')) || 0;
+        totalVolume += qtyNum;
+        totalDelaySum += item.delay;
+        if (item.delay >= 30) criticalCount++;
+        if (!item.pedido || item.pedido.trim() === '') noOrderCount++;
+      });
+
+      totalLateBadge.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span> ${lateItems.length} matérias-primas em atraso`;
+      totalVolumeBadge.innerText = `Volume em Aberto: ${totalVolume.toLocaleString('pt-BR')} KG`;
+
+      if (lateItems.length > 0) {
+        maxDelayDaysEl.innerText = lateItems[0].delay;
+        maxDelayMPEl.innerText = lateItems[0].materiaPrima;
+        avgDelayDaysEl.innerText = Math.round(totalDelaySum / lateItems.length);
+      } else {
+        maxDelayDaysEl.innerText = '0';
+        maxDelayMPEl.innerText = 'Nenhum atraso';
+        avgDelayDaysEl.innerText = '0';
+      }
+
+      criticalCountEl.innerText = criticalCount;
+      noOrderCountEl.innerText = noOrderCount;
+
+      // Cards do Top 6
+      if (lateItems.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-3 text-center text-xs text-emerald-600 bg-emerald-50/50 rounded border border-emerald-200/50">
+            Excelente! Todas as matérias-primas estão rigorosamente em dia.
+          </div>
+        `;
+      } else {
+        const topList = lateItems.slice(0, 6);
+        let html = '';
+
+        topList.forEach((item, rank) => {
+          const isWithOrder = (item.pedido && item.pedido.trim() !== '');
+
+          html += `
+            <div onclick="focusItem('${escapeHtml(item.materiaPrima)}')" class="group flex flex-col justify-between rounded border border-zinc-200/80 bg-zinc-50/60 p-2 transition-all hover:bg-white hover:border-zinc-300 hover:shadow-subtle cursor-pointer">
+              <div>
+                <div class="flex items-center justify-between text-[10px] mb-1">
+                  <span class="font-bold text-zinc-400 uppercase tracking-wider">#${rank + 1} MAIOR ATRASO</span>
+                  <span class="inline-flex items-center rounded bg-rose-50 px-1.5 py-0.2 font-bold text-rose-700 border border-rose-200/60 tabular-nums">
+                    +${item.delay} dias
+                  </span>
+                </div>
+                <p class="text-[11px] font-semibold text-zinc-900 line-clamp-2 leading-snug group-hover:text-pg transition-colors">
+                  ${escapeHtml(item.materiaPrima)}
+                </p>
+              </div>
+              
+              <div class="mt-2 pt-1.5 border-t border-zinc-200/60 flex items-center justify-between text-[11px]">
+                <span class="font-mono font-bold text-zinc-800 tabular-nums text-[11px]">
+                  ${escapeHtml(item.quantidade) || '0'} <span class="text-[9px] font-sans font-medium text-zinc-400">${escapeHtml(item.unidade) || 'KG'}</span>
+                </span>
+                <span class="text-[10px]">
+                  ${isWithOrder ? '<span class="font-mono text-zinc-600">Ped: ' + escapeHtml(item.pedido) + '</span>' : '<span class="text-rose-600 font-semibold">S/ Pedido</span>'}
+                </span>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
+      // Atualiza os Gráficos Visuais Chart.js
+      renderCharts(lateItems, ok, pedido, semPedido, atrasado, comPedidoAtrasado);
+      lucide.createIcons();
+    }
+
+    function renderCharts(lateItems, ok, pedido, semPedido, atrasado, comPedidoAtrasado) {
+      if (typeof Chart === 'undefined') return;
+
+      // 1. Gráfico de Barras Horizontais (Top 10 Atrasados com Quantidade Solicitada)
+      const top10 = lateItems.slice(0, 10);
+      const barLabels = top10.map(i => i.materiaPrima.length > 25 ? i.materiaPrima.substring(0, 25) + '...' : i.materiaPrima);
+      const barData = top10.map(i => i.delay);
+      const barQuantities = top10.map(i => (i.quantidade || '0') + ' ' + (i.unidade || 'KG'));
+      const barSuppliers = top10.map(i => i.fornecedor || 'Fornecedor não inf.');
+
+      const ctxBar = document.getElementById('delayBarChart');
+      if (ctxBar) {
+        if (delayBarChartInstance) delayBarChartInstance.destroy();
+
+        delayBarChartInstance = new Chart(ctxBar, {
+          type: 'bar',
+          data: {
+            labels: barLabels,
+            datasets: [{
+              label: 'Dias em Atraso',
+              data: barData,
+              backgroundColor: top10.map(i => i.delay >= 30 ? '#ef4444' : '#f97316'),
+              borderRadius: 4,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const idx = context.dataIndex;
+                    return [
+                      ` Atraso: ${context.raw} dias`,
+                      ` Qtd Solicitada: ${barQuantities[idx]}`,
+                      ` Fornecedor: ${barSuppliers[idx]}`
+                    ];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#f4f4f5' },
+                ticks: { font: { family: 'Inter', size: 10 }, color: '#71717a' },
+                title: { display: true, text: 'Dias Decorridos de Atraso', font: { size: 10 } }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { font: { family: 'Inter', size: 10 }, color: '#27272a' }
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Gráfico de Rosca (Status Geral)
+      const ctxPie = document.getElementById('statusPieChart');
+      if (ctxPie) {
+        if (statusPieChartInstance) statusPieChartInstance.destroy();
+
+        statusPieChartInstance = new Chart(ctxPie, {
+          type: 'doughnut',
+          data: {
+            labels: ['Entregue (OK)', 'No Prazo', 'Sem Pedido', 'Pedido Atrasado', 'Atrasado s/ Pedido'],
+            datasets: [{
+              data: [ok, pedido, semPedido, comPedidoAtrasado, atrasado],
+              backgroundColor: ['#3b82f6', '#4f46e5', '#eab308', '#f97316', '#ef4444'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 10, font: { family: 'Inter', size: 10 }, color: '#52525b', padding: 8 }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function focusItem(materiaPrima) {
+      document.getElementById('searchInput').value = materiaPrima;
+      renderTable();
+      showToast(`Filtrando por: ${materiaPrima}`, 'search');
+    }
+
+    // =========================================================================
+    // FILTROS ESTILO EXCEL NAS COLUNAS
+    // =========================================================================
+    function toggleColumnFilter(field, event) {
+      event.stopPropagation();
+      const popover = document.getElementById('excelFilterDropdown');
+
+      if (currentFilterField === field && !popover.classList.contains('hidden')) {
+        closeFilterDropdown();
+        return;
+      }
+
+      currentFilterField = field;
+      const th = event.currentTarget.closest('th');
+      const rect = th.getBoundingClientRect();
+
+      popover.style.top = (rect.bottom + window.scrollY + 2) + 'px';
+      popover.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 270) + 'px';
+
+      const fieldTitles = {
+        materiaPrima: 'Matéria-Prima',
+        fornecedor: 'Fornecedor',
+        pedido: 'Número do Pedido',
+        urgencia: 'Nível de Urgência',
+        status: 'Status do Pedido'
+      };
+
+      document.getElementById('filterDropdownTitle').innerText = `Filtro: ${fieldTitles[field] || field}`;
+      document.getElementById('filterSearchInput').value = '';
+
+      // Mostra a seção de filtrar por cor apenas na coluna Pedido
+      const colorSection = document.getElementById('filterByColorSection');
+      if (field === 'pedido') {
+        colorSection.classList.remove('hidden');
+        populateFilterColors();
+      } else {
+        colorSection.classList.add('hidden');
+      }
+
+      populateFilterCheckboxes(field);
+      popover.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function populateFilterColors() {
+      const container = document.getElementById('filterColorSwatches');
+      const distinctColors = new Set();
+      
+      rows.forEach(r => {
+        if (r.pedidoColor && r.pedidoColor !== '#27272a') {
+          distinctColors.add(r.pedidoColor);
+        }
+      });
+
+      let html = `
+        <button type="button" onclick="filterByPedidoColor(null)" class="inline-flex items-center gap-1 rounded border border-zinc-200 px-1.5 py-0.5 text-[10px] text-zinc-600 hover:bg-zinc-100 ${!activePedidoColorFilter ? 'bg-zinc-100 font-bold' : ''}">
+          Todas
+        </button>
+      `;
+
+      const colorLabels = {
+        '#2e7d32': 'Verde (67 pedidos - #92D050 da Planilha)',
+        '#b45309': 'Amarelo (4 pedidos - #FFFF00 da Planilha)',
+        '#dc2626': 'Vermelho (Crítico da Planilha)',
+        '#27272a': 'Padrão (Sem cor na Planilha)'
+      };
+
+      distinctColors.forEach(color => {
+        const isSelected = activePedidoColorFilter === color;
+        const label = colorLabels[color] || color;
+        html += `
+          <button type="button" onclick="filterByPedidoColor('${color}')" class="h-4 w-4 rounded-full border border-black/20 shadow-2xs transition-transform hover:scale-125 ${isSelected ? 'ring-2 ring-pg ring-offset-1 scale-110' : ''}" style="background-color: ${color};" title="Filtrar: ${label}"></button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterByPedidoColor(color) {
+      activePedidoColorFilter = color;
+      closeFilterDropdown();
+      renderTable();
+      if (color) {
+        showToast('Filtrado pela cor da fonte selecionada', 'palette');
+      } else {
+        showToast('Filtro de cor removido', 'palette');
+      }
+    }
+
+    function populateFilterCheckboxes(field) {
+      const container = document.getElementById('filterCheckboxContainer');
+      const uniqueVals = new Set();
+
+      rows.forEach(r => {
+        let val = '';
+        if (field === 'status') val = computeStatus(r);
+        else val = r[field] ? String(r[field]).trim() : '';
+        uniqueVals.add(val || '(Vazio)');
+      });
+
+      const sortedVals = Array.from(uniqueVals).sort();
+      const currentActive = activeColumnFilters[field];
+
+      let html = `
+        <label class="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-800 hover:bg-zinc-100 p-0.5 rounded cursor-pointer border-b border-zinc-100 pb-1">
+          <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllCheckboxes(this)" class="rounded text-pg focus:ring-pg h-3.5 w-3.5" ${!currentActive ? 'checked' : ''}>
+          <span>(Selecionar Tudo)</span>
+        </label>
+      `;
+
+      sortedVals.forEach((val) => {
+        const isChecked = !currentActive || currentActive.has(val);
+        html += `
+          <label class="filter-item-label flex items-center gap-1.5 text-[11px] text-zinc-700 hover:bg-zinc-100 p-0.5 rounded cursor-pointer">
+            <input type="checkbox" value="${escapeHtml(val)}" class="filter-col-checkbox rounded text-pg focus:ring-pg h-3.5 w-3.5" ${isChecked ? 'checked' : ''} onchange="updateSelectAllState()">
+            <span class="truncate">${escapeHtml(val)}</span>
+          </label>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterCheckboxList() {
+      const q = document.getElementById('filterSearchInput').value.toLowerCase();
+      const labels = document.querySelectorAll('.filter-item-label');
+      labels.forEach(l => {
+        const text = l.innerText.toLowerCase();
+        l.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    function toggleSelectAllCheckboxes(masterCheckbox) {
+      const cbs = document.querySelectorAll('.filter-col-checkbox');
+      cbs.forEach(cb => cb.checked = masterCheckbox.checked);
+    }
+
+    function updateSelectAllState() {
+      const cbs = Array.from(document.querySelectorAll('.filter-col-checkbox'));
+      const master = document.getElementById('selectAllCheckbox');
+      const allChecked = cbs.every(cb => cb.checked);
+      if (master) master.checked = allChecked;
+    }
+
+    function applyFilterFromDropdown() {
+      if (!currentFilterField) return;
+      const cbs = Array.from(document.querySelectorAll('.filter-col-checkbox'));
+      const selected = new Set();
+      let allSelected = true;
+
+      cbs.forEach(cb => {
+        if (cb.checked) selected.add(cb.value);
+        else allSelected = false;
+      });
+
+      if (allSelected) {
+        delete activeColumnFilters[currentFilterField];
+      } else {
+        activeColumnFilters[currentFilterField] = selected;
+      }
+
+      closeFilterDropdown();
+      renderTable();
+      showToast('Filtro aplicado na coluna', 'filter');
+    }
+
+    function clearCurrentFilter() {
+      if (currentFilterField && activeColumnFilters[currentFilterField]) {
+        delete activeColumnFilters[currentFilterField];
+      }
+      closeFilterDropdown();
+      renderTable();
+      showToast('Filtro removido da coluna', 'filter-x');
+    }
+
+    function clearAllFilters() {
+      activeColumnFilters = {};
+      activePedidoColorFilter = null;
+      currentSortField = null;
+      currentSortDirection = null;
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      renderTable();
+      showToast('Todos os filtros foram redefinidos', 'filter-x');
+    }
+
+    function closeFilterDropdown() {
+      const popover = document.getElementById('excelFilterDropdown');
+      if (popover) popover.classList.add('hidden');
+      currentFilterField = null;
+    }
+
+    document.addEventListener('click', (e) => {
+      const filterPopover = document.getElementById('excelFilterDropdown');
+      if (filterPopover && !filterPopover.contains(e.target) && !e.target.closest('.column-filter-btn')) {
+        closeFilterDropdown();
+      }
+
+      const colorPopover = document.getElementById('fontColorPickerPopover');
+      if (colorPopover && !colorPopover.contains(e.target) && !e.target.closest('[data-color-btn="true"]')) {
+        closeColorPicker();
+      }
+    });
+
+    // Ordenação Estilo Excel
+    function toggleSort(field) {
+      if (currentSortField === field) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : (currentSortDirection === 'desc' ? null : 'asc');
+        if (!currentSortDirection) currentSortField = null;
+      } else {
+        currentSortField = field;
+        currentSortDirection = 'asc';
+      }
+      renderTable();
+      if (currentSortDirection) {
+        showToast(`Ordenado por ${field} (${currentSortDirection.toUpperCase()})`, 'arrow-up-down');
+      }
+    }
+
+    function applySortFromDropdown(direction) {
+      if (!currentFilterField) return;
+      currentSortField = currentFilterField;
+      currentSortDirection = direction;
+      closeFilterDropdown();
+      renderTable();
+      showToast(`Coluna ordenada (${direction.toUpperCase()})`, 'arrow-up-down');
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO DA TABELA (INCLUINDO COLUNA: DATA SOLICITADA)
+    // =========================================================================
+
+    // =========================================================================
+    // NAVEGAÇÃO DE ABAS PRINCIPAIS: GESTÃO DE PEDIDOS | GESTÃO DE PEDIDOS IBC'S
+    // =========================================================================
+    let currentAppTab = 'pedidos';
+
+    function switchAppTab(tabId) {
+      currentAppTab = tabId;
+      const tabs = ['pedidos', 'ibcs'];
+      
+      tabs.forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const view = document.getElementById('view-' + t);
+        const isActive = t === tabId;
+
+        if (view) {
+          if (isActive) {
+            view.classList.remove('hidden');
+          } else {
+            view.classList.add('hidden');
+          }
+        }
+
+        if (btn) {
+          if (isActive) {
+            btn.className = 'flex items-center gap-2 border-b-2 border-pg px-4 py-2.5 text-xs font-semibold text-pg transition-all cursor-pointer';
+          } else {
+            btn.className = 'flex items-center gap-2 border-b-2 border-transparent px-4 py-2.5 text-xs font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 transition-all cursor-pointer';
+          }
+        }
+      });
+
+      if (tabId === 'pedidos') {
+        if (chartCriticosInstance) chartCriticosInstance.resize();
+        if (chartStatusInstance) chartStatusInstance.resize();
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+
+    // =========================================================================
+    // RECURSO: COPIAR DESCRIÇÃO DO PRODUTO (MATÉRIA-PRIMA)
+    // =========================================================================
+    function copyProductDescription(index, btnEl) {
+      const text = (rows[index] && rows[index].materiaPrima) || '';
+      if (!text) return;
+
+      const performCopy = () => {
+        showToast(`Copiado: "${text.slice(0, 32)}${text.length > 32 ? '...' : ''}"`, 'check');
+        if (btnEl) {
+          const originalContent = btnEl.innerHTML;
+          btnEl.innerHTML = '<i data-lucide="check" class="h-3 w-3 text-emerald-600"></i>';
+          btnEl.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+          if (window.lucide) lucide.createIcons();
+          setTimeout(() => {
+            btnEl.innerHTML = originalContent;
+            btnEl.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+            if (window.lucide) lucide.createIcons();
+          }, 1500);
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(performCopy).catch(() => {
+          fallbackCopyText(text, performCopy);
+        });
+      } else {
+        fallbackCopyText(text, performCopy);
+      }
+    }
+
+    function fallbackCopyText(text, callback) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        if (callback) callback();
+      } catch (err) {
+        showToast('Não foi possível copiar automaticamente', 'alert-circle');
+      }
+      document.body.removeChild(ta);
+    }
+
+    // =========================================================================
+    // RECURSO: CONTROLE DE ZOOM DA TABELA OPERACIONAL
+    // =========================================================================
+    let currentTableZoom = 1.0;
+    let isTableFullscreen = false;
+
+    function changeTableZoom(delta) {
+      currentTableZoom = Math.round((currentTableZoom + delta) * 10) / 10;
+      if (currentTableZoom < 0.7) currentTableZoom = 0.7;
+      if (currentTableZoom > 1.6) currentTableZoom = 1.6;
+      applyTableZoom();
+      showToast(`Zoom da tabela: ${Math.round(currentTableZoom * 100)}%`, 'zoom-in');
+    }
+
+    function resetTableZoom() {
+      currentTableZoom = 1.0;
+      applyTableZoom();
+      showToast('Zoom da tabela redefinido para 100%', 'rotate-ccw');
+    }
+
+    function applyTableZoom() {
+      const table = document.getElementById('mainTable');
+      const display = document.getElementById('tableZoomDisplay');
+      if (display) display.innerText = Math.round(currentTableZoom * 100) + '%';
+      if (table) {
+        table.style.zoom = currentTableZoom;
+      }
+    }
+
+    function toggleTableFullscreen() {
+      const container = document.querySelector('.table-container')?.parentElement;
+      const btn = document.getElementById('fullscreenToggleBtn');
+      if (!container) return;
+
+      isTableFullscreen = !isTableFullscreen;
+      if (isTableFullscreen) {
+        container.classList.add('fixed', 'inset-3', 'z-50', 'bg-white', 'p-3', 'shadow-2xl', 'flex', 'flex-col');
+        const scrollArea = container.querySelector('.table-container');
+        if (scrollArea) {
+          scrollArea.classList.remove('max-h-[66vh]');
+          scrollArea.classList.add('flex-1', 'h-full');
+        }
+        if (btn) btn.innerHTML = '<i data-lucide="minimize-2" class="h-3 w-3 text-pg"></i>';
+        showToast('Modo Foco Expandido ativado (Pressione ESC ou clique para sair)', 'maximize-2');
+      } else {
+        container.classList.remove('fixed', 'inset-3', 'z-50', 'bg-white', 'p-3', 'shadow-2xl', 'flex', 'flex-col');
+        const scrollArea = container.querySelector('.table-container');
+        if (scrollArea) {
+          scrollArea.classList.remove('flex-1', 'h-full');
+          scrollArea.classList.add('max-h-[66vh]');
+        }
+        if (btn) btn.innerHTML = '<i data-lucide="maximize-2" class="h-3 w-3"></i>';
+        showToast('Modo Foco desativado', 'minimize-2');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isTableFullscreen) {
+        toggleTableFullscreen();
+      }
+    });
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const quickStatusFilter = document.getElementById('statusFilter').value;
+
+      let displayRows = rows.map((r, originalIndex) => {
+        return {
+          ...r,
+          originalIndex,
+          computedStatus: computeStatus(r),
+          delayDays: calculateDelayDays(r)
+        };
+      });
+
+      // 1. Filtro da Busca Geral
+      if (search) {
+        displayRows = displayRows.filter(r => {
+          const matchMP = (r.materiaPrima || '').toLowerCase().includes(search);
+          const matchForn = (r.fornecedor || '').toLowerCase().includes(search);
+          const matchPed = (r.pedido || '').toLowerCase().includes(search);
+          const matchObs = (r.obs || '').toLowerCase().includes(search);
+          return matchMP || matchForn || matchPed || matchObs;
+        });
+      }
+
+      // 2. Filtro Rápido de Status (Select superior)
+      if (quickStatusFilter) {
+        displayRows = displayRows.filter(r => r.computedStatus === quickStatusFilter);
+      }
+
+      // 3. Filtro Específico por Cor da Fonte do Pedido
+      if (activePedidoColorFilter) {
+        displayRows = displayRows.filter(r => {
+          const color = r.pedidoColor || '#27272a';
+          return color === activePedidoColorFilter;
+        });
+      }
+
+      // 4. Filtros de Coluna Individuais (Estilo Excel)
+      Object.keys(activeColumnFilters).forEach(field => {
+        const allowedSet = activeColumnFilters[field];
+        if (!allowedSet) return;
+
+        displayRows = displayRows.filter(r => {
+          let val = '';
+          if (field === 'status') val = r.computedStatus;
+          else val = r[field] ? String(r[field]).trim() : '';
+          const checkVal = val || '(Vazio)';
+          return allowedSet.has(checkVal);
+        });
+      });
+
+      // 4. Ordenação
+      if (currentSortField && currentSortDirection) {
+        displayRows.sort((a, b) => {
+          let valA = a[currentSortField];
+          let valB = b[currentSortField];
+
+          if (currentSortField === 'quantidade') {
+            valA = parseFloat(String(valA).replace(/\./g, '').replace(',', '.')) || 0;
+            valB = parseFloat(String(valB).replace(/\./g, '').replace(',', '.')) || 0;
+          } else if (currentSortField === 'diasAtraso') {
+            valA = a.delayDays;
+            valB = b.delayDays;
+          } else if (currentSortField === 'status') {
+            valA = a.computedStatus;
+            valB = b.computedStatus;
+          } else {
+            valA = (valA || '').toString().toLowerCase();
+            valB = (valB || '').toString().toLowerCase();
+          }
+
+          if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+          if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      let html = '';
+      displayRows.forEach((r) => {
+        const idx = r.originalIndex;
+        const currentStatus = r.computedStatus;
+        const delayDays = r.delayDays;
+
+        const badgeClass = getBadgeClass(currentStatus);
+        const dotClass = getDotClass(currentStatus);
+
+        let urgencyClass = '';
+        // Sem alterar a cor de fundo: apenas a cor da fonte
+        if (r.urgencia === 'ALTA') urgencyClass = 'bg-transparent text-rose-700 font-bold';
+        else if (r.urgencia === 'MÉDIA' || r.urgencia === 'MEDIA') urgencyClass = 'bg-transparent text-amber-700 font-semibold';
+        else if (r.urgencia === 'BAIXA') urgencyClass = 'bg-transparent text-emerald-700 font-medium';
+
+        let delayBadgeHtml = '<span class="text-zinc-300 font-mono text-[11px]">-</span>';
+        if (delayDays > 0) {
+          if (r.dataChegada) {
+            delayBadgeHtml = `<span class="inline-flex items-center rounded border border-zinc-200 bg-zinc-50 px-1 py-0.2 text-[9px] font-medium text-zinc-600 font-mono tabular-nums">+${delayDays}d (entregue)</span>`;
+          } else if (delayDays >= 30) {
+            delayBadgeHtml = `<span class="inline-flex items-center gap-0.5 rounded border border-rose-200 bg-rose-50 px-1.5 py-0.2 text-[10px] font-bold text-rose-700 font-mono tabular-nums">+${delayDays}d</span>`;
+          } else {
+            delayBadgeHtml = `<span class="inline-flex items-center gap-0.5 rounded border border-orange-200 bg-orange-50 px-1.5 py-0.2 text-[10px] font-semibold text-orange-700 font-mono tabular-nums">+${delayDays}d</span>`;
+          }
+        }
+
+        html += `
+          <tr data-index="${idx}" class="hover:bg-zinc-50/80 transition-colors">
+            <td class="px-1.5 py-1 text-center">
+              <div class="inline-flex items-center gap-0.5">
+                <button type="button" class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors" title="Subir Linha" onclick="moveRow(${idx}, -1)">
+                  <i data-lucide="chevron-up" class="h-3 w-3"></i>
+                </button>
+                <button type="button" class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors" title="Descer Linha" onclick="moveRow(${idx}, 1)">
+                  <i data-lucide="chevron-down" class="h-3 w-3"></i>
+                </button>
+                <button type="button" class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Excluir" onclick="deleteRow(${idx})">
+                  <i data-lucide="trash-2" class="h-3 w-3"></i>
+                </button>
+              </div>
+            </td>
+            <td class="px-1 py-1 text-center font-mono text-[10px] text-zinc-400 tabular-nums">${idx + 1}</td>
+            <!-- Coluna Matéria-Prima: descrição 100% visível, quebra de linha automática sem cortes -->
+            <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[380px] max-w-[500px] whitespace-normal">
+              <div class="flex items-start gap-1.5 group/mp">
+                <!-- Botão de Copiar na frente da descrição do produto -->
+                <button type="button" 
+                        onclick="copyProductDescription(${idx}, this)" 
+                        class="mt-0.5 h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-pg hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all shrink-0 opacity-50 group-hover/mp:opacity-100 cursor-pointer shadow-2xs"
+                        title="Copiar descrição da matéria-prima">
+                  <i data-lucide="copy" class="h-3 w-3"></i>
+                </button>
+                <textarea rows="1"
+                          class="table-cell-input font-semibold text-zinc-900 leading-snug resize-none overflow-hidden whitespace-normal break-words py-1 block w-full text-[11px] bg-transparent"
+                          style="min-height: 26px; height: auto;"
+                          oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
+                          onchange="updateCell(${idx}, 'materiaPrima', this.value)">${escapeHtml(r.materiaPrima)}</textarea>
+              </div>
+            </td>
+            <td class="px-1 py-1">
+              <input type="text" class="table-cell-input text-zinc-600" value="${escapeHtml(r.fornecedor)}" placeholder="Fornecedor..." onchange="updateCell(${idx}, 'fornecedor', this.value)">
+            </td>
+            <!-- COLUNA PEDIDO: COM SUPORTE À COR DA FONTE PERSONALIZADA -->
+            <td class="px-1.5 py-1">
+              <div class="flex items-center gap-1 group/pedido">
+                <input type="text" 
+                       id="pedido-input-${idx}"
+                       class="table-cell-input font-mono transition-colors flex-1"
+                       style="color: ${r.pedidoColor || '#27272a'}; font-weight: ${r.pedidoColor && r.pedidoColor !== '#27272a' ? '700' : '500'};"
+                       value="${escapeHtml(r.pedido)}" 
+                       placeholder="-" 
+                       onchange="updateCell(${idx}, 'pedido', this.value)">
+                
+                <!-- Botão de Cor da Fonte com indicador visual -->
+                <button type="button" 
+                        data-color-btn="true"
+                        onclick="openFontColorPicker(${idx}, event)" 
+                        class="h-5 w-5 rounded flex items-center justify-center border border-zinc-200/80 bg-white hover:bg-zinc-100 hover:border-zinc-300 transition-all opacity-60 group-hover/pedido:opacity-100 shadow-2xs shrink-0"
+                        title="Alterar cor da fonte do Pedido">
+                  <span class="h-2.5 w-2.5 rounded-full border border-black/10 shadow-xs" style="background-color: ${r.pedidoColor || '#27272a'};"></span>
+                </button>
+              </div>
+            </td>
+            <td class="px-1 py-1">
+              <select class="table-cell-input text-[11px] cursor-pointer ${urgencyClass}" onchange="updateCell(${idx}, 'urgencia', this.value)">
+                <option value="" ${r.urgencia === '' ? 'selected' : ''}>-</option>
+                <option value="ALTA" ${r.urgencia === 'ALTA' ? 'selected' : ''}>ALTA</option>
+                <option value="MÉDIA" ${(r.urgencia === 'MÉDIA' || r.urgencia === 'MEDIA') ? 'selected' : ''}>MÉDIA</option>
+                <option value="BAIXA" ${r.urgencia === 'BAIXA' ? 'selected' : ''}>BAIXA</option>
+              </select>
+            </td>
+            <td class="px-1.5 py-1 text-center">
+              <span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold tracking-tight whitespace-nowrap ${badgeClass}">
+                <span class="h-1.5 w-1.5 rounded-full ${dotClass}"></span>
+                <span>${currentStatus || '-'}</span>
+              </span>
+            </td>
+            <td class="px-1 py-1 text-right">
+              <input type="text" class="table-cell-input text-right font-mono font-semibold text-zinc-800 tabular-nums" value="${escapeHtml(r.quantidade)}" placeholder="0" onchange="updateCell(${idx}, 'quantidade', this.value)">
+            </td>
+            <td class="px-1 py-1 text-center">
+              <input type="text" class="table-cell-input text-center uppercase font-mono text-[9px] text-zinc-400" value="${escapeHtml(r.unidade)}" placeholder="KG" onchange="updateCell(${idx}, 'unidade', this.value)">
+            </td>
+            
+            <!-- Coluna Nº Solicitação -->
+            <td class="px-1 py-1 text-center">
+              <input type="text" 
+                     class="table-cell-input font-mono font-semibold text-zinc-800 text-center tabular-nums" 
+                     value="${escapeHtml(r.solicitacao || '')}" 
+                     placeholder="-" 
+                     onchange="updateCell(${idx}, 'solicitacao', this.value)">
+            </td>
+            
+            <!-- NOVA COLUNA: Data Solicitada -->
+            <td class="px-1 py-1">
+              <input type="date" class="table-cell-input font-mono text-[10px] text-zinc-600 tabular-nums" value="${r.dataSolicitada || ''}" onchange="updateCell(${idx}, 'dataSolicitada', this.value)">
+            </td>
+
+            <!-- Previsão Entrega -->
+            <td class="px-1 py-1">
+              <input type="date" class="table-cell-input font-mono text-[10px] text-zinc-600 tabular-nums" value="${r.previsaoEntrega}" onchange="updateCell(${idx}, 'previsaoEntrega', this.value)">
+            </td>
+            
+            <td class="px-1.5 py-1 text-center">
+              ${delayBadgeHtml}
+            </td>
+            <td class="px-1 py-1">
+              <input type="date" class="table-cell-input font-mono text-[10px] font-semibold text-blue-700 tabular-nums" value="${r.dataChegada}" onchange="updateCell(${idx}, 'dataChegada', this.value)">
+            </td>
+            <td class="px-1.5 py-1">
+              <input type="text" class="table-cell-input text-zinc-500" value="${escapeHtml(r.obs)}" placeholder="Inserir observação..." onchange="updateCell(${idx}, 'obs', this.value)">
+            </td>
+          </tr>
+        `;
+      });
+
+      if (displayRows.length === 0) {
+        html = `
+          <tr>
+            <td colspan="14" class="py-8 text-center text-zinc-500">
+              <i data-lucide="filter-x" class="mx-auto h-6 w-6 text-zinc-400 stroke-[1.5]"></i>
+              <p class="mt-1.5 text-xs font-medium text-zinc-800">Nenhum registro corresponde aos filtros selecionados</p>
+              <button onclick="clearAllFilters()" class="mt-2 text-xs font-semibold text-pg hover:underline">Limpar Filtros e Restaurar Tabela</button>
+            </td>
+          </tr>
+        `;
+      }
+
+      tbody.innerHTML = html;
+      document.getElementById('filteredCount').innerText = `${displayRows.length} de ${rows.length} registros`;
+      
+      // Ajusta altura das textareas para que toda a descrição fique perfeitamente visível
+      setTimeout(() => {
+        document.querySelectorAll('textarea.table-cell-input').forEach(t => {
+          t.style.height = 'auto';
+          t.style.height = t.scrollHeight + 'px';
+        });
+      }, 0);
+
+      updateKPIs();
+      lucide.createIcons();
+    }
+
+    function updateCell(index, field, value) {
+      rows[index][field] = value;
+      saveState();
+      renderTable();
+    }
+
+    function addNewRow() {
+      const newRow = {
+        id: rows.length + 1,
+        materiaPrima: 'Nova Matéria-Prima',
+        fornecedor: '',
+        pedido: '',
+        pedidoColor: '#27272a',
+        dataPedido: '',
+        urgencia: '',
+        status: 'SEM PEDIDO',
+        quantidade: '',
+        unidade: 'KG',
+        embalagem: '',
+        previsaoEntrega: '',
+        solicitacao: '',
+        dataSolicitada: new Date().toISOString().slice(0, 10),
+        statusEntrega: '',
+        dataChegada: '',
+        obs: ''
+      };
+      rows.unshift(newRow);
+      saveState();
+      renderTable();
+      document.querySelector('.table-container').scrollTop = 0;
+      showToast('Nova solicitação adicionada no topo', 'plus');
+    }
+
+    function deleteRow(index) {
+      const item = rows[index].materiaPrima || 'este item';
+      if (confirm(`Deseja realmente remover o registro "${item}"?`)) {
+        rows.splice(index, 1);
+        saveState();
+        renderTable();
+        showToast('Registro excluído com sucesso', 'trash-2');
+      }
+    }
+
+    function moveRow(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= rows.length) return;
+      const temp = rows[index];
+      rows[index] = rows[targetIndex];
+      rows[targetIndex] = temp;
+      saveState();
+      renderTable();
+      showToast('Ordem da linha atualizada', 'arrow-up-down');
+    }
+
+    function exportToCSV() {
+      const headers = ['Matéria-Prima', 'Fornecedor', 'Pedido', 'Urgência', 'Status', 'Quantidade', 'Unidade', 'Nº Solicitação', 'Data Solicitada', 'Previsão Entrega', 'Dias em Atraso', 'Data Chegada', 'Observações'];
+      const csvRows = [headers.join(';')];
+
+      rows.forEach(r => {
+        const status = computeStatus(r);
+        const delay = calculateDelayDays(r);
+        const row = [
+          `"${(r.materiaPrima || '').replace(/"/g, '""')}"`,
+          `"${(r.fornecedor || '').replace(/"/g, '""')}"`,
+          `"${(r.pedido || '').replace(/"/g, '""')}"`,
+          `"${(r.urgencia || '').replace(/"/g, '""')}"`,
+          `"${status}"`,
+          `"${(r.quantidade || '').replace(/"/g, '""')}"`,
+          `"${(r.unidade || '').replace(/"/g, '""')}"`,
+          `"${(r.solicitacao || '').replace(/"/g, '""')}"`,
+          `"${(r.dataSolicitada || '').replace(/"/g, '""')}"`,
+          `"${(r.previsaoEntrega || '').replace(/"/g, '""')}"`,
+          `"${delay}"`,
+          `"${(r.dataChegada || '').replace(/"/g, '""')}"`,
+          `"${(r.obs || '').replace(/"/g, '""')}"`
+        ];
+        csvRows.push(row.join(';'));
+      });
+
+      const blob = new Blob(["\ufeff" + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'PG_Quimica_Pedidos_MP_' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exportação CSV concluída', 'download');
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Inicialização
+    renderTable();
+  </script>
+</body>
+</html>
