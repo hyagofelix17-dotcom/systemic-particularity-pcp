@@ -3929,6 +3929,152 @@
       return delayed;
     }
 
+
+    // =========================================================================
+    // RETORNO E SINCRONIZAÇÃO DE TRATATIVAS DE COMPRAS ENTRE ABAS
+    // =========================================================================
+    function getPurchasingTratativa(r) {
+      if (!r) return null;
+
+      // 1. Verificação direta na própria linha
+      const hasDirect = (r.motivoAtraso && r.motivoAtraso.trim() !== '') || 
+                        (r.causaRaiz && r.causaRaiz.trim() !== '') || 
+                        (r.novaPrevisao && r.novaPrevisao.trim() !== '') ||
+                        (r.statusCobranca && r.statusCobranca !== 'Pendente' && r.statusCobranca.trim() !== '');
+
+      if (hasDirect) {
+        return {
+          motivoAtraso: r.motivoAtraso || '',
+          causaRaiz: r.causaRaiz || '',
+          novaPrevisao: r.novaPrevisao || '',
+          statusCobranca: r.statusCobranca || 'Pendente',
+          isDirect: true,
+          dataTratativa: r.dataTratativa || ''
+        };
+      }
+
+      // 2. Sincronização por produto: se não preenchido nesta linha, busca tratativa do mesmo produto
+      const key = normalizeKey(r.materiaPrima);
+      if (!key) return null;
+
+      const match = rows.find(other => {
+        if (other === r) return false;
+        if (normalizeKey(other.materiaPrima) === key) {
+          return (other.motivoAtraso && other.motivoAtraso.trim() !== '') || 
+                 (other.causaRaiz && other.causaRaiz.trim() !== '') || 
+                 (other.novaPrevisao && other.novaPrevisao.trim() !== '') ||
+                 (other.statusCobranca && other.statusCobranca !== 'Pendente');
+        }
+        return false;
+      });
+
+      if (match) {
+        return {
+          motivoAtraso: match.motivoAtraso || '',
+          causaRaiz: match.causaRaiz || '',
+          novaPrevisao: match.novaPrevisao || '',
+          statusCobranca: match.statusCobranca || 'Pendente',
+          isDirect: false,
+          origemPedido: match.pedido ? '#' + match.pedido : (match.solicitacao ? 'Sol. #' + match.solicitacao : 'Outro pedido'),
+          dataTratativa: match.dataTratativa || ''
+        };
+      }
+
+      return null;
+    }
+
+    function salvarTratativaCriticos(originalIndex, btnEl, syncToSameProducts = true) {
+      const item = rows[originalIndex];
+      if (!item) return;
+
+      // Captura valores dos inputs se existirem no DOM
+      const cardCausa = document.getElementById('crit-causa-' + originalIndex);
+      const cardPrev = document.getElementById('crit-prev-' + originalIndex);
+      const cardCob = document.getElementById('crit-cob-' + originalIndex);
+      const cardMotivo = document.getElementById('crit-motivo-' + originalIndex);
+
+      if (cardCausa) item.causaRaiz = cardCausa.value;
+      if (cardPrev) item.novaPrevisao = cardPrev.value;
+      if (cardCob) item.statusCobranca = cardCob.value;
+      if (cardMotivo) item.motivoAtraso = cardMotivo.value;
+
+      const tblCausa = document.getElementById('crit-tbl-causa-' + originalIndex);
+      const tblPrev = document.getElementById('crit-tbl-prev-' + originalIndex);
+      const tblCob = document.getElementById('crit-tbl-cob-' + originalIndex);
+      const tblMotivo = document.getElementById('crit-tbl-motivo-' + originalIndex);
+
+      if (tblCausa) item.causaRaiz = tblCausa.value;
+      if (tblPrev) item.novaPrevisao = tblPrev.value;
+      if (tblCob) item.statusCobranca = tblCob.value;
+      if (tblMotivo) item.motivoAtraso = tblMotivo.value;
+
+      item.dataTratativa = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      // Replicar para outros pedidos do mesmo produto em aberto/atraso
+      let replicatedCount = 0;
+      if (syncToSameProducts && item.materiaPrima) {
+        const key = normalizeKey(item.materiaPrima);
+        rows.forEach((r, idx) => {
+          if (idx !== originalIndex && normalizeKey(r.materiaPrima) === key) {
+            r.causaRaiz = item.causaRaiz;
+            r.novaPrevisao = item.novaPrevisao;
+            r.statusCobranca = item.statusCobranca;
+            r.motivoAtraso = item.motivoAtraso;
+            r.dataTratativa = item.dataTratativa;
+            replicatedCount++;
+          }
+        });
+      }
+
+      saveState();
+
+      // Feedback visual no botão
+      if (btnEl) {
+        const originalContent = btnEl.innerHTML;
+        btnEl.innerHTML = '<i data-lucide="check-check" class="h-4 w-4"></i> Tratativa Salva!';
+        btnEl.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+        btnEl.classList.add('bg-emerald-800', 'text-white');
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => {
+          btnEl.innerHTML = originalContent;
+          btnEl.classList.remove('bg-emerald-800');
+          btnEl.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+          if (window.lucide) lucide.createIcons();
+        }, 2200);
+      }
+
+      const indicator = document.getElementById('saved-indicator-' + originalIndex);
+      if (indicator) {
+        indicator.classList.remove('hidden');
+        indicator.classList.add('inline-flex');
+        clearTimeout(indicator._timeout);
+        indicator._timeout = setTimeout(() => {
+          indicator.classList.remove('inline-flex');
+          indicator.classList.add('hidden');
+        }, 2500);
+      }
+
+      const syncMsg = replicatedCount > 0 ? (' (sincronizado com +' + replicatedCount + ' pedido(s) do mesmo produto)') : '';
+      showToast('Tratativa salva com sucesso e sincronizada com a Gestão de Pedidos!' + syncMsg, 'check-circle');
+
+      updateCriticosKPIsOnly();
+      renderTable();
+      renderPainelCriticos();
+    }
+
+    function goToItemInMainTable(originalIndex) {
+      const item = rows[originalIndex];
+      switchAppTab('pedidos');
+      if (item && item.materiaPrima) {
+        const sInput = document.getElementById('searchInput');
+        if (sInput) {
+          sInput.value = item.materiaPrima;
+          renderTable();
+          showToast('Item localizado na Gestão de Pedidos', 'search');
+        }
+      }
+    }
+
     function updateCriticosField(originalIndex, field, value) {
       if (rows[originalIndex]) {
         rows[originalIndex][field] = value;
@@ -4198,7 +4344,15 @@
                   </span>
                 </div>
                 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <!-- Botão Explícito de Salvar Tratativa -->
+                  <button type="button" 
+                          onclick="salvarTratativaCriticos(${item.originalIndex}, this)" 
+                          class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 py-1 text-xs font-bold shadow-2xs transition-all cursor-pointer hover:shadow-xs"
+                          title="Salvar justificativa e sincronizar com a Gestão de Pedidos">
+                    <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                    <span>Salvar Tratativa</span>
+                  </button>
                   <!-- Botão de Cobrança Rápida -->
                   <button type="button" 
                           onclick="copyCobrancaMessage(${item.originalIndex}, this)" 
@@ -4209,7 +4363,8 @@
                   </button>
                   <button type="button" 
                           onclick="goToItemInMainTable(${item.originalIndex})" 
-                          class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-600 hover:text-pg hover:border-pg transition-all cursor-pointer">
+                          class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-600 hover:text-pg hover:border-pg transition-all cursor-pointer"
+                          title="Localizar e filtrar na aba Gestão de Pedidos">
                     <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
                     <span>Ver na Tabela</span>
                   </button>
@@ -4224,7 +4379,8 @@
                   <label class="block text-[11px] font-bold text-zinc-700 mb-1">
                     Causa-Raiz do Atraso:
                   </label>
-                  <select onchange="updateCriticosField(${item.originalIndex}, 'causaRaiz', this.value)"
+                  <select id="crit-causa-${item.originalIndex}" 
+                          onchange="updateCriticosField(${item.originalIndex}, 'causaRaiz', this.value)"
                           class="h-8 w-full rounded-md border border-amber-300/80 bg-white px-2.5 text-xs text-zinc-800 font-medium focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none cursor-pointer">
                     <option value="" ${!item.causaRaiz ? 'selected' : ''}>Selecione a Causa-Raiz...</option>
                     <option value="Capacidade Fornecedor" ${item.causaRaiz === 'Capacidade Fornecedor' ? 'selected' : ''}>Produção / Capacidade do Fornecedor</option>
@@ -4243,6 +4399,7 @@
                     Nova Data Prometida (Reprogramada):
                   </label>
                   <input type="date" 
+                         id="crit-prev-${item.originalIndex}"
                          value="${item.novaPrevisao || ''}" 
                          onchange="updateCriticosField(${item.originalIndex}, 'novaPrevisao', this.value)"
                          class="h-8 w-full rounded-md border border-amber-300/80 bg-white px-2.5 text-xs font-mono font-medium text-zinc-800 focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none">
@@ -4253,7 +4410,8 @@
                   <label class="block text-[11px] font-bold text-zinc-700 mb-1">
                     Status da Cobrança:
                   </label>
-                  <select onchange="updateCriticosField(${item.originalIndex}, 'statusCobranca', this.value)"
+                  <select id="crit-cob-${item.originalIndex}" 
+                          onchange="updateCriticosField(${item.originalIndex}, 'statusCobranca', this.value)"
                           class="h-8 w-full rounded-md border border-amber-300/80 bg-white px-2.5 text-xs text-zinc-800 font-semibold focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none cursor-pointer">
                     <option value="Pendente" ${!item.statusCobranca || item.statusCobranca === 'Pendente' ? 'selected' : ''}>⏳ Pendente Cobrança</option>
                     <option value="Em Cobrança" ${item.statusCobranca === 'Em Cobrança' ? 'selected' : ''}>📞 Em Cobrança com Fornecedor</option>
@@ -4266,14 +4424,31 @@
 
               <!-- 4. Observação / Real Motivo do Atraso (Texto Livre Amplo) -->
               <div>
-                <label class="block text-[11px] font-bold text-zinc-800 mb-1">
-                  Observação do Comprador / Real Motivo do Atraso:
-                </label>
-                <textarea rows="2" 
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-[11px] font-bold text-zinc-800">
+                    Observação do Comprador / Real Motivo do Atraso:
+                  </label>
+                  <span class="text-[10px] text-zinc-500 font-medium">
+                    ${item.dataTratativa ? ('Última tratativa: <strong class="text-zinc-700">' + item.dataTratativa + '</strong>') : 'Nenhuma tratativa salva ainda'}
+                  </span>
+                </div>
+                <textarea id="crit-motivo-${item.originalIndex}"
+                          rows="2" 
                           placeholder="Digite detalhadamente a justificativa e o follow-up realizado com o fornecedor..." 
                           onchange="updateCriticosField(${item.originalIndex}, 'motivoAtraso', this.value)"
-                          oninput="updateCriticosField(${item.originalIndex}, 'motivoAtraso', this.value)"
                           class="w-full rounded-md border border-amber-300/90 bg-white p-2.5 text-xs text-zinc-800 placeholder-zinc-400 focus:bg-white focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none transition-all">${escapeHtml(item.motivoAtraso || '')}</textarea>
+                
+                <div class="flex items-center justify-between mt-2 pt-2 border-t border-amber-200/50">
+                  <span class="text-[10px] text-amber-800 italic flex items-center gap-1">
+                    <i data-lucide="info" class="h-3 w-3"></i> Ao salvar, a resposta aparecerá automaticamente como alerta na Gestão de Pedidos.
+                  </span>
+                  <button type="button" 
+                          onclick="salvarTratativaCriticos(${item.originalIndex}, this)" 
+                          class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3.5 py-1 text-xs font-bold shadow-2xs transition-all cursor-pointer hover:shadow-xs">
+                    <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                    <span>Salvar Tratativa de Compras</span>
+                  </button>
+                </div>
               </div>
 
             </div>
@@ -4311,7 +4486,8 @@
             
             <!-- Causa-Raiz -->
             <td class="px-2 py-1">
-              <select onchange="updateCriticosField(${item.originalIndex}, 'causaRaiz', this.value)"
+              <select id="crit-tbl-causa-${item.originalIndex}" 
+                      onchange="updateCriticosField(${item.originalIndex}, 'causaRaiz', this.value)"
                       class="h-7 w-full rounded border border-zinc-200 bg-white px-1 text-[11px] text-zinc-800 font-medium focus:border-pg focus:outline-none">
                 <option value="" ${!item.causaRaiz ? 'selected' : ''}>- Selecionar -</option>
                 <option value="Capacidade Fornecedor" ${item.causaRaiz === 'Capacidade Fornecedor' ? 'selected' : ''}>Produção Fornecedor</option>
@@ -4327,6 +4503,7 @@
             <!-- Nova Previsão -->
             <td class="px-2 py-1">
               <input type="date" 
+                     id="crit-tbl-prev-${item.originalIndex}"
                      value="${item.novaPrevisao || ''}" 
                      onchange="updateCriticosField(${item.originalIndex}, 'novaPrevisao', this.value)"
                      class="h-7 w-full rounded border border-zinc-200 bg-white px-1 text-[11px] font-mono text-zinc-800 focus:border-pg focus:outline-none">
@@ -4334,7 +4511,8 @@
 
             <!-- Status Cobrança -->
             <td class="px-2 py-1">
-              <select onchange="updateCriticosField(${item.originalIndex}, 'statusCobranca', this.value)"
+              <select id="crit-tbl-cob-${item.originalIndex}" 
+                      onchange="updateCriticosField(${item.originalIndex}, 'statusCobranca', this.value)"
                       class="h-7 w-full rounded border border-zinc-200 bg-white px-1 text-[11px] font-semibold text-zinc-800 focus:border-pg focus:outline-none">
                 <option value="Pendente" ${!item.statusCobranca || item.statusCobranca === 'Pendente' ? 'selected' : ''}>⏳ Pendente</option>
                 <option value="Em Cobrança" ${item.statusCobranca === 'Em Cobrança' ? 'selected' : ''}>📞 Em Cobrança</option>
@@ -4346,6 +4524,7 @@
             <!-- Observação / Motivo -->
             <td class="px-2 py-1">
               <input type="text" 
+                     id="crit-tbl-motivo-${item.originalIndex}"
                      value="${escapeHtml(item.motivoAtraso || '')}" 
                      placeholder="Motivo real do atraso..." 
                      onchange="updateCriticosField(${item.originalIndex}, 'motivoAtraso', this.value)"
@@ -4354,12 +4533,26 @@
 
             <!-- Ações -->
             <td class="px-2 py-1 text-center">
-              <button type="button" 
-                      onclick="copyCobrancaMessage(${item.originalIndex}, this)" 
-                      class="inline-flex h-7 w-7 items-center justify-center rounded border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all cursor-pointer"
-                      title="Copiar mensagem pronta de cobrança">
-                <i data-lucide="copy" class="h-3.5 w-3.5"></i>
-              </button>
+              <div class="inline-flex items-center gap-1">
+                <button type="button" 
+                        onclick="salvarTratativaCriticos(${item.originalIndex}, this)" 
+                        class="inline-flex h-7 w-7 items-center justify-center rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer shadow-2xs"
+                        title="Salvar Tratativa de Compras deste Pedido">
+                  <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                </button>
+                <button type="button" 
+                        onclick="copyCobrancaMessage(${item.originalIndex}, this)" 
+                        class="inline-flex h-7 w-7 items-center justify-center rounded border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all cursor-pointer shadow-2xs"
+                        title="Copiar mensagem pronta de cobrança">
+                  <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                </button>
+                <button type="button" 
+                        onclick="goToItemInMainTable(${item.originalIndex})" 
+                        class="inline-flex h-7 w-7 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-600 hover:text-pg hover:border-pg transition-all cursor-pointer shadow-2xs"
+                        title="Ver e filtrar na Gestão de Pedidos">
+                  <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -4645,14 +4838,42 @@
         };
       });
 
-      // 1. Filtro da Busca Geral
+      // 1. Filtro Inteligente Multi-termo (Sem acentos, sem distinção maiúsculas/minúsculas, abrangendo produto, códigos, compras e observações)
       if (search) {
+        const normalizeStr = (str) => {
+          if (!str) return '';
+          return String(str)
+            .normalize('NFD')
+            .replace(/[̀-ͯ]/g, '')
+            .toLowerCase();
+        };
+
+        const tokens = normalizeStr(search).split(/\s+/).filter(Boolean);
+
         displayRows = displayRows.filter(r => {
-          const matchMP = (r.materiaPrima || '').toLowerCase().includes(search);
-          const matchForn = (r.fornecedor || '').toLowerCase().includes(search);
-          const matchPed = (r.pedido || '').toLowerCase().includes(search);
-          const matchObs = (r.obs || '').toLowerCase().includes(search);
-          return matchMP || matchForn || matchPed || matchObs;
+          const pInfo = getProductInfo(r.materiaPrima);
+          const trat = getPurchasingTratativa(r);
+
+          const corpus = normalizeStr([
+            r.materiaPrima || '',
+            r.fornecedor || '',
+            r.pedido || '',
+            r.solicitacao || '',
+            r.status || '',
+            r.computedStatus || '',
+            r.urgencia || '',
+            r.quantidade || '',
+            r.unidade || '',
+            r.obs || '',
+            pInfo.codigo || '',
+            pInfo.mp || '',
+            trat ? trat.causaRaiz : '',
+            trat ? trat.motivoAtraso : '',
+            trat ? trat.novaPrevisao : '',
+            trat ? trat.statusCobranca : ''
+          ].join(' '));
+
+          return tokens.every(tok => corpus.includes(tok));
         });
       }
 
@@ -4718,6 +4939,42 @@
         const badgeClass = getBadgeClass(currentStatus);
         const dotClass = getDotClass(currentStatus);
 
+        // Alerta de Retorno de Compras preenchido em Pedidos Críticos
+        const tratativa = getPurchasingTratativa(r);
+        let tratativaAlertHtml = '';
+        if (tratativa && (tratativa.motivoAtraso || tratativa.causaRaiz || tratativa.novaPrevisao || (tratativa.statusCobranca && tratativa.statusCobranca !== 'Pendente'))) {
+          let statusBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
+          if (tratativa.statusCobranca === 'Em Trânsito') statusBadgeClass = 'bg-sky-100 text-sky-900 border-sky-300';
+          else if (tratativa.statusCobranca === 'Justificado') statusBadgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
+          else if (tratativa.statusCobranca === 'Em Cobrança') statusBadgeClass = 'bg-orange-100 text-orange-900 border-orange-300';
+
+          const fullTooltip = 'Retorno de Compras:\n' + 
+            (tratativa.causaRaiz ? ('• Causa: ' + tratativa.causaRaiz + '\n') : '') + 
+            (tratativa.motivoAtraso ? ('• Motivo: ' + tratativa.motivoAtraso + '\n') : '') + 
+            (tratativa.novaPrevisao ? ('• Nova Previsão: ' + tratativa.novaPrevisao + '\n') : '') + 
+            ('• Status: ' + tratativa.statusCobranca) + 
+            (tratativa.dataTratativa ? ('\n• Registrado em: ' + tratativa.dataTratativa) : '') + 
+            (!tratativa.isDirect ? '\n(Tratativa vinculada a este mesmo produto)' : '');
+
+          tratativaAlertHtml = `
+            <div class="mt-1 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50/95 text-amber-950 border border-amber-300/90 text-[10px] font-medium shadow-2xs group/tratativa transition-all hover:bg-amber-100/90 cursor-default" title="${escapeHtml(fullTooltip)}">
+              <span class="inline-flex items-center gap-1 font-bold text-amber-800 shrink-0">
+                <i data-lucide="shield-alert" class="h-3.5 w-3.5 text-amber-600 shrink-0"></i>
+                <span>Retorno Compras:</span>
+              </span>
+              <div class="truncate flex-1 font-normal text-zinc-900">
+                ${tratativa.causaRaiz ? `<span class="font-bold text-amber-950 bg-amber-200/80 px-1 py-0.2 rounded border border-amber-300 text-[9px] mr-1">[${escapeHtml(tratativa.causaRaiz)}]</span>` : ''}
+                <span class="font-semibold text-zinc-800">${escapeHtml(tratativa.motivoAtraso || 'Tratativa registrada')}</span>
+                ${tratativa.novaPrevisao ? `<span class="ml-1.5 text-emerald-700 font-bold font-mono text-[9.5px]">Prev: ${escapeHtml(tratativa.novaPrevisao)}</span>` : ''}
+              </div>
+              <span class="shrink-0 px-1.5 py-0.2 rounded text-[8.5px] font-bold border ${statusBadgeClass}">
+                ${escapeHtml(tratativa.statusCobranca || 'Pendente')}
+              </span>
+              ${!tratativa.isDirect ? `<span class="shrink-0 text-[8.5px] font-semibold text-amber-700 bg-amber-100/80 px-1 rounded border border-amber-200" title="Tratativa preenchida para o mesmo produto em Pedidos Críticos">(mesmo produto)</span>` : ''}
+            </div>
+          `;
+        }
+
         let urgencyClass = '';
         // Sem alterar a cor de fundo: apenas a cor da fonte
         if (r.urgencia === 'ALTA') urgencyClass = 'bg-transparent text-rose-700 font-bold';
@@ -4751,9 +5008,13 @@
               </div>
             </td>
             <td class="px-1 py-1 text-center font-mono text-[10px] text-zinc-400 tabular-nums">${idx + 1}</td>
-            <!-- Coluna Matéria-Prima: toda a descrição na frente na mesma linha horizontal (sem quebrar para baixo) -->
-            <td class="px-2.5 py-1 font-medium text-zinc-900 min-w-[560px] whitespace-nowrap">
-              <div class="flex items-center gap-1.5 group/mp w-full">
+            <!-- Coluna Matéria-Prima: com Passe o Mouse para ver Código e MP + Alerta de Retorno de Compras -->
+            <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[560px]">
+              <div class="flex items-center gap-1.5 group/mp w-full"
+                   data-mp="${escapeHtml(r.materiaPrima)}"
+                   onmouseenter="showProductTooltip(event, this)"
+                   onmousemove="moveProductTooltip(event)"
+                   onmouseleave="hideProductTooltip()">
                 <!-- Botão de Copiar na frente da descrição do produto -->
                 <button type="button" 
                         onclick="copyProductDescription(${idx}, this)" 
@@ -4761,12 +5022,19 @@
                         title="Copiar descrição da matéria-prima">
                   <i data-lucide="copy" class="h-3 w-3"></i>
                 </button>
-                <input type="text"
-                       class="table-cell-input font-semibold text-zinc-900 whitespace-nowrap py-0.5 block w-full text-[11px] bg-transparent tracking-tight focus:bg-white focus:ring-1 focus:ring-pg"
-                       value="${escapeHtml(r.materiaPrima)}"
-                       title="${escapeHtml(r.materiaPrima)}"
-                       onchange="updateCell(${idx}, 'materiaPrima', this.value)">
+                <div class="flex-1 min-w-0">
+                  <input type="text"
+                         class="table-cell-input font-semibold text-zinc-900 whitespace-nowrap py-0.5 block w-full text-[11px] bg-transparent tracking-tight focus:bg-white focus:ring-1 focus:ring-pg cursor-help"
+                         value="${escapeHtml(r.materiaPrima)}"
+                         title="Passe o cursor para ver Código do Produto e Código MP"
+                         data-mp="${escapeHtml(r.materiaPrima)}"
+                         onmouseenter="showProductTooltip(event, this)"
+                         onmousemove="moveProductTooltip(event)"
+                         onmouseleave="hideProductTooltip()"
+                         onchange="updateCell(${idx}, 'materiaPrima', this.value)">
+                </div>
               </div>
+              ${tratativaAlertHtml}
             </td>
             <td class="px-1 py-1">
               <input type="text" class="table-cell-input text-zinc-600" value="${escapeHtml(r.fornecedor)}" placeholder="Fornecedor..." onchange="updateCell(${idx}, 'fornecedor', this.value)">
