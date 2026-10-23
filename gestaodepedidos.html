@@ -47,6 +47,9 @@
   <!-- Chart.js para os Gráficos Executivos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- ExcelJS para Geração e Exportação Fiel do Arquivo .xlsx -->
+  <script src="assets/exceljs.min.js"></script>
+
   <style>
     .tabular-nums { font-variant-numeric: tabular-nums; }
     
@@ -120,9 +123,9 @@
 
         <div class="h-4 w-px bg-zinc-200 hidden sm:block"></div>
 
-        <button onclick="exportToCSV()" class="inline-flex h-7 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 text-xs font-medium text-zinc-700 shadow-subtle hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 transition-all">
-          <i data-lucide="download" class="h-3.5 w-3.5 text-zinc-500"></i>
-          <span>Exportar</span>
+        <button onclick="exportToExcel()" class="inline-flex h-7 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 text-xs font-medium text-zinc-700 shadow-subtle hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 transition-all cursor-pointer" title="Exportar planilha Excel (.xlsx) com a formatação e cores originais">
+          <i data-lucide="file-spreadsheet" class="h-3.5 w-3.5 text-emerald-600"></i>
+          <span>Exportar Excel</span>
         </button>
 
         <button onclick="resetToOriginalData()" class="inline-flex h-7 items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 text-xs font-medium text-zinc-500 shadow-subtle hover:bg-zinc-50 hover:text-zinc-800 transition-all" title="Restaurar dados originais da planilha">
@@ -3775,39 +3778,263 @@
       showToast('Ordem da linha atualizada', 'arrow-up-down');
     }
 
-    function exportToCSV() {
-      const headers = ['Matéria-Prima', 'Fornecedor', 'Pedido', 'Urgência', 'Status', 'Quantidade', 'Unidade', 'Nº Solicitação', 'Data Solicitada', 'Previsão Entrega', 'Dias em Atraso', 'Data Chegada', 'Observações'];
-      const csvRows = [headers.join(';')];
+    async function exportToExcel() {
+      if (typeof ExcelJS === 'undefined') {
+        showToast('Carregando biblioteca Excel...', 'clock');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+        script.onload = () => exportToExcel();
+        document.head.appendChild(script);
+        return;
+      }
 
-      rows.forEach(r => {
-        const status = computeStatus(r);
-        const delay = calculateDelayDays(r);
-        const row = [
-          `"${(r.materiaPrima || '').replace(/"/g, '""')}"`,
-          `"${(r.fornecedor || '').replace(/"/g, '""')}"`,
-          `"${(r.pedido || '').replace(/"/g, '""')}"`,
-          `"${(r.urgencia || '').replace(/"/g, '""')}"`,
-          `"${status}"`,
-          `"${(r.quantidade || '').replace(/"/g, '""')}"`,
-          `"${(r.unidade || '').replace(/"/g, '""')}"`,
-          `"${(r.solicitacao || '').replace(/"/g, '""')}"`,
-          `"${(r.dataSolicitada || '').replace(/"/g, '""')}"`,
-          `"${(r.previsaoEntrega || '').replace(/"/g, '""')}"`,
-          `"${delay}"`,
-          `"${(r.dataChegada || '').replace(/"/g, '""')}"`,
-          `"${(r.obs || '').replace(/"/g, '""')}"`
-        ];
-        csvRows.push(row.join(';'));
+      showToast('Gerando planilha Excel (.xlsx) formatada...', 'clock');
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'PG Química - PCP';
+      wb.lastModifiedBy = 'PCP PG Química';
+      wb.created = new Date();
+      wb.modified = new Date();
+
+      const ws = wb.addWorksheet('MP Nacional', {
+        views: [{ showGridLines: true }]
       });
 
-      const blob = new Blob(["\ufeff" + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      // 17 colunas idênticas à planilha base original
+      ws.columns = [
+        { header: 'Matéria-prima', key: 'materiaPrima', width: 74.1 },
+        { header: 'Fornecedor', key: 'fornecedor', width: 17.1 },
+        { header: 'Pedido', key: 'pedido', width: 13.0 },
+        { header: 'Data do pedido', key: 'dataPedido', width: 13.5 },
+        { header: 'Urgência', key: 'urgencia', width: 14.9 },
+        { header: 'Status do pedido', key: 'status', width: 28.8 },
+        { header: 'Quantidade', key: 'quantidade', width: 17.1 },
+        { header: 'Unidade Medida', key: 'unidade', width: 14.1 },
+        { header: 'Embalagem', key: 'embalagem', width: 17.3 },
+        { header: 'Previsão de entrega', key: 'previsaoEntrega', width: 17.3 },
+        { header: 'Número da solicitação', key: 'solicitacao', width: 16.8 },
+        { header: 'Data solicitada', key: 'dataSolicitada', width: 20.7 },
+        { header: 'Status de entrega', key: 'statusEntrega', width: 15.0 },
+        { header: 'Data de chegada', key: 'dataChegada', width: 14.1 },
+        { header: 'Atraso (dias)', key: 'diasAtraso', width: 12.3 },
+        { header: 'Motivo do Atraso', key: 'motivoAtraso', width: 22.1 },
+        { header: 'Observações', key: 'obs', width: 73.3 }
+      ];
+
+      // Cabeçalho (Linha 1): Estilo idêntico ao modelo base original
+      const headerRow = ws.getRow(1);
+      headerRow.height = 28;
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF0E2841' } // Azul Petróleo / Slate original da planilha
+        };
+        cell.font = {
+          name: 'Calibri',
+          size: 11,
+          bold: true,
+          color: { argb: 'FFFFFFFF' }
+        };
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          wrapText: true
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF3A4B5C' } },
+          left: { style: 'thin', color: { argb: 'FF3A4B5C' } },
+          bottom: { style: 'medium', color: { argb: 'FF05121F' } },
+          right: { style: 'thin', color: { argb: 'FF3A4B5C' } }
+        };
+      });
+
+      const thinBorder = {
+        top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
+      };
+
+      const parseExcelDate = (str) => {
+        if (!str) return '';
+        const parts = String(str).split('-');
+        if (parts.length === 3) {
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) - 1;
+          const d = parseInt(parts[2], 10);
+          if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            return new Date(y, m, d);
+          }
+        }
+        return str;
+      };
+
+      rows.forEach((r) => {
+        const status = computeStatus(r);
+        const delay = calculateDelayDays(r);
+        
+        let qtyNum = 0;
+        if (r.quantidade !== undefined && r.quantidade !== '') {
+          qtyNum = parseFloat(String(r.quantidade).replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        const row = ws.addRow({
+          materiaPrima: r.materiaPrima || '',
+          fornecedor: r.fornecedor || '',
+          pedido: r.pedido || '',
+          dataPedido: parseExcelDate(r.dataPedido),
+          urgencia: r.urgencia || '',
+          status: status,
+          quantidade: qtyNum || (r.quantidade || ''),
+          unidade: r.unidade || 'KG',
+          embalagem: r.embalagem || '',
+          previsaoEntrega: parseExcelDate(r.previsaoEntrega),
+          solicitacao: r.solicitacao || '',
+          dataSolicitada: parseExcelDate(r.dataSolicitada),
+          statusEntrega: r.statusEntrega || (r.dataChegada || status === 'OK' ? 'ENTREGUE' : ''),
+          dataChegada: parseExcelDate(r.dataChegada),
+          diasAtraso: delay,
+          motivoAtraso: r.motivoAtraso || '',
+          obs: r.obs || ''
+        });
+
+        row.height = 21;
+
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          cell.border = thinBorder;
+          cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF000000' } };
+          cell.alignment = { vertical: 'middle' };
+
+          // 1. Matéria-prima (Col A)
+          if (colNumber === 1) {
+            cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+          }
+          // 2. Fornecedor (Col B)
+          else if (colNumber === 2) {
+            cell.alignment = { horizontal: 'left', vertical: 'middle' };
+          }
+          // 3. Pedido (Col C) - Cores da planilha original!
+          else if (colNumber === 3) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF000000' } };
+
+            const color = r.pedidoColor;
+            if (color === '#2e7d32' || color === '#92D050') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF92D050' } };
+            } else if (color === '#b45309' || color === '#FFFF00') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+            } else if (color === '#dc2626') {
+              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFF0000' } };
+            }
+          }
+          // 4. Data do pedido (Col D)
+          else if (colNumber === 4) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            if (cell.value instanceof Date) cell.numFmt = 'dd/mm/yyyy';
+          }
+          // 5. Urgência (Col E)
+          else if (colNumber === 5) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            if (r.urgencia === 'ALTA') cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFC00000' } };
+          }
+          // 6. Status do pedido (Col F)
+          else if (colNumber === 6) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.font = { name: 'Calibri', size: 10, bold: true };
+            if (status === 'OK') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9EAD3' } };
+              cell.font.color = { argb: 'FF274E13' };
+            } else if (status === 'COM PEDIDO - PORÉM ATRASADO') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF2CC' } };
+              cell.font.color = { argb: 'FF7F6000' };
+            } else if (status === 'ATRASADO') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4CCCC' } };
+              cell.font.color = { argb: 'FF990000' };
+            } else if (status === 'SEM PEDIDO') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFCE5CD' } };
+              cell.font.color = { argb: 'FF783F04' };
+            } else if (status === 'PEDIDO') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F4EA' } };
+              cell.font.color = { argb: 'FF137333' };
+            }
+          }
+          // 7. Quantidade (Col G)
+          else if (colNumber === 7) {
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            if (typeof cell.value === 'number') {
+              cell.numFmt = '#,##0.00';
+            }
+          }
+          // 8. Unidade Medida (Col H)
+          else if (colNumber === 8) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+          // 9. Embalagem (Col I)
+          else if (colNumber === 9) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+          // 10. Previsão de entrega (Col J)
+          else if (colNumber === 10) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            if (cell.value instanceof Date) cell.numFmt = 'dd/mm/yyyy';
+          }
+          // 11. Número da solicitação (Col K)
+          else if (colNumber === 11) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.font = { name: 'Calibri', size: 10, bold: true };
+          }
+          // 12. Data solicitada (Col L)
+          else if (colNumber === 12) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            if (cell.value instanceof Date) cell.numFmt = 'dd/mm/yyyy';
+          }
+          // 13. Status de entrega (Col M)
+          else if (colNumber === 13) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+          // 14. Data de chegada (Col N)
+          else if (colNumber === 14) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            if (cell.value instanceof Date) cell.numFmt = 'dd/mm/yyyy';
+          }
+          // 15. Atraso (dias) (Col O)
+          else if (colNumber === 15) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.numFmt = '0';
+            if (delay > 0) {
+              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFF0000' } };
+            }
+          }
+          // 16. Motivo do Atraso (Col P)
+          else if (colNumber === 16) {
+            cell.alignment = { horizontal: 'left', vertical: 'middle' };
+          }
+          // 17. Observações (Col Q)
+          else if (colNumber === 17) {
+            cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+          }
+        });
+      });
+
+      // Filtro Automático A1:Q
+      ws.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: rows.length + 1, column: 17 }
+      };
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'PG_Quimica_Pedidos_MP_' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.download = 'PG - MP NOVO MODELO - OUTUBRO.xlsx';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Exportação CSV concluída', 'download');
+
+      showToast('Planilha Excel (.xlsx) exportada com a formatação original!', 'file-spreadsheet');
     }
 
     function escapeHtml(text) {
