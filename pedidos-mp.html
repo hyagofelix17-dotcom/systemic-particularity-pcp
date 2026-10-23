@@ -211,6 +211,38 @@
           <span>Limpar Filtros</span>
         </button>
 
+        <!-- BOTÃO DE ZOOM AO LADO DO LIMPAR FILTROS -->
+        <div class="inline-flex h-7 items-center rounded-md border border-zinc-200 bg-white px-1 shadow-subtle gap-0.5" title="Controle de Zoom da Tabela">
+          <button type="button" 
+                  onclick="changeTableZoom(-0.1)" 
+                  class="h-5 w-5 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
+                  title="Diminuir Zoom (-10%)">
+            <i data-lucide="zoom-out" class="h-3 w-3"></i>
+          </button>
+          
+          <button type="button" 
+                  onclick="resetTableZoom()" 
+                  class="px-1.5 text-[11px] font-mono font-semibold text-zinc-700 hover:text-pg hover:bg-zinc-50 rounded transition-colors tabular-nums cursor-pointer"
+                  title="Clique para redefinir o zoom para 100%">
+            <span id="tableZoomDisplay">100%</span>
+          </button>
+
+          <button type="button" 
+                  onclick="changeTableZoom(0.1)" 
+                  class="h-5 w-5 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
+                  title="Aumentar Zoom (+10%)">
+            <i data-lucide="zoom-in" class="h-3 w-3"></i>
+          </button>
+
+          <button type="button" 
+                  onclick="toggleTableFullscreen()" 
+                  id="fullscreenToggleBtn"
+                  class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 border-l border-zinc-200 ml-0.5 transition-colors cursor-pointer"
+                  title="Expandir Tabela (Modo Foco / Tela Cheia)">
+            <i data-lucide="maximize-2" class="h-3 w-3"></i>
+          </button>
+        </div>
+
         <span id="filteredCount" class="rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600 tabular-nums">
           0 registros
         </span>
@@ -3336,6 +3368,118 @@
       if (window.lucide) lucide.createIcons();
     }
 
+
+    // =========================================================================
+    // RECURSO: COPIAR DESCRIÇÃO DO PRODUTO (MATÉRIA-PRIMA)
+    // =========================================================================
+    function copyProductDescription(index, btnEl) {
+      const text = (rows[index] && rows[index].materiaPrima) || '';
+      if (!text) return;
+
+      const performCopy = () => {
+        showToast(`Copiado: "${text.slice(0, 32)}${text.length > 32 ? '...' : ''}"`, 'check');
+        if (btnEl) {
+          const originalContent = btnEl.innerHTML;
+          btnEl.innerHTML = '<i data-lucide="check" class="h-3 w-3 text-emerald-600"></i>';
+          btnEl.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+          if (window.lucide) lucide.createIcons();
+          setTimeout(() => {
+            btnEl.innerHTML = originalContent;
+            btnEl.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+            if (window.lucide) lucide.createIcons();
+          }, 1500);
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(performCopy).catch(() => {
+          fallbackCopyText(text, performCopy);
+        });
+      } else {
+        fallbackCopyText(text, performCopy);
+      }
+    }
+
+    function fallbackCopyText(text, callback) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        if (callback) callback();
+      } catch (err) {
+        showToast('Não foi possível copiar automaticamente', 'alert-circle');
+      }
+      document.body.removeChild(ta);
+    }
+
+    // =========================================================================
+    // RECURSO: CONTROLE DE ZOOM DA TABELA OPERACIONAL
+    // =========================================================================
+    let currentTableZoom = 1.0;
+    let isTableFullscreen = false;
+
+    function changeTableZoom(delta) {
+      currentTableZoom = Math.round((currentTableZoom + delta) * 10) / 10;
+      if (currentTableZoom < 0.7) currentTableZoom = 0.7;
+      if (currentTableZoom > 1.6) currentTableZoom = 1.6;
+      applyTableZoom();
+      showToast(`Zoom da tabela: ${Math.round(currentTableZoom * 100)}%`, 'zoom-in');
+    }
+
+    function resetTableZoom() {
+      currentTableZoom = 1.0;
+      applyTableZoom();
+      showToast('Zoom da tabela redefinido para 100%', 'rotate-ccw');
+    }
+
+    function applyTableZoom() {
+      const table = document.getElementById('mainTable');
+      const display = document.getElementById('tableZoomDisplay');
+      if (display) display.innerText = Math.round(currentTableZoom * 100) + '%';
+      if (table) {
+        table.style.zoom = currentTableZoom;
+      }
+    }
+
+    function toggleTableFullscreen() {
+      const container = document.querySelector('.table-container')?.parentElement;
+      const btn = document.getElementById('fullscreenToggleBtn');
+      if (!container) return;
+
+      isTableFullscreen = !isTableFullscreen;
+      if (isTableFullscreen) {
+        container.classList.add('fixed', 'inset-3', 'z-50', 'bg-white', 'p-3', 'shadow-2xl', 'flex', 'flex-col');
+        const scrollArea = container.querySelector('.table-container');
+        if (scrollArea) {
+          scrollArea.classList.remove('max-h-[66vh]');
+          scrollArea.classList.add('flex-1', 'h-full');
+        }
+        if (btn) btn.innerHTML = '<i data-lucide="minimize-2" class="h-3 w-3 text-pg"></i>';
+        showToast('Modo Foco Expandido ativado (Pressione ESC ou clique para sair)', 'maximize-2');
+      } else {
+        container.classList.remove('fixed', 'inset-3', 'z-50', 'bg-white', 'p-3', 'shadow-2xl', 'flex', 'flex-col');
+        const scrollArea = container.querySelector('.table-container');
+        if (scrollArea) {
+          scrollArea.classList.remove('flex-1', 'h-full');
+          scrollArea.classList.add('max-h-[66vh]');
+        }
+        if (btn) btn.innerHTML = '<i data-lucide="maximize-2" class="h-3 w-3"></i>';
+        showToast('Modo Foco desativado', 'minimize-2');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isTableFullscreen) {
+        toggleTableFullscreen();
+      }
+    });
+
     function renderTable() {
       const tbody = document.getElementById('tableBody');
       const search = document.getElementById('searchInput').value.toLowerCase();
@@ -3458,11 +3602,20 @@
             <td class="px-1 py-1 text-center font-mono text-[10px] text-zinc-400 tabular-nums">${idx + 1}</td>
             <!-- Coluna Matéria-Prima: descrição 100% visível, quebra de linha automática sem cortes -->
             <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[380px] max-w-[500px] whitespace-normal">
-              <textarea rows="1"
-                        class="table-cell-input font-semibold text-zinc-900 leading-snug resize-none overflow-hidden whitespace-normal break-words py-1 block w-full text-[11px] bg-transparent"
-                        style="min-height: 26px; height: auto;"
-                        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
-                        onchange="updateCell(${idx}, 'materiaPrima', this.value)">${escapeHtml(r.materiaPrima)}</textarea>
+              <div class="flex items-start gap-1.5 group/mp">
+                <!-- Botão de Copiar na frente da descrição do produto -->
+                <button type="button" 
+                        onclick="copyProductDescription(${idx}, this)" 
+                        class="mt-0.5 h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-pg hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all shrink-0 opacity-50 group-hover/mp:opacity-100 cursor-pointer shadow-2xs"
+                        title="Copiar descrição da matéria-prima">
+                  <i data-lucide="copy" class="h-3 w-3"></i>
+                </button>
+                <textarea rows="1"
+                          class="table-cell-input font-semibold text-zinc-900 leading-snug resize-none overflow-hidden whitespace-normal break-words py-1 block w-full text-[11px] bg-transparent"
+                          style="min-height: 26px; height: auto;"
+                          oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
+                          onchange="updateCell(${idx}, 'materiaPrima', this.value)">${escapeHtml(r.materiaPrima)}</textarea>
+              </div>
             </td>
             <td class="px-1 py-1">
               <input type="text" class="table-cell-input text-zinc-600" value="${escapeHtml(r.fornecedor)}" placeholder="Fornecedor..." onchange="updateCell(${idx}, 'fornecedor', this.value)">
