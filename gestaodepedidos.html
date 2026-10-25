@@ -179,6 +179,16 @@
           <span class="rounded-full bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs" id="badgeTotalCriticos">34</span>
         </button>
 
+        <!-- Aba 3: Ponto de Reordem (POR & Planejamento de Compras) -->
+        <button type="button" 
+                id="tab-btn-por" 
+                onclick="switchAppTab('por')" 
+                class="flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-emerald-800 hover:border-emerald-400 hover:text-emerald-950 transition-all cursor-pointer">
+          <i data-lucide="calculator" class="h-4.5 w-4.5 text-emerald-700"></i>
+          <span>Ponto de Reordem</span>
+          <span class="rounded-full bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs" id="badgeTotalPOROrders">34</span>
+        </button>
+
         <!-- Aba 3: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
         <button type="button" 
                 id="tab-btn-ibcs" 
@@ -873,6 +883,342 @@
       </div>
 
     </div> <!-- FIM DO #view-criticos -->
+
+    <!-- =======================================================================
+         ABA 3: PONTO DE REORDEM & PLANEJAMENTO DE COMPRAS (P.O.R)
+         ======================================================================= -->
+    <div id="view-por" class="hidden flex-col gap-4">
+
+      <!-- CABEÇALHO DO PAINEL DE PONTO DE REORDEM -->
+      <div class="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/50 p-4 sm:p-5 shadow-card">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-md">
+              <i data-lucide="calculator" class="h-6 w-6"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-lg font-black tracking-tight text-zinc-900 uppercase">
+                  Ponto de Reordem & Planejamento de Matérias-Primas (P.O.R)
+                </h2>
+                <span class="rounded-md border border-emerald-300 bg-emerald-100/90 px-2 py-0.5 text-xs font-mono font-black text-emerald-900 shadow-2xs">
+                  Cálculo Oficial PCP
+                </span>
+                <span class="text-xs text-zinc-400 font-medium">Ref: 21/10/2026</span>
+              </div>
+              <p class="mt-0.5 text-xs text-zinc-600 max-w-2xl leading-relaxed">
+                Dimensionamento de compra baseado em consumo histórico de 6M, desvio padrão 12M, nível de serviço 85% e lote econômico (EOQ). Sincronizado em tempo real com a Gestão de Pedidos.
+              </p>
+            </div>
+          </div>
+
+          <!-- Ações Rápidas no Cabeçalho -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" 
+                    onclick="exportPORToExcel()" 
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3.5 py-2 text-xs font-bold text-emerald-900 shadow-2xs hover:bg-emerald-50 hover:border-emerald-400 transition-all cursor-pointer">
+              <i data-lucide="download" class="h-4 w-4 text-emerald-700"></i>
+              <span>Exportar P.O.R (.xlsx)</span>
+            </button>
+            <label class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white px-3.5 py-2 text-xs font-bold shadow-2xs transition-all cursor-pointer">
+              <i data-lucide="upload" class="h-4 w-4"></i>
+              <span>Atualizar Planilha (.xlsx/.xlsm)</span>
+              <input type="file" id="porFileInput" accept=".xlsx,.xlsm" class="hidden" onchange="handlePORFileUpload(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Sub-navegação interna de Abas do Ponto de Reordem -->
+        <div class="mt-4 flex items-center gap-1 border-t border-emerald-200/60 pt-3 flex-wrap">
+          <button type="button" 
+                  id="subtab-por-lista" 
+                  onclick="switchPORSubTab('lista')" 
+                  class="por-subtab-btn inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-2xs transition-all cursor-pointer">
+            <i data-lucide="shopping-cart" class="h-3.5 w-3.5"></i>
+            <span>Lista de MP (Necessidades de Compra)</span>
+            <span class="ml-1 rounded-full bg-rose-500 text-white px-1.5 py-0.2 text-[10px] font-mono font-bold" id="subtabBadgeOrders">34</span>
+          </button>
+          <button type="button" 
+                  id="subtab-por-leadtime" 
+                  onclick="switchPORSubTab('leadtime')" 
+                  class="por-subtab-btn inline-flex items-center gap-1.5 rounded-lg bg-white hover:bg-emerald-50 text-zinc-700 border border-zinc-200 px-3.5 py-1.5 text-xs font-semibold shadow-2xs transition-all cursor-pointer">
+            <i data-lucide="clock" class="h-3.5 w-3.5 text-zinc-500"></i>
+            <span>Lead Time Registro (466 itens)</span>
+          </button>
+          <button type="button" 
+                  id="subtab-por-pedidos" 
+                  onclick="switchPORSubTab('pedidos')" 
+                  class="por-subtab-btn inline-flex items-center gap-1.5 rounded-lg bg-white hover:bg-emerald-50 text-zinc-700 border border-zinc-200 px-3.5 py-1.5 text-xs font-semibold shadow-2xs transition-all cursor-pointer">
+            <i data-lucide="link-2" class="h-3.5 w-3.5 text-zinc-500"></i>
+            <span>Cruzamento com Controle de Pedidos</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           SUB-VISÃO 1: LISTA DE MP (DECISÃO DE COMPRA)
+           =================================================================== -->
+      <div id="por-subview-lista" class="flex flex-col gap-4">
+        
+        <!-- Cards de KPIs do P.O.R -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          
+          <div class="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-card">
+            <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Total de Matérias-Primas</span>
+            <strong class="mt-1 text-xl font-bold font-mono text-zinc-900 block tabular-nums" id="porKpiTotalMP">570</strong>
+            <span class="text-[10px] text-zinc-400 font-mono mt-0.5 block">Estoque R$ 7,38M</span>
+          </div>
+
+          <div class="rounded-xl border border-rose-300 bg-rose-50/70 p-3.5 shadow-card">
+            <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">🚨 Comprar Agora (Order)</span>
+            <strong class="mt-1 text-xl font-black font-mono text-rose-700 block tabular-nums" id="porKpiOrder">34</strong>
+            <span class="text-[10px] text-rose-600 font-semibold mt-0.5 block">Abaixo do P.O.R</span>
+          </div>
+
+          <div class="rounded-xl border border-amber-300 bg-amber-50/70 p-3.5 shadow-card">
+            <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">✋ Revisão Manual</span>
+            <strong class="mt-1 text-xl font-bold font-mono text-amber-900 block tabular-nums" id="porKpiManual">16</strong>
+            <span class="text-[10px] text-amber-700 mt-0.5 block">Avaliação pontual</span>
+          </div>
+
+          <div class="rounded-xl border border-emerald-300 bg-emerald-50/70 p-3.5 shadow-card">
+            <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">✅ Com Pedido Aberto</span>
+            <strong class="mt-1 text-xl font-bold font-mono text-emerald-800 block tabular-nums" id="porKpiComPedido">0</strong>
+            <span class="text-[10px] text-emerald-700 mt-0.5 block">Em Gestão de Pedidos</span>
+          </div>
+
+          <div class="rounded-xl border border-red-300 bg-red-100/60 p-3.5 shadow-card">
+            <span class="text-[10px] font-bold text-red-900 uppercase tracking-wider block">⚠️ Sem Pedido Colocado</span>
+            <strong class="mt-1 text-xl font-black font-mono text-red-800 block tabular-nums" id="porKpiSemPedido">0</strong>
+            <span class="text-[10px] text-red-700 font-bold mt-0.5 block">Ação imediata compras</span>
+          </div>
+
+          <div class="rounded-xl border border-sky-300 bg-sky-50/70 p-3.5 shadow-card">
+            <span class="text-[10px] font-bold text-sky-800 uppercase tracking-wider block">Valor Sugerido (EOQ+POR)</span>
+            <strong class="mt-1 text-lg font-bold font-mono text-sky-900 block tabular-nums truncate" id="porKpiValorSugerido">R$ 0</strong>
+            <span class="text-[10px] text-sky-600 mt-0.5 block">Investimento estimado</span>
+          </div>
+
+        </div>
+
+        <!-- Filtros e Barra de Pesquisa de MP -->
+        <div class="rounded-xl border border-zinc-200 bg-white p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" 
+                    onclick="setPORFilter('ALL')" 
+                    id="por-flt-ALL" 
+                    class="por-flt-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer">
+              Todos (570)
+            </button>
+            <button type="button" 
+                    onclick="setPORFilter('ORDER')" 
+                    id="por-flt-ORDER" 
+                    class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 shadow-2xs transition-all cursor-pointer">
+              🚨 Comprar Agora (34)
+            </button>
+            <button type="button" 
+                    onclick="setPORFilter('SEM_PEDIDO')" 
+                    id="por-flt-SEM_PEDIDO" 
+                    class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 shadow-2xs transition-all cursor-pointer">
+              ⚠️ Sem Pedido Colocado
+            </button>
+            <button type="button" 
+                    onclick="setPORFilter('COM_PEDIDO')" 
+                    id="por-flt-COM_PEDIDO" 
+                    class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-50 shadow-2xs transition-all cursor-pointer">
+              ✅ Já em Andamento
+            </button>
+            <button type="button" 
+                    onclick="setPORFilter('MANUAL')" 
+                    id="por-flt-MANUAL" 
+                    class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-white text-amber-800 hover:bg-amber-50 shadow-2xs transition-all cursor-pointer">
+              ✋ Revisão Manual (16)
+            </button>
+            <button type="button" 
+                    onclick="setPORFilter('ZERADOS')" 
+                    id="por-flt-ZERADOS" 
+                    class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-all cursor-pointer">
+              📦 Zerados
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 flex-1 max-w-md min-w-[260px]">
+            <div class="relative w-full">
+              <i data-lucide="search" class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400"></i>
+              <input type="text" 
+                     id="porSearchInput" 
+                     placeholder="Buscar matéria-prima, código do produto, código MP..." 
+                     oninput="onPORSearch(this.value)"
+                     class="w-full rounded-lg border border-zinc-200 bg-zinc-50/70 pl-8 pr-3 py-1.5 text-xs text-zinc-800 placeholder-zinc-400 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition-all">
+            </div>
+            <button type="button" 
+                    onclick="clearPORSearch()" 
+                    class="text-xs text-zinc-500 hover:text-zinc-800 underline shrink-0 cursor-pointer">
+              Limpar
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabela Gerencial da Lista de MP -->
+        <div class="rounded-xl border border-zinc-200 bg-white shadow-card overflow-hidden">
+          <div class="max-h-[64vh] overflow-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="sticky top-0 z-20 bg-zinc-100/95 backdrop-blur-xs border-b border-zinc-200 text-[11px] font-bold text-zinc-700 uppercase tracking-wider">
+                <tr>
+                  <th class="px-2.5 py-2 text-center w-10">Nº</th>
+                  <th class="px-3 py-2 min-w-[280px]">Matéria-Prima</th>
+                  <th class="px-2.5 py-2 text-right">Saldo Atual</th>
+                  <th class="px-2.5 py-2 text-right">Consumo 6M</th>
+                  <th class="px-2 py-2 text-center">DDE</th>
+                  <th class="px-2 py-2 text-center">Lead Time</th>
+                  <th class="px-2.5 py-2 text-right">Est. Segurança</th>
+                  <th class="px-2.5 py-2 text-right font-black text-zinc-900 bg-zinc-200/50">P.O.R</th>
+                  <th class="px-2.5 py-2 text-center">Decisão</th>
+                  <th class="px-3 py-2 min-w-[190px]">Controle de Pedidos</th>
+                  <th class="px-2.5 py-2 text-right">Lote Econômico</th>
+                  <th class="px-2.5 py-2 text-right font-bold text-emerald-800">Sugestão Compra</th>
+                  <th class="px-2 py-2 text-center w-24">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="porTableBody" class="divide-y divide-zinc-100 text-zinc-800">
+                <!-- Preenchido via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div class="p-2.5 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between text-xs text-zinc-500">
+            <span id="porTableCount">Carregando itens...</span>
+            <span class="text-[11px] text-zinc-400">P.O.R = (Lead Time / 30 * Média 6M) + Safety Stock (85%)</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================
+           SUB-VISÃO 2: LEAD TIME REGISTRO (BANCO DE DADOS EDITÁVEL)
+           =================================================================== -->
+      <div id="por-subview-leadtime" class="hidden flex-col gap-4">
+        
+        <div class="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-card flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-zinc-900">Banco de Dados de Lead Time de Entrega</h3>
+            <p class="text-xs text-zinc-500 mt-0.5">
+              Ajuste o prazo de entrega (dias) e o tipo de ressuprimento. O P.O.R e o Estoque de Segurança são recalculados automaticamente!
+            </p>
+          </div>
+          <div class="flex items-center gap-2 max-w-sm w-full">
+            <input type="text" 
+                   id="leadTimeSearchInput" 
+                   placeholder="Buscar por código ou descrição..." 
+                   oninput="onLeadTimeSearch(this.value)"
+                   class="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs text-zinc-800 focus:bg-white focus:border-emerald-600 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-zinc-200 bg-white shadow-card overflow-hidden">
+          <div class="max-h-[64vh] overflow-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="sticky top-0 z-20 bg-zinc-100/95 backdrop-blur-xs border-b border-zinc-200 text-[11px] font-bold text-zinc-700 uppercase tracking-wider">
+                <tr>
+                  <th class="px-3 py-2 text-center w-12">Nº</th>
+                  <th class="px-3 py-2">Código PCP</th>
+                  <th class="px-3 py-2 min-w-[320px]">Descrição da Matéria-Prima</th>
+                  <th class="px-3 py-2">Família</th>
+                  <th class="px-3 py-2 text-center font-bold text-emerald-900">Lead Time Atual (Dias)</th>
+                  <th class="px-3 py-2 text-center">Tipo</th>
+                  <th class="px-3 py-2 text-center w-28">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="leadTimeTableBody" class="divide-y divide-zinc-100 text-zinc-800">
+                <!-- Preenchido via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div class="p-2.5 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between text-xs text-zinc-500">
+            <span id="leadTimeTableCount">Carregando itens...</span>
+            <span class="text-[11px] text-zinc-400">Total cadastrado: 466 produtos</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================
+           SUB-VISÃO 3: CRUZAMENTO COM CONTROLE DE PEDIDOS
+           =================================================================== -->
+      <div id="por-subview-pedidos" class="hidden flex-col gap-4">
+        
+        <div class="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-card">
+          <h3 class="text-sm font-bold text-zinc-900">Cruzamento em Tempo Real: Gestão de Pedidos &bull; Ponto de Reordem</h3>
+          <p class="text-xs text-zinc-500 mt-0.5">
+            Abaixo estão as matérias-primas que atingiram o Ponto de Reordem cruzadas com os pedidos colocados e em aberto na primeira aba.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="cruzamentoPedidosContainer">
+          <!-- Preenchido via JavaScript -->
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE LEAD TIME -->
+    <div id="modalEditLeadTime" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xl animate-scaleUp">
+        <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <i data-lucide="edit-3" class="h-4 w-4"></i>
+            </span>
+            <h3 class="text-sm font-bold text-zinc-900">Editar Lead Time do Produto</h3>
+          </div>
+          <button type="button" onclick="closeEditLeadTimeModal()" class="text-zinc-400 hover:text-zinc-700 cursor-pointer">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+
+        <form onsubmit="handleSaveLeadTime(event)" class="mt-4 flex flex-col gap-3.5">
+          <input type="hidden" id="editLTId">
+
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-600 mb-1">Matéria-Prima:</label>
+            <div id="editLTDescricao" class="p-2.5 rounded-lg bg-zinc-50 border border-zinc-200 text-xs font-bold text-zinc-800 break-words"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-zinc-700 mb-1">Lead Time (Dias):</label>
+              <input type="number" 
+                     id="editLTDias" 
+                     min="1" 
+                     max="360" 
+                     required 
+                     class="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-mono font-bold text-zinc-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-zinc-700 mb-1">Tipo Ressuprimento:</label>
+              <select id="editLTTipo" class="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-900 focus:border-emerald-600 focus:outline-none cursor-pointer">
+                <option value="Automatico">Automático (POR)</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-zinc-500 bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-200/60 leading-relaxed">
+            <strong class="text-emerald-900 font-bold">Recálculo Imediato:</strong> Ao salvar, o Estoque de Segurança e o P.O.R de todas as matérias-primas vinculadas a este produto serão atualizados instantaneamente.
+          </p>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <button type="button" onclick="closeEditLeadTimeModal()" class="px-3.5 py-1.5 rounded-lg border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer">
+              Salvar Alteração
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- =======================================================================
          ABA 3: GESTÃO DE PEDIDOS IBC'S (CRIADA E NÃO MODIFICADA AINDA)
@@ -3817,7 +4163,7 @@
 
     function switchAppTab(tabId) {
       currentAppTab = tabId;
-      const tabs = ['pedidos', 'criticos', 'ibcs'];
+      const tabs = ['pedidos', 'criticos', 'por', 'ibcs'];
       
       tabs.forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
@@ -3847,6 +4193,12 @@
             } else {
               btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-zinc-600 hover:border-zinc-300 hover:text-zinc-900 transition-all cursor-pointer';
             }
+          } else if (t === 'por') {
+            if (isActive) {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-emerald-600 px-5 py-3 text-sm font-bold text-emerald-800 bg-emerald-50/50 transition-all cursor-pointer';
+            } else {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-emerald-800 hover:border-emerald-300 hover:text-emerald-950 transition-all cursor-pointer';
+            }
           } else {
             if (isActive) {
               btn.className = 'flex items-center gap-2.5 border-b-2 border-sky-600 px-5 py-3 text-sm font-bold text-sky-800 bg-sky-50/50 transition-all cursor-pointer';
@@ -3859,6 +4211,8 @@
 
       if (tabId === 'criticos') {
         renderPainelCriticos();
+      } else if (tabId === 'por') {
+        renderPainelPOR();
       } else if (tabId === 'pedidos') {
         renderTable();
       }
@@ -5671,7 +6025,724 @@
         .replace(/'/g, "&#039;");
     }
 
+    
+    // =========================================================================
+    // MÓDULO PONTO DE REORDEM (P.O.R) & PLANEJAMENTO DE MATÉRIAS-PRIMAS
+    // =========================================================================
+    const INITIAL_POR_COMPACT = {"dataReferencia":"21/10/2026","custoRessuprimento":100,"waccEstoque":0.2,"zFactor":1.036433389,"mp":[["2 ETILHEXANOL (OCTANOL) - KG (MP)",155.5,1,155.5,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["A 007 CHEMICALS - GR (MP)",732,6.0787,4449.6084,0,"S/C",0,"Automatico",14,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["A 36-3 CHEMICALS - GR (MP)",0,8.1496,0,0,"Zerado",0,"Manual",18,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["A012 CHEMICALS - GR (MP)",508,6.0778,3087.5224,0,"S/C",0,"Automatico",11,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACETATO DE ETILA TCN - GR (MP)",445.4163,8.412265078758907,3746.9599860000003,90.51083333333334,"",97.47885730631155,"Automatico",17,13.885292448181877,65.1747646704041,"","[object Object]",147.6341395597212,0,0,"[object Object]",761.4011224993676,3570.9836372555687],["ACIDO ACRILICO GLACIAL - GR (MP)",83995.9,7.4465902339280845,625483.04863,57833.56666666667,"",19372.1573428011,"Importação",90,6349.205494984042,179849.90549498406,"","Order",43.57118443902531,9653.879710482199,189503.78520546627,"[object Object]",430662.87273322884,1411157.0362034305],["ACIDO ASCORBICO - GR (MP)",110.8552,14.757100000721664,1635.901272,79.64823999999999,"",30.454164963886093,"Automatico",20,4.7052405882901285,57.804067254956784,"","[object Object]",41.7542936290871,0,0,"[object Object]",1175.3770425614791,4608.619489056491],["ACIDO BENZOICO - GR (MP)",190,11.013399999999999,2092.546,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACIDO BORICO - GR (MP)",4988.495,7.066853202218305,35252.961865000005,447.35833333333335,"",389.8746861150331,"Automatico",10,42.59368149923047,191.71312594367492,"","[object Object]",334.5301492092469,0,0,"[object Object]",3161.415670455711,7514.109456032739],["ACIDO CLORIDRICO (HCL) 30-33% - GR (MP)",0,0,0,0,"S/C",0,"Commodities",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACIDO CLORIDRICO (HCL) 30-33% - GR (MPCH)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO ESTEARICO TP 68 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO FLUOSSILICICO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO FOSFORICO 54% - GR (MP)",0,3.4385,0,0,"Zerado",0,"Commodities",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO FOSFORICO 85% - GR (MP)",231.2086,10.500599999307985,2427.829025,58.25289999999999,"",51.99395515155116,"Commodities",90,17.040967606886525,191.7996676068865,"","[object Object]",119.0714625366291,0,0,"[object Object]",611.690401699688,4723.30759042234],["ACIDO ITACONICO - GR (MP)",5,21.4668,107.334,2,"",3.4641016151377544,"Automatico",30,0.6554980307697609,2.6554980307697607,"","[object Object]",75,0,0,"[object Object]",42.9336,774.7816120333717],["ACIDO ITACONICO- GR (MP)",200,12.281400000000001,2456.28,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACIDO LAURICO - GR (MP)",0,65.4875,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO MIRISTICO - GR (MP)",0,25.825,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO MONOCLORO ACETICO MCAA - GR (MP)",210,12.7812,2684.052,0,"S/C",0,"Automatico",12,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACIDO OLEICO - GR (MP)",165,13.271099999999999,2189.7315,0,"S/C",0,"Automatico",16,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACIDO OXALICO 7% - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO OXALICO 99% - GR (MP)",190,5.9891000000000005,1137.929,0,"S/C",0,"Automatico",4,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACIDO SULFONICO 90% - GR (MP)",629.44,8.4412,5313.228928,9.675,"",10.205224597768982,"Commodities",90,3.3447523137003468,32.369752313700346,"","[object Object]",1951.751937984496,0,0,"[object Object]",81.66861000000002,1263.2008252001747],["ACIDO SULFURICO - GR (MP)",0,0,0,0,"Zerado",0,"Commodities",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACIDO SULFURICO 98% - GR (MP)",0,0,0,0,"Zerado",0,"Commodities",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACQUADHERE OT - GR (MP)",235,10.265400000000001,2412.369,0,"S/C",0,"Manual",14,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACRILAMIDA 45% - GR (MP)",0,0,0,0,"Zerado",0,"Manual",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACRILAMIDA 50% - GR (MP)",15000,9.9404,149106,0,"S/C",0,"Manual",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACRILAMIDA 98% - SC 25KG (MP)",0,8.4086,0,37142.108,"",16023.817654456858,"Importação",90,5251.7904589551,116678.1144589551,"","Order","",7280.514154539268,123958.62861349437,"[object Object]",312313.1293288,1042318.5245594287],["ACRILATO DE BUTILA - GR (MP)",174,14.329380459770114,2493.3122,33.333333333333336,"",26.111648393354677,"Automatico",25,4.510497374932443,32.28827515271023,"","[object Object]",156.6,0,0,"[object Object]",477.6460153256705,2856.778784459367],["ACRYLUX HT 4560 - GR (MP)",1,11,11,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACRYLUX HT 5079 - KG (MP)",1,12,12,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ACTICIDE L - GR (MP)",0,0,0,0,"Zerado",0,"Manual",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACTICIDE LPB 31 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACTICIDE LPB 43 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACTICIDE LPB 9 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACTIVATED ZEOLITE POWDER R 3A - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ACTIVATED ZEOLITE POWDER R 4A - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ADDITIVES NANO - GR (MP)",32230,4.413225690350605,142238.264,2360.8333333333335,"",3109.1118531103884,"Importação",30,588.32474435821,2949.1580776915434,"","[object Object]",409.5587716201906,0,0,"[object Object]",10418.890317302721,24196.83335334887],["ADICAO MINERAL - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ADIPRINT ESP (AM) - GR (MP)",0,24.82,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ADITIVO DILUENTE HX - GR (MP)",300,8.5491,2564.73,0,"S/C",0,"Manual",10,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ADTEX CR 70 / AS 120 DE BAIXA - GR (MP)",0,8.6168,0,0,"Zerado",0,"Manual",17,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ADWANA 030 - GR (MP)",0,1,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AG-E03ST - GR (MP)",0,130.58,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AG-E090 - GR (MP)",0,151.02,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AGENTE DE POLIMENTO NANO H-1 - GR (MP)",0,0,0,0,"Zerado",0,"Manual",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AGUA - LT (MP)",0,0,0,0,"Zerado",0,"Manual",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AGUA DE LIMPEZA SLURRY - GR (MP)",1168.27813,0.020799999910980103,24.300185,205.29208333333335,"",321.3661678059001,"Manual",30,60.81082876791276,266.1029121012461,"","[object Object]",170.7242838151333,0,0,"[object Object]",4.2700753150582536,231.89947792235762],["AGUA DESMINERALIZADA - GR (MP)",0,0.0151,0,26.59522816666667,"",31.12886126653318,"Manual",30,5.890389349766854,32.48561751643352,"","Manual","",0,0,"[object Object]",0.4015879453166667,69.90994901190207],["AGUA POTAVEL - LT (MP)",621297.42673,0.020800000000025753,12922.986476,970651.2313955001,"",112718.12078085005,"Manual",30,21329.197123155715,991980.4285186558,"","Manual",19.202492305194852,0,0,"[object Object]",20189.5456130514,36198.36388421859],["AGUARRAS - GR (MP)",2592.2,6.9884,18115.33048,1131,"",639.0344582163617,"Automatico",24,108.1558559669605,1012.9558559669606,"","[object Object]",68.75862068965516,0,0,"[object Object]",7903.8804,16817.860808245332],["AL TP-325 ELFUSA - GR (MP)",0,5.4848,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALC TP-325 ELFUSA - GR (MP)",1418.3,10.065800000000001,14276.32414,431.31666666666666,"",232.16531384887247,"Automatico",58,61.084563265416456,894.9634521543054,"","[object Object]",98.64909772402333,0,0,"[object Object]",4341.547303333334,16226.456868122566],["ALCOOL 2-ETIL HEXILICO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",21,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL BENZILICO - GR (MP)",947.05,13.7871,13057.073055,4.458333333333333,"",7.7199699226137275,"Automatico",20,1.19275363036012,4.164975852582342,"","[object Object]",6372.672897196261,0,0,"[object Object]",61.4674875,916.2650952043031],["ALCOOL CETILICO (HEXADECANOL) - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL ETILICO ANIDRO 99% - GR (MP)",5,5.4015,27.0075,1.6666666666666667,"",11.64500152881315,"Automatico",10,1.272212595074646,1.8277681506302015,"","[object Object]",90,0,0,"[object Object]",9.002500000000001,338.5518645459369],["ALCOOL ISOPROPILICO - GR (MP)",925.4584,10.83546246595201,10027.769757,227.0953333333334,"",181.47496274624976,"Automatico",6,15.357215624315742,60.77628229098242,"","[object Object]",122.25593363139706,0,0,"[object Object]",2460.682960526194,6092.524359858639],["ALCOOL ISOTRIDECILICO 6E0 - GR (MP)",0,1,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL METILICO - METANOL - GR (MP)",173.072,5.368599998844412,929.154339,4.488,"",7.773444024369121,"Automatico",13,0.9682896566521528,2.9130896566521534,"","[object Object]",1156.8983957219252,0,0,"[object Object]",24.094276794813723,553.3485412385054],["ALCOOL METILICO - METANOL P.A. - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL POLIVINILICO ALTA VISCOSIDADE 088-26 - GR (MP)",0,0,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL POLIVINILICO ALTA VISCOSIDADE 088-50 - GR (MP)",7801,12.838799999999999,100155.4788,0,"S/C",0,"Importação",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL POLIVINILICO ALTA VISCOSIDADE 2688 PVA 088-60 - GR (MP)",3.25,7.5571,24.560575,5738.666666666667,"",2414.6493898826393,"Importação",90,791.3989600337374,18007.398960033737,"","Order",0.016990009293680296,3018.6901531898648,21026.089113223603,"[object Object]",43367.67786666667,158896.25803754208],["ALCOOL POLIVINILICO BAIXA VISCOSIDADE 088-05 - GR (MP)",996.15,12.3748,12327.15702,0,"S/C",0,"Manual",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ALCOOL POLIVINILICO MEDIA VISCOSIDADE 088-17 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ALFOL 20 - GR (MP)",171.67999999999998,45.0535265610438,7734.78944,23.7,"",23.60746543452779,"Automatico",11,2.7049911341290205,11.39499113412902,"","[object Object]",217.3164556962025,0,0,"[object Object]",1067.768579496738,4092.940786708651],["ALKEST TW - GR (MP)",738.316,34.15060000054177,25213.93439,45.31733333333333,"",30.31501043537623,"Automatico",38,6.456091268972044,63.85804682452759,"","[object Object]",488.763975520772,0,0,"[object Object]",1547.614123757885,6490.241795346386],["ALLPLUS AP-3132 - GR (MP)",500,14.1526,7076.3,83.33333333333333,"",194.62473604038075,"Automatico",41,43.053662880440285,156.94255176932916,"","[object Object]",180,0,0,"[object Object]",1179.3833333333332,5983.139310212846],["ALUMIBART 30 M  - GR (MP)",24,11.603200000000001,278.4768,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ALUMINATO DE SODIO LIQUIDO 32% - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AMARELO TRANSPERSE Y554 - GR (MP)",0,12.9187,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AMIDO DE MILHO - GR (MP)",1500,3.7813,5671.95,0,"S/C",0,"Automatico",13,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["AMQZ 400 QTZ ROCHA - GR (MP)",5431.326,1.4671999999631766,7968.841507,1596.7923333333335,"",1622.0345038023772,"Automatico",10,177.20673718051077,709.4708482916219,"","[object Object]",102.04193532158324,0,0,"[object Object]",2342.8137114078677,6343.177092052998],["AN 934-VHM ANIONICO - GR (MP)",4200,13.211500000000001,55488.3,25,"",43.30127018922193,"Automatico",30,8.193725384622011,33.19372538462201,"","[object Object]",5040,0,0,"[object Object]",330.2875,2429.38043352854],["ANIDRIDO MALEICO - GR (MP)",0,11.6729,0,499.6666666666667,"",530.740020817132,"Automatico",13,66.11098901818941,282.63321124041164,"","Order","",716.7066425314755,999.3398537718872,"[object Object]",5832.559033333334,11665.194179093862],["ANIONIC NE AFLOC 728 - GR (MP)",69.05,10.8299,747.804595,1362.5,"",1027.8387104856129,"Importação",30,194.4937895955622,1556.9937895955622,"","Order",1.520366972477064,1228.7022547897816,2785.696044385344,"[object Object]",14755.73875,30168.809591088837],["ANTIESPUMANTE TE TIQ - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AP 3132 DRUM - GR (MP)",1,4.91,4.91,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["APCA - GR (MP)",241,22.613,5449.733,0.16666666666666666,"",0.28867513459481287,"Automatico",19,0.04347166941035886,0.14902722496591442,"","[object Object]",43380,0,0,"[object Object]",3.7688333333333333,216.03400695857766],["APRESTOCRYL 447 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AQ-1523 - GR (MP)",289.6,15.770299999999999,4567.07888,46.73333333333333,"",77.92789207746071,"Automatico",19,11.735183104677308,41.33296088245508,"","[object Object]",185.90584878744653,0,0,"[object Object]",736.9986866666666,3625.716889452712],["AQUASOL TH-308 - GR (MP)",14985,4.2158,63173.763,2604.1666666666665,"",4510.548978043951,"Automatico",30,853.513060898126,3457.6797275647923,"","[object Object]",172.62720000000002,0,0,"[object Object]",10978.645833333332,26054.854221211575],["AREIA AQ 60 - 250 UMIDA - GR (MP)",0,0.1578,0,0,"Zerado",0,"Manual",21,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AREIA AQ 90 - 500 UG - GR (MP)",223246.8509,0.16030491129315189,35787.56663,458245.37195,"",75380.46008850016,"Automatico",7,6890.13838867851,113814.05851034517,"","[object Object]",14.615326061014242,0,0,"[object Object]",73458.98370094215,47935.14966308868],["ARQUAD 2C-75 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ARQUAD 2HT 75 E - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ATAWET 2000 - GR (MP)",40.079,34.119599990019715,1367.479448,0.3333333333333333,"",0.5085595447988963,"Manual",30,0.09623267940180966,0.42956601273514294,"","[object Object]",3607.11,0,0,"[object Object]",11.373199996673238,384.08645142555804],["ATHON FB 550 - GR (MP)",39.1158,50.05130001175995,1957.796641,0.05000000000000001,"",0.09504469602468221,"Manual",30,0.017984925963787642,0.06798492596378765,"","[object Object]",23469.479999999996,0,0,"[object Object]",2.502565000587998,176.6966461299456],["ATHON OH 70 FLUID - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ATMP - GR (MP)",0,7.7498,0,0,"S/C",0,"Automatico",14,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["AXFIX AX 6544 - GR (MP)",210.75,26.2624,5534.8008,131.70833333333334,"",85.48295007653795,"Automatico",19,12.872901405815234,96.288179183593,"","[object Object]",48.003796267004105,0,0,"[object Object]",3458.9769333333334,8971.407449041395],["AZUL NEOPRINT D2 - GR (MP)",0.3,21.2333,6.36999,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["AZUL QUIMPRINT QB-150 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["AZUL QUIMPRINT QCP-PH - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BACQUAT 80 - GR (MP)",325,20.505599999999998,6664.32,104.16666666666667,"",180.42195912175805,"Manual",7,16.491439097690765,40.79699465324632,"","[object Object]",93.6,0,0,"[object Object]",2136,5899.372399896564],["BARRILHA DENSA (CARBONATO DE SODIO) - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BARRILHA LEVE (CARBONATO DE SODIO) - GR (MP)",0,0,0,0,"S/C",0,"Manual",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["BAYHYDROL A 2546 - GR (MP)",161.4,36.7694,5934.58116,0.7999999999999999,"",5.701568099030196,"Automatico",24,0.9649839225035045,1.6049839225035045,"","[object Object]",6052.500000000001,0,0,"[object Object]",29.415519999999997,653.1407470270508],["BAYHYDUR XP 2547 - GR (MP)",13.2,108.6437,1434.09684,0.39999999999999997,"",6.786349936051446,"Automatico",36,1.4067199333025528,1.8867199333025528,"","[object Object]",990,0,0,"[object Object]",43.45748,927.122713434176],["BELSIL PF 200 - GR (MP)",48,214.44629999999998,10293.4224,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["BENTONITA BRASGEL - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BENTONITA BT-5002/400 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BENTONITA POLENITA EXTRA - GR (MP)",1389.6,4.719687593552102,6558.47788,1586.4333333333334,"",923.1167651199139,"Automatico",12,110.47586290088995,745.0491962342234,"","[object Object]",26.277813964238433,0,0,"[object Object]",7487.46972133084,12995.304271710796],["BIOTEX CR 140 - GR (MP)",500,9.3064,4653.2,0,"S/C",0,"Automatico",25,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["BLACK INK - GR (MP)",650,26.5069,17229.485,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["BLUESIL FLD 47 V 1000 - GR (MP)",397.208,16.018100000503512,6362.517465,21.56925,"",30.195705995242708,"Automatico",30,5.713812126956661,27.28306212695666,"","[object Object]",552.4642720539657,0,0,"[object Object]",345.4984034358604,2473.190993537109],["BLUESIL FLD 47 V 50 - GR (MP)",0,17.4058,0,0,"Zerado",0,"Automatico",23,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BORAX DECAH ETM - GR (MP)",1332.2,5.114,6812.8708,3852.3250000000003,"",1618.249541241175,"Automatico",20,250.0233853878173,2818.240052054484,"","Order",10.374514092139162,3006.5727763036125,5824.812828358096,"[object Object]",19700.79005,29788.092804223303],["BORAX DECAHIDRATADO - GR (MP)",0,4.5269,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BRANCOCRYL TEX 407 - GR (MP)",0,6.9769,0,666.6666666666666,"",778.498944161523,"Manual",16,107.58163992195519,463.1371954775107,"","Manual","",0,0,"[object Object]",4651.266666666666,10702.218999793598],["BRIGHTENER A-ASSIT 10 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BULAB 6024SC - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BUTILDIGLICOL - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BUTILGLICOL - GR (MP)",41.5,12.3354,511.9191,119.75,"",107.13497186712516,"Automatico",16,14.805101603408845,78.67176827007552,"","Order",10.396659707724426,341.3121634200681,419.9839316901436,"[object Object]",1477.16415,5180.669790970597],["BYK 1810 - GR (MP)",0.05,1,0.05,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["BYK 310 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["BYK 333 - GR (MP)",0.06,1,0.06,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["BYK 361 - GR (MP)",0.06,1,0.06,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["CARBOCEL FAA 300 X - GR (MP)",0.5,30.62,15.31,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["CARBONATO DE SODIO LEVE (UNIL) - GR (MP)",25,3.1239999999999997,78.1,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["CATIONIC NE CFLOC 805 - GR (MP)",0.1,15.7,1.57,1583.7,"",4166.572294982793,"Importação",30,788.4237351716529,2372.1237351716527,"","Order",0.0018942981625307824,1100.2142234945056,3472.3379586661586,"[object Object]",24864.09,54515.705951058684],["CAULIM ATOMIZADO CR-S - GR (MP)",1933.835,1.8302,3539.304817,628.4233333333333,"",197.81586701141356,"Automatico",12,23.674013331059758,275.0433466643931,"","[object Object]",92.3184212340938,0,0,"[object Object]",1150.1403846666667,4218.446192038721],["CAULIM COLOIDAL MCP-400 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CELLOSIZE QP-4400 - GR (MP)",156.5,66.0902,10343.1163,32.25,"",43.87246927864968,"Automatico",18,6.430555221607614,25.780555221607614,"","[object Object]",145.5813953488372,0,0,"[object Object]",2131.40895,6761.203754204281],["CELULOSE - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CERAFLOUR 1000 - GR (MP)",0,125.718,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CHEMGARD 1 SO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CHEMGARD 3 DS - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CHEMPOL TA 250 F - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CLEAR LA/B 01 /LUMENCRYL EB /CHEMPOL TA 250 /CHEMPOL TA 237N /PROESPESSANTE EI - GR (MP)",2392.47,12.638400000000003,30236.992848,697.3833333333332,"",305.61830930769025,"Automatico",32,59.72752227994181,803.6030778354972,"","[object Object]",102.91915015653754,0,0,"[object Object]",8813.80952,20440.50306363032],["CLORETO DE COLINA 98% - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",47,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - CARBOXIMETILCELULOSE P4-100 - GR (MP)",0,0,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - CARBOXIMETILCELULOSE P4-30 - GR (MP)",34,22.598100000000002,768.3354,0,"S/C",0,"Importação",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["CMC - CARBOXIMETILCELULOSE P4-400 - GR (MP)",0,19.3773,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - CARBOXIMETILCELULOSE PAC R - GR (MP)",0,0,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - CARBOXIMETILCELULOSE T2-30 - GR (MP)",0,10.8204,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - FINNFIX 10 - GR (MP)",27954.5,17.5032,489293.2044,6110,"",5032.94208794479,"Importação",90,1649.5418138130292,19979.54181381303,"","[object Object]",137.25613747954174,0,0,"[object Object]",106944.552,385529.57639004313],["CMC - FINNFIX 100000 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - FINNFIX 2 - GR (MP)",0,0,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - FINNFIX 30 - GR (MP)",28854.8,17.2929,498983.17092,6023.333333333333,"",4718.5770839279185,"Importação",90,1546.5089932750357,19616.508993275034,"","[object Object]",143.71510791366907,0,0,"[object Object]",104160.901,374580.68894951366],["CMC - FINNFIX 300 G - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - FINNFIX 5 - GR (MP)",25497.675,17.05570000001961,434880.695498,6041,"",4002.1368435716054,"Importação",90,1311.696409916147,19434.69640991615,"","[object Object]",126.6231170336037,0,0,"[object Object]",103033.48370011846,366634.857220579],["CMC - FINNFIX 50000 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - GELYCEL P4-30C - GR (MP)",0,24.122,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - RHEOLON 100G - GR (MP)",0,18.747,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - RHEOLON 10G - GR (MP)",0,23.5438,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - RHEOLON 20000 - GR (MP)",0,0,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - RHEOLON 30G - GR (MP)",0,18.9552,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC - USK 60THT - GR (MP)",21075,10.7084,225679.53,9058.333333333334,"",4795.569979671263,"Importação",90,1571.7433390465476,28746.74333904655,"","Order",69.79760809567617,3186.049209651628,31932.792548698177,"[object Object]",97000.25666666667,341949.1157284795],["CMC- CARBOXIMETILCELULOSE, TECH CL6-10 - GR (MP)",0,25.406,0,0,"Zerado",0,"Importação",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CMC INDUSCEL CR-4001B TECNICO - GR (MP)",5000,9.468,47340,833.3333333333334,"",1083.6246694508316,"Importação",90,355.1569184592766,2855.1569184592768,"","[object Object]",180,0,0,"[object Object]",7890,36762.990548108544],["CMC INDUSKOL T-2000 - GR (MP)",1539.4756,23.143603344541482,35629.012645,769.2034,"",1198.8999758756158,"Automatico",90,392.93828663819,2700.5484866381903,"","Order",60.04168468314103,631.532538917073,3332.0810255552633,"[object Object]",17802.13838087268,77116.361567324],["CMC INDUSKOL T-5000 - GR (MP)",100,24.7128,2471.28,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["CMC-CARBOXIMETILCELULOSE, TECH CL6-5 - GR (MP)",10,26.726999999999997,267.27,0,"S/C",0,"Importação",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["COALESCENTE NX-795 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL 1211 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL 2059 - GR (MP)",80,38.959199999999996,3116.736,0,"S/C",0,"Automatico",28,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL 3573 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL CLEAN - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL DRI - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL MP 200 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL PRIM 2 - GR (MP)",200,54.719300000000004,10943.86,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["COATOSIL PROTEC - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLA PVA - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLA PVA FQ-685 - GR (MP)",1078,23.2345,25046.791,160,"",134.97474511249067,"Automatico",15,18.06002247724449,98.06002247724449,"","[object Object]",202.125,0,0,"[object Object]",3717.52,8957.46535059036],["COLA SILICATO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN PART I - BB 220 KG (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN PART I - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN PART II - BB 220 KG (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN PART II - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN XP I 1610 - BB 220 KG (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN XP II 2610 - BB 220 KG (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLD BOX RESIN XP III 3400 - BB 220 KG (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["COLLOIDAL SILICA - 30 - GR (MP)",4449.2,2.9632,13183.86944,27610.083333333332,"",18354.712974723134,"Importação",30,3473.18859172575,31083.27192505908,"","Order",4.834320794637224,10574.114267804944,41657.386192864025,"[object Object]",81814.19893333333,123439.16676669469],["COLLOIDAL SILICA - 30 M - GR (MP)",0,0,0,1041.6666666666667,"",1455.6251911016438,"Importação",90,477.07972315299224,3602.0797231529923,"","Order","",0,0,"[object Object]",0,0],["COLLOIDAL SILICA HS-1430 - GR (MP)",0,3.4928,0,183.33333333333334,"",9444.102480336123,"Importação",30,1787.0695683971635,1970.4029017304968,"","Order","",793.6417046066091,2764.044606337106,"[object Object]",640.3466666666667,9654.255001014244],["COLLOIDAL SILICA HS-830 - GR (MP)",1960,4.7327,9276.092,3800,"",3254.6470273636855,"Manual",30,615.8637806595387,4415.863780659539,"","Manual",15.473684210526317,0,0,"[object Object]",17984.260000000002,35589.46973796262],["COLLOIDAL SILICA HSD-10050 - GR (MP)",0,0,0,0,"S/C",0,"Manual",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["COLLOIDAL SILICA SKP-K1 - GR (MP)",1200,10.4718,12566.16,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["COMGEL 601 - GR (MP)",0,0,0,1210,"",2095.7814771583417,"Manual",30,396.5763086157054,1606.5763086157053,"","Manual","",0,0,"[object Object]",0,0],["COPOLIMERO DE BLOCO EO 10% PO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CORAGUM - DEXTRINA 080800 / SODEX-907 - GR (MP)",2186.29775,5.8696999999199555,12832.911903,834.3755833333333,"",357.7038407120836,"Automatico",21,56.630890599488694,640.693798932822,"","[object Object]",78.60840346978034,0,0,"[object Object]",4897.5343614248795,11426.866688335209],["CORANTE AZUL TRANSPERSE T3BG - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["CORANTE VERDE - GR (MP)",0.003,38.44866666666667,0.115346,14.794246666666666,"",4.159741275316875,"Automatico",10,0.45445036908031766,5.385865924635873,"","Order",0.00608344595218772,67.95108706423599,73.33695298887187,"[object Object]",568.8190586711111,2819.7080598181383],["DADMAC 65% - GR (MP)",26250,11.4976,301812,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DEG - DIETILENOGLICOL - GR (MP)",13646.5,6.6034,90113.2981,831.0833333333334,"",1440.4862519460069,"Automatico",10,157.37265025025354,434.40042802803134,"","[object Object]",492.6040308833851,0,0,"[object Object]",5487.975683333333,10983.67278561413],["DEG - DIETILENOGLICOL / MEG - MONOETILENO GLICOL - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DENVERCEL CR-9003A - GR (MP)",154.2,19.764900000000004,3047.74758,0,"S/C",0,"Manual",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DENVERCEL CR-9006B - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DENVERCRIL RA 154 - GR (MP)",1,2,2,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DIETILENOGLICOL - GR (MP)",5375.5,6.5861,35403.58055,800,"",1976.1375301022924,"Automatico",30,373.9365652126692,1173.9365652126692,"","[object Object]",201.58125,0,0,"[object Object]",5268.88,15683.17667570934],["DIOXIDO DE TITANIOCOAL - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DIOXOLANE ULTRA PURE - GR (MP)",25,31.427,785.675,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DIPROPILENOGLICOL - GR (MP)",108,18.4619,1993.8852,35,"",44.57067931438172,"Automatico",30,8.433930573219032,43.43393057321903,"","[object Object]",92.57142857142857,0,0,"[object Object]",646.1665,3586.473033679271],["DISPERBYK 108 - GR (MP)",1.5,60.1278,90.1917,0.25,"",0.45016831868926,"Automatico",30,0.08518354228590078,0.33518354228590075,"","[object Object]",180,0,0,"[object Object]",15.03195,444.8695185894124],["DISPONIL AES 60 - GR (MP)",56.675,8.75,495.90625,28.8875,"",25.258678657797578,"Automatico",57,6.58822157012558,61.47447157012558,"","Order",58.85763738641281,199.0405558099727,260.5150273800983,"[object Object]",252.765625,2279.50648957586],["DISSOLVINE D-40 - GR (MP)",178,0,0,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DISSOLVINE E-39 - GR (MP)",750,9.981,7485.75,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DMP-30 - TRIS DIMETILAMINOFENOL  - GR (MP)",0.5,9.36,4.68,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DNDFLOC A9071 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",8,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DOWANOL DPM - GR (MP)",201.8932,26.206500000990623,5290.914146,47.99666666666667,"",31.908007832726454,"Automatico",21,5.0516060918596635,38.64927275852633,"","[object Object]",126.19201333425931,0,0,"[object Object]",1257.8246450475467,4897.948490023323],["DOWANOL PMA - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DOWSIL 57 ADDITIVE BT316 - GR (MP)",0.001,4160,4.16,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DOWSIL IE-6683 - GR (MP)",3153.65,48.6755,153505.490575,856.8916666666665,"",1124.9537142919446,"Automatico",52,280.2569986601827,1765.5358875490715,"","[object Object]",110.41010629503926,0,0,"[object Object]",41709.63032083333,108310.54725727496],["DOWSIL MH 1109 - GR (MP)",1,3.99,3.99,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["DPV LPS - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DRYMAX IMPERMEABILIZANTE - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",9,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DYNABRIGHT CBS - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DYNASPERS VERDE D G7W - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DYNASYLAN OCTEO - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["DYNASYLAN SIVO 160 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ECC 4060 LUSTRE - GR (MP)",90,12.6563,1139.067,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ECOFLOC 1700-A - GR (MP)",0,0,0,0,"S/C",0,"Manual",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EMUL GME - GR (MP)",0,13.7563,0,0,"Zerado",0,"Automatico",42,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ENERGY TENSOATIVO - GR (MP)",0,14.5334,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["EP SOLVEN 220 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["EPOXY DEH 23 - GR (MP)",188.7,50.216300000000004,9475.81581,0,"S/C",0,"Automatico",20,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EPOXY DEH 52 - GR (MP)",215,44.464099999999995,9559.7815,0,"S/C",0,"Automatico",20,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EPOXY DEH 554 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["EPOXY DER 331 LCO - GR (MP)",6103.1,13.994143464796577,85407.65698,14,"",460.30964545289476,"Automatico",25,79.51338100890473,91.1800476755714,"","[object Object]",13078.07142857143,0,0,"[object Object]",195.91800850715208,2809.2890201153778],["EPOXY DER 721 - GR (MP)",206,34.5913,7125.8078,0.3333333333333333,"",57.68540595857899,"Automatico",39,12.445673335443962,12.879006668777295,"","[object Object]",18540,0,0,"[object Object]",11.530433333333331,817.4763137061968],["EPOXY DER 731 - GR (MP)",280,35.1728,9848.384,0.3333333333333333,"",54.79880556097086,"Automatico",39,11.822886947767506,12.25622028110084,"","[object Object]",25200,0,0,"[object Object]",11.724266666666667,806.1738409842087],["EPY AIRSTONE 713H - GR (MP)",778.3,39.9855,31120.71465,0,"S/C",0,"Automatico",25,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EPY DEH 487 - GR (MP)",847.25,27.606499999999997,23389.607125,14.166666666666666,"",26.35238869915809,"Manual",20,4.071506444281587,13.51595088872603,"","[object Object]",1794.1764705882356,0,0,"[object Object]",391.0920833333333,2539.4856402603264],["EPY DEH 545 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ESCOVA PANAL 110 MM - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ESPESSANTE AP 50 / WANCER 212 - GR (MP)",1875.46,7.540699999999999,14142.281222,522.88,"",270.2981137334828,"Automatico",22,43.80003891470654,427.2453722480398,"","[object Object]",107.60365667074663,0,0,"[object Object]",3942.8812159999998,10100.288227614028],["ESTEARATO DE CALCIO - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ESTEARATO DE ZINCO - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ESTER DIBASICO - GR (MP)",160,19.1272,3060.352,10,"",17.320508075688775,"Automatico",30,3.277490153848805,13.277490153848806,"","[object Object]",480,0,0,"[object Object]",191.272,1768.9740809031493],["EVERSORB 80 - GR (MP)",0.1,5.1,0.51,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EVERSORB 89 - GR (MP)",0.1,5.1,0.51,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EVERSORB 93 - GR (MP)",0.1,5.1,0.51,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EVERSORB EP4 PAIL - GR (MP)",12.76,300.5461,3834.968236,0.08333333333333333,"",2.877222461143575,"Automatico",15,0.384980925705612,0.4266475923722787,"","[object Object]",4593.6,0,0,"[object Object]",25.045508333333334,676.4481196201158],["EVM-01 - GR (MP)",750,8.8554,6641.55,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["EX CELL 1001-XAROPE DE GLUCOSE - GR (MP)",31194.12,2.7880000000000003,86969.20656,50962.28,"",31198.72884633118,"Manual",26,5495.961914491308,49663.27124782464,"","Manual",18.363063818965713,0,0,"[object Object]",142082.83664000002,179752.77370955984],["EXXSOL D40 - GR (MP)",0,11.9683,0,127.5,"",220.83647796503186,"Automatico",30,41.787999461572255,169.28799946157227,"","Order","",357.543989745308,526.8319892068803,"[object Object]",1525.95825,6305.2832964247045],["FECULA DE BATATA - GR (MP)",85,8.089599999999999,687.616,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["FECULA DE MANDIOCA - GR (MP)",11,3.0027,33.0297,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["FEISPARTIC F2401 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["FEISPARTIC F2850 - GR (MP)",250,37.8861,9471.525,25,"",43.30127018922193,"Manual",30,8.193725384622011,33.19372538462201,"","[object Object]",300,0,0,"[object Object]",947.1524999999999,4628.9054647633775],["FEISPARTIC F420 - GR (MP)",506.95,37.8741,19200.274995,30.833333333333332,"",93.04367854628407,"Manual",30,17.606281465920137,48.43961479925347,"","[object Object]",493.24864864864867,0,0,"[object Object]",1167.7847499999998,5578.056694324521],["FEISPARTIC F520 - GR (MP)",401.85,46.90409999999999,18848.412585,77.5,"",276.8996105075672,"Manual",30,52.39660078545537,129.89660078545538,"","[object Object]",155.55483870967743,0,0,"[object Object]",3635.0677499999993,12697.288591532517],["FELDSPATO POTASSICO 325 PO - GR (MP)",1272,2.4064,3060.9408,119.5,"",143.43330727680944,"Automatico",17,20.431234766018125,88.14790143268479,"","[object Object]",319.3305439330544,0,0,"[object Object]",287.5648,2069.7459831982433],["FLOCPOL ALS - GR (MP)",4869,3.2066,15612.9354,960.4166666666666,"",1358.7906464328246,"Automatico",19,204.62066420277324,812.884553091662,"","[object Object]",152.09023861171366,0,0,"[object Object]",3079.672083333333,8685.745630767638],["FO 4290 SSH - GR (MP)",4800,16.6779,80053.92,2165.9416666666666,"",3105.8300608767145,"Manual",30,587.7037439992228,2753.6454106658894,"","[object Object]",66.48378495881315,0,0,"[object Object]",36123.3585225,66745.21256961634],["FO 4350-SSH CATIONICO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["FORMIATO DE CALCIO - GR (MP)",0,6.4987,0,16.666666666666668,"",28.867513459481287,"Automatico",30,5.4624835897480075,22.129150256414675,"","Order","",175.42914765340464,197.55829790981932,"[object Object]",108.31166666666668,1283.872110626543],["FORTCOLA 3204 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["FORTGEL 9800 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["FORTSOLV 5900 - GR (MP)",0,2,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["FRAGANCIA FRESH MINT - GR (MP)",7.2,87.036,626.6592,2.1666666666666665,"",1.8308683152752376,"Automatico",32,0.357809806421469,2.6689209175325797,"","[object Object]",99.6923076923077,0,0,"[object Object]",188.578,1736.5980209498234],["FTALON 60/60 X - GR (MP)",144.6,22.6173,3270.46158,5.966666666666666,"",9.439359890983878,"Automatico",20,1.4584034511930921,5.436181228970869,"","[object Object]",727.0391061452515,0,0,"[object Object]",134.94988999999998,1395.5077051159346],["GENAPOL PF 10 / DOWFAX 63N10L - GR (MP)",6132.9305,18.93296457509179,116114.55589799999,1204.0153333333335,"",686.6692264756756,"Automatico",19,103.40571123147157,865.9487556759161,"","[object Object]",152.8119367804286,0,0,"[object Object]",22795.57965386734,32934.23211177332],["GENAPOL PF 20 / TERGITOL L 62 / MAKON L 62 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["GENIOSIL DAPTM - GR (MP)",0.25,51.36,12.84,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["GENIOSIL NOTE - GR (MP)",0.6,206.3167,123.79002,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["GLICERINA BI-DESTILADA - GR (MP)",85,4.4572,378.862,8.333333333333334,"",19.393063427187286,"Automatico",9,2.009961846050777,4.509961846050777,"","[object Object]",306,0,0,"[object Object]",37.14333333333334,687.7244498484501],["GLUCODRY 40 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",4,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["GLUCOGIL 40/72 - GR (MP)",0,2.6842,0,0,"Zerado",0,"Manual",17,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["GLUCONATO DE SODIO - GR (MP)",101.15,5.5539,561.776985,59.80833333333334,"",56.25255734927376,"Automatico",20,8.69115329048728,48.5633755127095,"","[object Object]",50.73707677302494,0,0,"[object Object]",332.1695025,2266.221585798041],["GOMA XANTANA - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["GOMA XANTANACMC - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HDK N20 S10 - GR (MP)",10.44,63.6681,664.694964,0.5966666666666667,"",0.9439359890983877,"Automatico",21,0.14944188361281174,0.5671085502794784,"","[object Object]",524.9162011173185,0,0,"[object Object]",37.988633,711.2834385359258],["HEDP - GR (MP)",0,5.6773,0,0,"S/C",0,"Automatico",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["HEDP 60% - IBC 1250 KG (MP)",1076,12.295200000000001,13229.6352,54,"",93.53074360871938,"Automatico",90,30.654609125973472,192.65460912597348,"","[object Object]",597.7777777777778,0,0,"[object Object]",663.9408000000001,5191.3657155365045],["HEXAFOR 6240 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HEXAFOR 6282 - GR (MP)",114.6,237.7347,27244.39662,62.28333333333333,"",29.123373930417287,"Automatico",30,5.510899038682147,67.79423237201547,"","[object Object]",55.1993577736152,0,0,"[object Object]",14806.909565,29446.81699092537],["HEXAFOR 6400 - GR (MP)",170,242.3127,41193.159,50,"",116.77484162422844,"Automatico",90,38.27283936406622,188.27283936406621,"","Order",102,49.760820960318654,238.03366032438487,"[object Object]",12115.635,57678.57892408458],["HEXAMETAFOSFATO DE SODIO - GR (MP)",0,9.5967,0,0,"Zerado",0,"Automatico",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROPAC 18 (CLORETO DE POLIALUMINIO) - GR (MP)",176,1.7706000000000002,311.6256,5150.666666666667,"",24673.260506062023,"Automatico",30,4668.821954794134,9819.488621460801,"","Order",1.0251100181206316,5908.294238697368,15727.78286015817,"[object Object]",9119.770400000001,27847.61233219606],["HIDROXIDO DE CALCIO (CAL HIDRATADA) - GR (MP)",5940,0.8168000000000001,4851.792,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE POTASSIO SOLIDO (ONU 1814 - RSC 80 CL/SUB 8 - GE II) - GR (MPQC)",0,6.3742,0,0,"Zerado",0,"Importação",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE POTASSIO SOLIDO (ONU 1814 - RSC 80 CL/SUB 8 - GE II) GR (MP)",0,0,0,3849.941666666667,"",7933.48652139829,"Importação",30,1501.221779750886,5351.163446417553,"","Order","",0,0,"[object Object]",0,0],["HIDROXIDO DE POTASSIO/POTASSA CAUSTICA - GR (MP)",0,0,0,0,"Zerado",0,"Importação",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE SODIO SOLIDO - SC 25 KG (MPU)",0,0,0,0,"Zerado",0,"Commodities",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE SODIO SOLUCAO - GR (MP)",418997.717,1.523899999999284,638510.620936,691762.7505766666,"",109587.87872648009,"Commodities",30,20736.873995708833,712499.6245723754,"","Order",18.170870720520103,73805.88206144438,786305.5066338198,"[object Object]",1054177.255603287,1198250.961558715],["HIDROXIDO DE SODIO SOLUCAO - GR (MPB)",0,0,0,0,"Zerado",0,"Commodities",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE SODIO SOLUCAO - GR (MPU)",0,0,0,0,"Zerado",0,"Commodities",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE SODIO SOLUCAO (ONU 1824 - RSC 80 CL/SUB 8 - GE II/III) - GR (MPO)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE SODIO SOLUCAO (ONU 1824 - RSC 80 CL/SUB 8 - GE II/III) [BS] - GR (MPFA)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIDROXIDO DE SODIO SOLUCAO 32% - GR (MP)",0,0,0,10000,"",33594.83708530045,"Manual",30,6357.016046300268,16357.016046300268,"","Manual","",0,0,"[object Object]",0,0],["HIPOCLORITO DE SODIO - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["HIPOFOSFITO DE SODIO - GR (MP)",319.51,20.5108,6553.405708,397.2906666666667,"",228.00433662077313,"Automatico",14,29.473198299934683,214.87550941104584,"","[object Object]",24.12666796434516,0,0,"[object Object]",8148.749405866667,14295.89807224294],["HORDAPHOS MDAH - GR (MP)",215.42,49.84310000000001,10737.200602,48.93,"",44.29481846022446,"Automatico",14,5.725812006414531,28.559812006414532,"","[object Object]",132.0784794604537,0,0,"[object Object]",2438.8228830000003,6833.303886860928],["HOSTATINT AMARELO - GR (MP)",63.9,74.1638,4739.06682,6.164666666666666,"",5.8722836196058275,"Automatico",30,1.1111886360239096,7.275855302690576,"","[object Object]",310.96571861144156,0,0,"[object Object]",457.19510573333326,2881.899095933456],["HOSTATINT PRETO - GR (MP)",37.882,27.526400005279555,1042.755085,0.2745,"",0.3732061336337041,"Automatico",30,0.07062029722195692,0.3451202972219569,"","[object Object]",4140.109289617486,0,0,"[object Object]",7.555996801449239,310.6177727200007],["HOSTATINT VERMELHO - GR (MP)",39.496,61.417,2425.725832,9.186666666666667,"",10.134070078879283,"Automatico",30,1.917629364958442,11.10429603162511,"","[object Object]",128.97822931785194,0,0,"[object Object]",564.2175066666667,3284.0321493804377],["HPMC HP 70US - GR (MP)",100,18.2595,1825.95,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["HUMECTEX DOS 70 - GR (MP)",0,1,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["IMACARBO 10 - GR (MP)",0,44.2712,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["IMACARBO READY - GR (MP)",18.537,52.70100000000001,976.918437,1.6166666666666665,"",2.0147177766865934,"Automatico",30,0.38123695026838167,1.9979036169350481,"","[object Object]",343.9855670103093,0,0,"[object Object]",85.19995,1116.4291946017988],["IMPERMEABILIZANTE PRI 468 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",4,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["IMPERWAN 1130 - GR (MP)",47,65.04809999999999,3057.2607,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["IMPERWAN FT-10 - GR (MP)",37.1,43.7913,1624.65723,150.83333333333334,"",221.21008456928791,"Manual",13,27.554766737125014,92.91587784823614,"","Manual",7.379005524861878,0,0,"[object Object]",6605.18775,12971.842159442325],["INDUSFLOC 50 - LIQUIDO - GR (MP)",115,2.4917000000000002,286.5455,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["IPEL 1000 - GR (MP)",89.32499999999999,50.5697571004758,4517.143553,158.77083333333334,"",95.63538443812931,"Automatico",7,8.741536372417398,45.78806415019518,"","[object Object]",16.87809998687836,0,0,"[object Object]",8029.002476306793,12131.194502816325],["IPEL BP 507 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["IPEL BP 509 / ACTICIDE BR 7530 - GR (MP)",922.4047999999999,3.191849143673147,2944.1769710000003,1007.7025666666665,"",378.4920700209403,"Automatico",7,34.59600456669969,269.72660345558853,"","[object Object]",27.460626692194925,0,0,"[object Object]",3216.434574492232,7073.5923116825525],["IPEL BP 575 - GR (MP)",0,22.9076,0,0,"Zerado",0,"Automatico",7,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["IPEL FBP 418 - GR (MP)",36.85,40.2567,1483.459395,5.791666666666667,"",2.995941067308881,"Automatico",7,0.27384349384241213,1.625232382731301,"","[object Object]",190.87769784172662,0,0,"[object Object]",233.15338750000004,1738.1011918580489],["IPEL FBP 490 / ACTICITE BRF1 - GR (MP)",310.2645,15.803799999677695,4903.358105,28.517166666666668,"",18.16948807311354,"Automatico",7,1.6607790285203448,8.3147845840759,"","[object Object]",326.39760845806325,0,0,"[object Object]",450.67959855747546,2456.949254260176],["IPEL PR 060 - GR (MP)",0.1,1.3,0.13,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["ITA 10 BB - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ITA 3G PLUS 325 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",7,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ITA 3GN PLUS 325 SC - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ITA 3GR PLUS BB - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ITA MULITA 325 SC - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LAMCOL MM 250 - GR (MP)",0.5,37.58,18.79,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LAURIL ETER SULFATO DE SODIO 28% - GR (MP)",156,6.1408,957.9648,0,"S/C",0,"Automatico",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LEVASIL CS-15-450 - GR (MP)",373,8.9483,3337.7159,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LEVASIL CS-40-125 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LEVASIL CS-50-28 - GR (MP)",194.8,38.72834558521561,7544.28172,39.199999999999996,"",445.13513474204456,"Automatico",30,84.23113310959822,123.43113310959822,"","[object Object]",149.08163265306123,0,0,"[object Object]",1518.1511469404516,9048.516675218478],["LEVASIL TH-830 - GR (MP)",150,3.3813,507.195,38.333333333333336,"",16221.55983676905,"Manual",13,2020.6189888891909,2037.230100000302,"","Manual",117.39130434782608,0,0,"[object Object]",129.6165,8135.642101716044],["LIGNOBOND DD - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LIGNOSULFONATO DE SODIO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LINQUAD BC-50 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LINQUAD BC-80 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LIOCAT 29 - GR (MP)",23,127.40039999999999,2930.2092,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LUMENCRYL EA 02 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["LUMENCRYL EA 04 - KG (MP)",1,9.29,9.29,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LUMENCRYL ER 04 - GR (MP)",1,9.29,9.29,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LUMENCRYL ER 05 - GR (MP)",1,9,9,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LUMENCRYL ER 06 - GR (MP)",1,9,9,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["LUMENCRYL ER 43 - KG (MP)",1,10.33,10.33,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MAGNASOFT 2059 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["MAKON 10 - GR (MP)",214,15.1002,3231.4428,0,"S/C",0,"Automatico",17,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MEA - MONOETANOLAMINA - GR (MP)",1652.8154,14.00550000018151,23148.506085,556.6835166666666,"",202.2106086989346,"Automatico",7,18.48302698018594,148.37584753574149,"","[object Object]",89.07118769548623,0,0,"[object Object]",7796.630992776042,11750.6976354018],["MEG - MONOETILENO GLICOL - GR (MP)",37719.595,5.730639242680097,216157.391325,9410.903333333332,"",4280.136890344567,"Automatico",10,467.60355050764537,3604.571328285422,"","[object Object]",120.24221373010246,0,0,"[object Object]",53930.49195106893,46095.95354992498],["MEHQ (METIL ETER DE HIDROQUINONA) - GR (MP)",63.27858,129.71370000717462,8208.098743,13.797421833333333,"",6.212979766015711,"Automatico",19,0.9356143639478429,9.673981525058954,"","[object Object]",137.58783509928926,0,0,"[object Object]",1789.7146365614412,5889.130582954729],["MEM 0349 EMULSION - GR (MP)",415,25.77151686746988,10695.1795,0,"S/C",0,"Automatico",12,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MERCAPTOETANOL - GR (MP)",148.367,45.39140000134801,6734.585844,1.5221666666666664,"",1.1989186384051054,"Automatico",30,0.22686655700094344,1.7490332236676098,"","[object Object]",2924.12788787912,0,0,"[object Object]",69.09327603538522,989.9509562031957],["MERI AGRO - GR (MP)",1,7.0278,7.0278,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MERI SOLV - GR (MP)",1,1,1,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MERILUB C - GR (MP)",4.482,0.9995999553770638,4.480207,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["METABISSULFITO DE SODIO - GR (MP)",12186.94,6.666899999999999,81249.110286,6195.926666666666,"",1724.032845871104,"Automatico",90,565.0500677254477,19152.830067725445,"","Order",59.00783202727814,3339.502608216011,22492.332675941456,"[object Object]",41307.62349399999,149954.13271723408],["METASSILICATO DE SODIO ANIDRO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",90,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["METASSILICATO DE SODIO PENTAHIDRATADO - GR (MP)",30,3.0471999999999997,91.416,178.33333333333334,"",308.8823940164498,"Automatico",10,33.7453001695387,93.18974461398315,"","Order",5.046728971962617,838.0239042287566,931.2136488427398,"[object Object]",543.4173333333333,2837.594230753596],["METILATO DE SODIO SOLUCAO 30% EM METANOL - GR (MP)",3,44.6467,133.9401,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MICRON 8CD PAPEL - GR (MP)",4595.88,0.7863,3613.740444,394.3533333333333,"",662.049271708456,"Automatico",20,102.28817990526328,365.19040212748547,"","[object Object]",349.62656162831985,0,0,"[object Object]",310.080026,2216.128298616009],["MIOX SG - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["MONOLEATO DE SORBITAN - GR (MP)",246,15.5435,3823.701,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["MOWICOLL WL 250 BR - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["MOWILITH POWDER 2704 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["MUB TP 325 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["MUB TP-325 ELFUSA - GR (MP)",0,9.4524,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["MUBZD TP 325 - GR (MP)",3440.89,10.1472,34915.399008,34.345000000000006,"",143.8826319751307,"Automatico",56,37.1982516382821,101.30891830494878,"","[object Object]",3005.5815984859505,0,0,"[object Object]",348.50558400000006,3073.012126702829],["N805 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["NAMET - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["NATROSOL 250 GR - GR (MP)",63.05,76.56450000000001,4827.391725,52.800000000000004,"",47.41327709299336,"Automatico",30,8.97182393004434,61.77182393004435,"","[object Object]",35.823863636363626,0,0,"[object Object]",4042.605600000001,11694.5318427241],["NATROSOL 250 MBR PA - GR (MP)",0,65.5724,0,1.8320833333333333,"",53.02704038264273,"Automatico",89,17.28273745801476,22.717918013570316,"","Order","",18.310605050504964,41.02852306407528,"[object Object]",120.13410116666667,2690.33872576677],["NEMOL L61 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",16,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["NITRATO DE CALCIO - GR (MP)",800,4.5484,3638.72,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["NOGABAC LF - GR (MP)",1,20,20,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["OLEATO DE SODIO 329 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["OLEATO DE SODIO 330 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["OLEO DE MILHO REFINADO - GR (MP)",204.0704,8.32119999764787,1698.110612,29.3216,"",50.786500959211594,"Manual",30,9.610125529509311,38.93172552950931,"","[object Object]",208.79188038851905,0,0,"[object Object]",243.99089785103178,2035.0667288955692],["OLEO DE PALMA  - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",12,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["OLEO MINERAL BRANCO - GR (MP)",144,8.168,1176.192,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["OXIPURITY 4060 UC-A - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PARAFORMALDEIDO TCN - SC 25 KG (MP)",209.9625,6.4172,1347.371355,0.9895833333333334,"",0.8326514729337768,"Automatico",30,0.1575592928453766,1.1471426261787099,"","[object Object]",6365.178947368421,0,0,"[object Object]",6.350354166666667,283.41261645300625],["PASTA PROTETIVA APT-100 - GR (MP)",0,1.6256,0,0,"Zerado",0,"Manual",4,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PASTA PROTETIVA TRANSPARENTE PPT 2100 - GR (MP)",1593.32,1.6743,2667.695676,9171.495,"",5593.181786884218,"Manual",20,864.1598281397936,6978.489828139794,"","Manual",5.211756643818701,0,0,"[object Object]",15355.8340785,25258.694498595258],["PEG 4000 POWDER - GR (MP)",430,11.9599,5142.757,0,"S/C",0,"Automatico",31,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["PERLITE FA 6000 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PEROXIDO DE HIDROGENIO - GR (MP)",585.0316,2.3924999999999996,1399.688103,343.02404333333334,"",106.2150176715245,"Automatico",7,9.708565984520758,89.7475094289652,"","[object Object]",51.16535805901186,0,0,"[object Object]",820.6850236749999,3352.90833647669],["PERSULFATO DE SODIO - GR (MP)",2550.51,7.5312,19208.400912,1993.4164933333332,"",554.4631014860984,"Automatico",25,95.77734527041267,1756.9577563815237,"","[object Object]",38.384000662126226,0,0,"[object Object]",15012.818294592,26654.13941131037],["PHENOLIC RESIN - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PIROFOSFATO DE SODIO - GR (MP)",526,5.603700000000001,2947.5462,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLICLOR CR244B - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["POLICLORETO DE ALUMINIO PAC - GR (MP)",0.0019,1952.6315789473683,3.71,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLICLORETO DE ALUMINIO PAC 30% - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",5,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["POLICLORETO DE ALUMINIO PAC 9% 12% - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",5,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["POLICLORETO DE ALUMINIO PAC18 - GR (MP)",9.2,1.7458000000000002,16.06136,5679.666666666667,"",10466.524911339819,"Commodities",30,1980.53845718757,7660.205123854237,"","Order",0.048594401079875574,6248.198273926206,13908.403397780443,"[object Object]",9915.56206666667,24281.290651845102],["POLIETERE L 61 - GR (MP)",0,0,0,190.66666666666666,"",229.24275871713468,"Automatico",30,43.37868619403464,234.0453528607013,"","Order","",0,0,"[object Object]",0,0],["POLIETERE L 62 - GR (MP)",191,24.00859162303665,4585.6410000000005,1.6666666666666667,"",2.886751345948129,"Automatico",30,0.5462483589748007,2.2129150256414674,"","[object Object]",3438,0,0,"[object Object]",40.01431937172775,746.0732944751152],["POLIETILENOGLICOL 400 - GR (MP)",218,12.815,2793.67,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLIETILENOGLICOL 4000 - GR (MP)",0,11.8368,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["POLIFER 180/HX - GR (MP)",134,4.0371999999999995,540.9848,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLIFIX PG 1002 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["POLIMERO EMULSAO ANIONICO 3303 - GR (MP)",1,10.19,10.19,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLIMERO EMULSAO ANIONICO 3305 - GR (MP)",1,10.32,10.32,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLY POWER - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",47,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["POLYDISPERSE D-1 / DTPMPA / SEQUEST DTMP / DEQUEST 2060 S - GR (MP)",945,9.4294,8910.783,0,"S/C",0,"Automatico",10,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["POLYDISPERSE HEDP NA2 POWER - GR (MP)",49.9,14.8404,740.53596,7687.5,"",3988.7782467210627,"Manual",90,1307.3181429514582,24369.81814295146,"","Manual",0.19473170731707318,0,0,"[object Object]",114085.57500000001,398658.2126803847],["POLYDISPERSE HEDP NA4 POWER - GR (MP)",4804.65,10.855300000000002,52155.917145,7443.541666666667,"",6071.426428789889,"Manual",90,1989.9040340176268,24320.529034017625,"","Manual",19.364370679280132,0,0,"[object Object]",80801.87785416668,295145.4013907102],["POLYGLYCOL ML 2400 - GR (MP)",11035,8.1546,89986.011,0,"S/C",0,"Automatico",90,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["PRAIDMUL MEG I - GR (MP)",310.6,12.886899999999999,4002.67114,47.4,"",47.21493086905558,"Automatico",30,8.934291670992332,56.33429167099233,"","[object Object]",196.58227848101268,0,0,"[object Object]",610.8390599999999,3433.384348596914],["PRAIDMUL PEG 600 DO - GR (MP)",295,22.6664,6686.588,45,"",45.192906388932194,"Automatico",32,8.832128969481053,56.832128969481055,"","[object Object]",196.66666666666666,0,0,"[object Object]",1019.9879999999999,4786.73032509028],["PRETO OXIDO BX50 - GR (MP)",0,9,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PRETO TRANSCOR BCW - GR (MP)",0,12.7,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PREVENTOL BIT 20 N - GR (MP)",0.1,1.2,0.12,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["PRIMAL AP-50 / WANCER 212 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PRIMAL ASE-60 - GR (MP)",0,5.2903,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PROPAC 800 HT - GR (MP)",1042.04,2.2535000000000003,2348.23714,2.9933333333333336,"",5.18460541732284,"Automatico",5,0.40051690586139477,0.8994057947502837,"","[object Object]",10443.60801781737,0,0,"[object Object]",6.745476666666669,286.5364241528221],["PROPAC H600 HX - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",5,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PROPILENOGLICOL - GR (MP)",70,12.88,901.6,44.666666666666664,"",63.50638240413798,"Manual",30,12.01705759014475,56.683724256811416,"","[object Object]",47.01492537313433,0,0,"[object Object]",575.3066666666666,3357.5718583971807],["PROTECTOSIL 100 SK - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PROTECTOSIL 60 SK - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PROTECTOSIL SC CONCENTRATE - GR (MP)",200.82,281.2042,56471.427444,70.73,"",52.720483847276185,"Manual",30,9.976085341175615,80.70608534117562,"","[object Object]",85.1774353174042,0,0,"[object Object]",19889.573066,38143.99618268143],["PROTECTOSIL WS 340 PLUS - GR (MP)",0.8,951.2624999999999,761.01,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["PROTECTOSIL WS 610 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PROTECTOSIL WS 670 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["PVA 0588 120 MESH 120 PO - GR (MP)",2325.1,12.8895,29969.37645,258.1666666666667,"",346.5907948733046,"Automatico",14,44.802390066918605,165.2801678446964,"","[object Object]",270.18592640413164,0,0,"[object Object]",3327.63925,8449.5298531351],["PVA 2488 120 MESH 120 PO - GR (MP)",0,12.7253,0,58.5,"",1922.7650307919487,"Automatico",14,248.54805779842343,275.84805779842344,"","Order","",234.87378214615927,510.7218399445827,"[object Object]",744.43005,6499.0886298467985],["PVA 2688 120 MESH 120 PO - GR (MP)",0,0,0,33.333333333333336,"",57.735026918962575,"Manual",30,10.924967179496015,44.25830051282935,"","Manual","",0,0,"[object Object]",0,0],["PVA 2688 MESH 120 PO - SC 25 KG (MP)",25,12.6576,316.44,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["QFH 2022 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["QUALICIM NA 40 - GR (MP)",15834.83,4.3022,68124.605626,20906.695,"",12208.050327762585,"Manual",30,2310.080314739348,23216.77531473935,"","Manual",22.722142356790492,0,0,"[object Object]",89944.783229,132736.48150565027],["QUALITAN D 94 PO - GR (MP)",1,10,10,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["QUIMBRIGHT DX - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["RDP FM 8020 - GR (MP)",100,11.4968,1149.68,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["RESIDHERE AB 150 - GR (MP)",220,8.8541,1947.902,0,"S/C",0,"Automatico",14,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["RESIWAN 3220 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",7,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["RESIWAN 4500 - GR (MP)",0.25,1,0.25,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["RHEOBYK 420 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["RS 150 AMT 200G - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["RS 4004 AMT - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["RS-740F - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["RY 1525 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SABER PG 4 CL - AM - GR (MP)",87,14.654200000000001,1274.9154,0,"S/C",0,"Automatico",5,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SAL GRANULADO SEM IODO - GR (MP)",7212.5,1.0893,7856.57625,5807.5,"",1946.2532356291592,"Automatico",25,336.1936396360642,5175.776972969398,"","[object Object]",37.25785622040465,0,0,"[object Object]",6326.10975,14350.79871430076],["SATIAXANE CX 851 (GOMA XANTANA) - GR (MP)",1095.7547,15.801000000273783,17314.020015,1054.7746,"",749.2356882030751,"Automatico",10,81.85375303325706,433.4452863665904,"","[object Object]",31.165559921522572,0,0,"[object Object]",16666.49345488878,20990.931106003543],["SICOL 30 - GR (MP)",0,9.3306,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILFOAM SE 39 BR - GR (MP)",3541.99816,13.80159999998419,48885.241805,772.7881900000001,"",799.8377569326647,"Automatico",53,201.16849980622194,1566.4276354728888,"","[object Object]",137.5020298899754,0,0,"[object Object]",10665.713483091782,32932.41063948194],["SILFOAM SE 47 BR - GR (MP)",1383.439775,8.621399999866275,11927.187676,283.9124541666667,"",184.53675419924187,"Automatico",22,29.902972327398803,238.1054387162877,"","[object Object]",146.18306679014563,0,0,"[object Object]",2447.722832314534,7472.458490351627],["SILICA COLOIDAL HSD-3030 - GR (MP)",0,7.5561,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILICA COLOIDAL HSD-5050 - GR (MP)",0,10.0876,0,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILICA COLOIDAL HSN-30 - GR (MP)",130,4.8664,632.632,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILICA NANO A 30 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILICA SOLUTION A019 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILICATO DE POTASSIO PO - GR (MP)",0,1000,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILICATO DE SODIO ALCALINO - GR (MP)",0,1.3508,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILICATO DE SODIO NEUTRO - GR (MP)",49511.8,1.1253,55715.62854,72098.75,"",27904.4652083198,"Automatico",7,2550.602990770544,19373.644657437213,"","[object Object]",20.601660916451397,0,0,"[object Object]",81132.723375,53003.609039963216],["SILICATO DE SODIO SEMI ALCALINO PQ 1,57 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",10,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILIKOL 300 - GR (MP)",38,6.839,259.882,0,"S/C",0,"Automatico",19,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILQUEST A-1120 J - GR (MP)",114.95,89.2584,10260.25308,0.16666666666666666,"",0.3092941622272861,"Automatico",30,0.058526491654462255,0.2251931583211289,"","[object Object]",20691,0,0,"[object Object]",14.876399999999999,442.6128660253228],["SILQUEST A-137 SILANE - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS 6920 - GR (MP)",0.5,72.18,36.09,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS 6921 - GR (MP)",0.5,75.34,37.67,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-1001 - GR (MP)",107,54.89940000000001,5874.2358,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-1306 - GR (MP)",2235.6,41.0555,91783.6758,949.5,"",597.9410316015512,"Automatico",30,113.14597903782041,1062.6459790378203,"","[object Object]",70.63507109004739,0,0,"[object Object]",38982.197250000005,65255.83148710412],["SILRES BS-1346 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-1360 - GR (MP)",1301.42,58.24179999999999,75797.043356,192.39666666666665,"",300.86137040997744,"Automatico",58,79.15904882712701,451.12593771601587,"","[object Object]",202.92763214885915,0,0,"[object Object]",11205.528180666664,37870.34878856872],["SILRES BS-16 - GR (MP)",56,25.2298,1412.8688,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-1703 SQ - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-1705 - GR (MP)",880,12.6154,11101.552,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-1802 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-290 - GR (MP)",339.284,74.37209999882106,25233.263576,114.50733333333334,"",55.80699440903169,"Automatico",64,15.42406196608365,259.70637307719477,"","[object Object]",88.88967809921927,0,0,"[object Object]",8516.150845265003,29424.003765490423],["SILRES BS-3003 - GR (MP)",4221.6,51.19369999999999,216119.32392,9.166666666666666,"",21.236582216600304,"Automatico",30,4.0185131297622325,13.185179796428898,"","[object Object]",13816.145454545456,0,0,"[object Object]",469.27558333333326,3048.0356439156544],["SILRES BS-39 - GR (MP)",0,161.2929,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-4004 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",9,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-46 - GR (MP)",111.1,19.8968,2210.53448,163.33333333333334,"",210.11207597303152,"Automatico",46,49.232293790587775,299.67673823503225,"","Order",20.40612244897959,313.86032377901506,613.5370620140473,"[object Object]",3249.8106666666667,12207.424215481095],["SILRES BS-5137 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-6510 - GR (MP)",0.9,133.84439999999998,120.45996,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SILRES BS-710 - GR (MP)",0,142.41,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SODEX COL 855 - GR (MP)",1011.8,5.9514000000000005,6021.62652,848.8666666666667,"",843.7043304811984,"Automatico",13,105.09500987162204,472.9372320938443,"","[object Object]",35.75826592319171,0,0,"[object Object]",5051.94508,10600.73785642499],["SOLUCAO DE SULFIDRATO 42 % - GR (MP)",33800,5.6075,189533.5,11266.666666666666,"",13156.632156329739,"Manual",30,2489.5766430030967,13756.243309669762,"","[object Object]",90,0,0,"[object Object]",63177.83333333333,104672.36759688995],["SOLVEN OIL N140 - GR (MP)",86,9.7662,839.8932,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SOLVESSO 100 - GR (MP)",110,10.8491,1193.401,10,"",17.320508075688775,"Automatico",30,3.277490153848805,13.277490153848806,"","[object Object]",330,0,0,"[object Object]",108.491,1285.05363875098],["SOLVESSO 150 - GR (MP)",110,15.747499999999999,1732.225,10,"",17.320508075688775,"Automatico",30,3.277490153848805,13.277490153848806,"","[object Object]",330,0,0,"[object Object]",157.475,1583.7508714093044],["SONGSORB CS UV1 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SORBOSIL TC15 - GR (MP)",1.5,46.24529999999999,69.36795,2.65,"",4.771784178106156,"Automatico",17,0.6797127155933651,2.1813793822600314,"","Order",16.9811320754717,26.222842073275707,28.40422145553574,"[object Object]",122.55004499999998,1313.5617424776867],["SPECTROGEL AP - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SPECTROGEL BP - GR (MP)",22.5,25.8911,582.54975,170.41666666666666,"",287.76856691803675,"Manual",28,52.60687577786357,211.6624313334191,"","Manual",3.960880195599022,0,0,"[object Object]",4412.274958333333,12756.662679771478],["SPUR+ 3030 PREPOLYMER - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["STANLUX PASTE 130 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["STEPAN C-65 - GR (MP)",0.5,1,0.5,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["STEPFAC 5000 - GR (MP)",0,0,0,0,"S/C",0,"Automatico",8,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["STEPFAC 8181 - GR (MP)",1,1,1,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["STEPFAC TSP-PE - GR (MP)",1,1,1,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["STYROFORT 701 - GR (MP)",50,7.9927,399.635,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFATO DE ALUMINIO LIQUIDO ISENTO DE FERRO 50% - GR (MP)",4984.5,1.4222,7088.9559,1361,"",1225.864926564839,"Automatico",30,231.96549484620564,1592.9654948462057,"","[object Object]",109.8714180749449,0,0,"[object Object]",1935.6142,7084.993755790506],["SULFATO DE ALUMINO ISENTO DE FERRO 50% - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SULFATO DE AMONIO - GR (MP)",0.101,9.10890099009901,0.919999,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFATO DE AMONIO FERT - GR (MP)",1125,5.440799999999999,6120.9,83.33333333333333,"",77.11659806403351,"Automatico",10,8.424963028439521,36.20274080621729,"","[object Object]",405,0,0,"[object Object]",453.3999999999999,2529.524122397098],["SULFATO DE FERRO (MP)",0.85993,52.24410010117102,44.926269,0.528883,"",0.1957863819242799,"Manual",30,0.03704787043257629,0.5659308704325763,"","[object Object]",48.7780851341412,0,0,"[object Object]",27.631016393807634,605.3896093039199],["SULFATO DE MAGNESIO HEPTA 9% - GR (MP)",1,3,3,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFATO DE SODIO ANIDRO - GR (MP)",25,5.278,131.95,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFONOL NSDC LIQUIDO - GR (MP)",0,4.0381,0,0,"S/C",0,"Automatico",34,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFONOL NSDC PO / DISPER NSNA PO - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SULFOTECH CSS 40 - GR (MP)",1,12,12,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFOTECH TSS 34 - GR (MP)",1,6,6,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFOTECH XSS 34 - GR (MP)",1,8,8,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SULFOTECH XSS 40 - GR (MP)",1,16,16,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SUPER RESANITE 1003 - GR (MP)",25,45.9472,1148.68,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["SUPERFLOC 496HMW CATIONICO - GR (MP)",0,15.93,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SURFACE-ACITVE AGENT A008 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SURFACTANTE - GR (MP)",0,24.61,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["SURFATA DISPERSE 12 - GR (MP)",36.837,45.24240000542932,1666.594289,0.6666666666666666,"",1.4777167558791708,"Manual",30,0.2796224046319602,0.9462890712986268,"","[object Object]",1657.6650000000002,0,0,"[object Object]",30.161600003619544,644.4262183488329],["TANWAX AC 40 - GR (MP)",183,13.869399999999999,2538.1002,46.666666666666664,"",80.82903768654761,"Automatico",23,13.39218583965761,49.169963617435386,"","[object Object]",117.64285714285715,0,0,"[object Object]",647.2386666666666,3468.8672927123994],["TANWAX CE 6025 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TENSAPOL L 62 - GR (MP)",1.5,26.6467,39.97005,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TENSAPOL L-61 / DOWFAX / PLURONIC FT PE 610 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["THINNER PU - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["THS 450 ANTI-ODOR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TIANFLOC A 345 - GR (MP)",5000,9.8783,49391.5,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TIANFLOC A 878 - GR (MP)",0.15,11.0738,1.66107,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TIANFLOC C 1220 - GR (MP)",666.2,13.6352,9083.77024,8772.133333333333,"",8338.435105999788,"Automatico",30,1577.8485734365352,10349.981906769868,"","Order",2.2783511422535,2778.513292802842,13128.49519957271,"[object Object]",119609.79242666665,179009.6577452138],["TIANFLOC RY1525 - GR (MP)",4172.5,13.276900000000001,55397.86525,166.66666666666666,"",287.7222461143575,"Automatico",30,54.44452463878253,221.11119130544918,"","[object Object]",751.05,0,0,"[object Object]",2212.8166666666666,8088.7091147682795],["TIANFLOC RY540C - GR (MP)",4938.5,16.1698,79854.5573,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TINOPAL CBS-X - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TIONA 592 - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TOLUENO - GR (MP)",166,8.0619,1338.2754,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TOLUENO SULFONATO DE SODIO 34% - GR (MP)",139,5.0622,703.6458,0,"S/C",0,"Automatico",13,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TORTA DE ALGODAO FAMOTEC - GR (MP)",1,1.45,1.45,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TRANSTINT PRETO CBS-PMA - GR (MP)",27.315,48.781100018304954,1332.455747,0.4475,"",2.1647623478634492,"Automatico",29,0.4027442655391184,0.8353275988724518,"","[object Object]",1831.173184357542,0,0,"[object Object]",21.829542258191466,552.5631140332156],["TREWASH LT - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TREWET PSE/M - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TRIACETATO GLIC-TRIACETINA IND - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TRIETANOLAMINA 99% - GR (MP)",237,20.1367,4772.3979,0,"S/C",0,"Automatico",51,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["TRIETILAMINA - GR (MP)",0,90.79,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TRIGONOX AW 70 - GR (MP)",1.6675,41.96020029985007,69.968634,3.7220833333333334,"",2.865463258794292,"Automatico",22,0.4643295526938217,3.1938573304715994,"","Order",13.44005373334826,32.6260797054266,35.8199370358982,"[object Object]",156.1793621994003,1503.0117327543064],["TRIPOLIFOSFATO DE SODIO - GR (MP)",1747.887,8.64,15101.74368,565.4566666666666,"",2028.3258755292893,"Automatico",90,664.7818085844001,2361.1518085844,"","Order",92.73320678861334,886.2034086379274,3247.355217222327,"[object Object]",4885.5455999999995,28057.14907680091],["TRIPOLIFOSFATO DE SODIO - SC 25 KG (MP)",0,7.477,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["TYZOR TNBT - GR (MP)",18.3,135.9625,2488.11375,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["UCAR FILMER IBT BT303 - GR (MP)",0,54.48,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["UCAR FILMER LV BT303 - GR (MP)",0,54.48,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["UCAR FILMR LV - GR (MP)",0,18.29,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ULTRAFILM 260 LV - GR (MP)",2364.219,14.097490254921393,33329.554313,648.8085,"",279.8390851199134,"Automatico",16,38.671276200489736,384.70247620048974,"","[object Object]",109.31818864888486,0,0,"[object Object]",9146.571506060167,15899.925593373231],["ULTRANEX N 95 - GR (MP)",250.724,14.777992565530225,3705.197408,79.69266666666667,"",68.06144904734428,"Automatico",36,14.108231665999583,109.73943166599958,"","[object Object]",94.3840922209488,0,0,"[object Object]",1177.6976355272784,5381.033178556725],["ULTRAPEG 6000 FT - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["UNIQ ISO 520 - GR (MP)",0,0,0,11,"",19.05255888325765,"Manual",30,3.6052391692336845,14.605239169233684,"","Manual","",0,0,"[object Object]",0,0],["UNIQ REP 0238 - GR (MP)",1,4.06,4.06,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["UNIQ REP 0254 - GR (MP)",1,5.08,5.08,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["URANOL NL - GR (MP)",238.16,24.494470910312398,5833.6031920000005,2.513333333333333,"",7.020519707948762,"Automatico",10,0.7669894739234517,1.6047672517012295,"","[object Object]",2842.7586206896553,0,0,"[object Object]",61.562770221251824,898.8154829949231],["UREIA TECNICA/INDUSTRIAL - SC 25 KG (MP)",173.55,3.0930999999999997,536.807505,3941.4499999999994,"",2746.7816345757115,"Automatico",7,251.06911742761397,1170.7407840942806,"","Order",1.3209605601999268,3910.4042238969514,5081.145007991232,"[object Object]",12191.298994999997,15716.489624217678],["UREWAN 307 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["UREWAN 320 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["UREWAN 361 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["UREWAN 377 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["VERMELHO TRANSCOR ATR - GR (MP)",0.2,77.3,15.46,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["VERMELHO TRANSCOR RO60 - GR (MP)",0.2,50.449999999999996,10.09,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["VETTALIT 1000 - GR (MP)",35.6675,24.430100007009184,871.360592,3.38875,"",2.641690974101913,"Automatico",16,0.3650582307044796,2.172391564037813,"","[object Object]",315.75802286978967,0,0,"[object Object]",82.78750139875237,1049.7913711360206],["VINNAPAS 8034-H - GR (MP)",122,28.8813,3523.5186,0,"S/C",0,"Automatico",10,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["VIOLETA QUIMPRINT QCP-SL - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["W ACR-20 ANTICRISTAL - GR (MP)",9931,5.4143,53769.4133,13880.5,"",6573.487619009617,"Automatico",18,963.5011620639814,9291.80116206398,"","[object Object]",21.463924210222974,0,0,"[object Object]",75153.19115,80339.22163270153],["WACKER AK 50 - GR (MP)",620,46.118,28593.16,0,"S/C",0,"Automatico",20,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["WANBAC 719 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WANBAC HCW - GR (MP)",4000,4.2103,16841.2,0,"S/C",0,"Automatico",5,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["WANBAC WBT - GR (MP)",2470.665,3.6219775748634473,8948.693224999999,1347.6558333333335,"",836.466893890494,"Automatico",11,95.84406840460487,589.9845406268271,"","[object Object]",54.9991683089216,0,0,"[object Object]",4881.179206967246,9790.285879737034],["WANCER 200 (CT-1000R) - GR (MP)",18462.4902,6.494100000009749,119897.257608,4539.264133333333,"",1622.4101626665845,"Automatico",16,224.20267520555987,2645.143546316671,"","[object Object]",122.01861132792713,0,0,"[object Object]",29478.435208324252,35985.83623467449],["WANCER 228 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WANCOLL PS 987 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",17,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WANCRIL 1015 / WANCRIL W50 - GR (MP)",332,10.5071,3488.3572,191.28166666666667,"",96.46392311573682,"Automatico",16,13.330457439828194,115.34734632871708,"","[object Object]",52.069809791842744,0,0,"[object Object]",2009.8155998333332,6122.952479907797],["WANCRIL 1019 - GR (MP)",200,11.9149,2382.98,66.66666666666667,"",77.8498944161523,"Automatico",30,14.731222739663293,81.39788940632997,"","[object Object]",90,0,0,"[object Object]",794.3266666666667,4057.2284794159787],["WANCRIL 338 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WANCRIL E 10 - GR (MP)",200,10.6054,2121.08,66.66666666666667,"",77.8498944161523,"Automatico",17,11.089261619384672,48.86703939716245,"","[object Object]",90,0,0,"[object Object]",707.0266666666666,3431.0401079364674],["WANCRIL IMP 09 - GR (MP)",0,9.2104,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WANCRIL TL 12 - GR (MP)",198,9.3509,1851.4782,0,"S/C",0,"Automatico",14,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["WANFOAM 582 - GR (MP)",0.75,1,0.75,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["WANFOAM CR 25 - GR (MP)",586.5749999999999,15.184099970165796,8906.613440000001,297.15457999999995,"",135.53070776238832,"Automatico",34,27.302178753630415,364.07736942029703,"","[object Object]",59.21917811261735,0,0,"[object Object]",4512.024849312629,12886.468100547983],["WANNATE HT-90BS BT303 - TECH - GR (MP)",120,28.7226,3446.712,134,"",175.78361353629862,"Automatico",30,33.26282693645934,167.26282693645933,"","Order",26.865671641791046,236.60893847937302,403.87176541583233,"[object Object]",3848.8284,11600.247169332786],["WANPEX 1510 - GR (MP)",0.25,1,0.25,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["WHITELUM AS - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WHITELUM FS - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["WHITELUM FS P BB - GR (MP)",0,0,0,0,"Zerado",0,"Check",0,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["XARIN 306 - GR (MP)",0,1.585,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["XARIN 307 - GR (MP)",318,5.2314,1663.5852,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["XIAMETER AFE-1520 - GR (MP)",1,52.24,52.24,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["XIAMETER MEM 0039 - GR (MP)",18,66.7368,1201.2624,0,"S/C",0,"Automatico",30,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["XIAMETER OFS-6040 SILANE - GR (MP)",32.08,149.49173815461347,4795.69496,2.52,"",3.121235186734426,"Automatico",30,0.5906187940714732,3.110618794071473,"","[object Object]",381.90476190476187,0,0,"[object Object]",376.71918014962597,2591.1891692318854],["XIAMETER OFX-0193 - GR (MP)",1,5.16,5.16,0,"S/C",0,"Check",0,0,0,"S/C","[object Object]","",0,0,"[object Object]",0,0],["XIAMETER PMX-200 50 CST - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["XILENO - GR (MP)",128.7,15.7047,2021.19489,36.5,"",35.60055753734339,"Automatico",16,4.9196808688396665,24.38634753550633,"","[object Object]",105.78082191780821,0,0,"[object Object]",573.22155,3005.699967419033],["ZEOLITA NATURAL - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0],["ZIBOZAN IND 200 - GR (MP)",0,0,0,0,"Zerado",0,"Automatico",30,0,0,"Zerado","[object Object]","",0,0,"[object Object]",0,0]],"lt":[["01.069.00.1.003","2 ETILHEXANOL (OCTANOL) (MP)",30,"Automatico","069"],["01.069.00.0.001","A 007 CHEMICALS - GR (MP)",14,"Automatico","069"],["01.069.00.0.002","A 36-3 CHEMICALS - GR (MP)",18,"Manual","069"],["01.069.00.0.003","A012 CHEMICALS - GR (MP)",11,"Automatico","069"],["01.069.00.0.004","ACETATO DE ETILA TCN - GR (MP)",17,"Automatico","069"],["01.019.00.0.001","ACIDO ACRILICO GLACIAL - GR (MP)",90,"Importação","019"],["01.068.00.0.001","ACIDO ASCORBICO - GR (MP)",20,"Automatico","068"],["01.068.00.2.001","ACIDO BENZOICO - GR (MP)",30,"Automatico","068"],["01.068.00.2.002","ACIDO BORICO - GR (MP)",10,"Automatico","068"],["01.015.00.0.001","ACIDO CLORIDRICO (HCL) 30-33% - GR (MP)",30,"Commodities","015"],["01.068.00.0.008","ACIDO FLUOSSILICICO - GR (MP)",30,"Automatico","068"],["01.020.00.0.001","ACIDO FOSFORICO 54% - GR (MP)",90,"Commodities","020"],["01.020.00.2.001","ACIDO FOSFORICO 85% - GR (MP)",90,"Commodities","020"],["01.068.00.0.003","ACIDO ITACONICO - GR (MP)",30,"Automatico","068"],["01.069.00.0.198","ACIDO LAURICO - GR (MP)",30,"Automatico","069"],["01.069.00.0.197","ACIDO MIRISTICO - GR (MP)",30,"Automatico","069"],["01.070.00.0.001","ACIDO MONOCLORO ACETICO MCAA - GR (MP)",12,"Automatico","070"],["01.068.00.0.005","ACIDO OLEICO - GR (MP)",16,"Automatico","068"],["01.068.00.0.006","ACIDO OXALICO 7% - GR (MP)",30,"Automatico","068"],["01.068.00.0.007","ACIDO OXALICO 99% - GR (MP)",4,"Automatico","068"],["01.018.00.0.001","ACIDO SULFONICO 90% - GR (MP)",90,"Commodities","018"],["01.014.00.0.001","ACIDO SULFURICO - GR (MP)",30,"Commodities","014"],["01.014.00.0.002","ACIDO SULFURICO 98% - GR (MP)",30,"Commodities","014"],["01.069.00.0.005","ACQUADHERE OT - GR (MP)",14,"Manual","069"],["01.072.00.0.002","ACRILAMIDA 45% - GR (MP)",90,"Manual","072"],["01.072.00.0.001","ACRILAMIDA 50% - GR (MP)",90,"Manual","072"],["01.072.00.7.001","ACRILAMIDA 98% - SC 25KG (MP)",90,"Importação","072"],["01.069.00.2.004","ACRILATO DE BUTILA - GR (MP)",25,"Automatico","069"],["01.027.00.6.001","ACTICIDE L - GR (MP)",10,"Manual","027"],["01.027.00.5.002","ACTICIDE LPB 31 - GR (MP)",10,"Automatico","027"],["01.027.00.5.001","ACTICIDE LPB 43 - GR (MP)",10,"Automatico","027"],["01.027.00.0.001","ACTICIDE LPB 9 - GR (MP)",10,"Automatico","027"],["01.096.00.2.001","ADDITIVES NANO - GR (MP)",30,"Importação","096"],["01.069.00.0.216","ADICAO MINERAL - GR (MP)",30,"Automatico","069"],["01.069.00.2.007","ADIPRINT ESP (AM) - GR (MP)",30,"Automatico","069"],["01.099.00.0.001","ADITIVO DILUENTE HX - GR (MP)",10,"Manual","099"],["01.069.00.0.008","ADTEX CR 70 / AS 120 DE BAIXA - GR (MP)",17,"Manual","069"],["01.069.00.0.009","ADWANA 030 - GR (MP)",30,"Automatico","069"],["01.069.00.1.004","AG-E03ST - GR (MP)",30,"Automatico","069"],["01.069.00.1.005","AG-E090 - GR (MP)",30,"Automatico","069"],["01.096.00.0.001","AGENTE DE POLIMENTO NANO H-1 - GR (MP)",30,"Manual","096"],["01.069.00.0.161","AGUA - LT (MP)",30,"Manual","069"],["01.069.00.0.000","AGUA DE LIMPEZA SLURRY - GR (MP)",30,"Manual","069"],["01.069.00.0.202","AGUA DESMINERALIZADA - GR (MP)",30,"Manual","069"],["01.069.00.0.010","AGUA POTAVEL - LT (MP)",30,"Manual","069"],["01.069.00.0.011","AGUARRAS - GR (MP)",24,"Automatico","069"],["01.069.00.0.013","AL TP-325 ELFUSA - GR (MP)",30,"Automatico","069"],["01.069.00.0.210","ALC TP-325 ELFUSA - GR (MP)",58,"Automatico","069"],["01.069.00.0.230","ALCOOL 2-ETIL HEXILICO - GR (MP)",21,"Automatico","069"],["01.069.00.2.072","ALCOOL BENZILICO - GR (MP)",20,"Automatico","069"],["01.069.00.0.253","ALCOOL CETILICO (HEXADECANOL) - GR (MP)",30,"Automatico","069"],["01.073.00.0.001","ALCOOL ETILICO ANIDRO 99% - GR (MP)",10,"Automatico","073"],["01.074.00.0.001","ALCOOL ISOPROPILICO - GR (MP)",6,"Automatico","074"],["01.069.00.1.006","ALCOOL ISOTRIDECILICO 6E0 - GR (MP)",30,"Automatico","069"],["01.069.00.0.196","ALCOOL METILICO - METANOL - GR (MP)",13,"Automatico","069"],["01.023.00.2.002","ALCOOL POLIVINILICO ALTA VISCOSIDADE 088-26 - GR (MP)",90,"Importação","023"],["01.023.00.0.002","ALCOOL POLIVINILICO ALTA VISCOSIDADE 088-50 - GR (MP)",90,"Importação","023"],["01.023.00.7.007","ALCOOL POLIVINILICO ALTA VISCOSIDADE 2688 PVA 088-60 - GR (MP)",90,"Importação","023"],["01.023.00.0.003","ALCOOL POLIVINILICO BAIXA VISCOSIDADE 088-05 - GR (MP)",90,"Manual","023"],["01.023.00.0.004","ALCOOL POLIVINILICO MEDIA VISCOSIDADE 088-17 - GR (MP)",90,"Automatico","023"],["01.069.00.2.070","ALFOL 20 - GR (MP)",11,"Automatico","069"],["01.069.00.0.014","ALKEST TW - GR (MP)",38,"Automatico","069"],["01.069.00.7.002","ALLPLUS AP-3132 - GR (MP)",41,"Automatico","069"],["01.069.00.0.015","ALUMINATO DE SODIO LIQUIDO 32% - GR (MP)",30,"Automatico","069"],["01.069.00.5.003","AMARELO TRANSPERSE Y554 - GR (MP)",30,"Automatico","069"],["01.069.00.0.016","AMIDO DE MILHO - GR (MP)",13,"Automatico","069"],["01.069.00.0.018","AMQZ 400 QTZ ROCHA - GR (MP)",10,"Automatico","069"],["01.069.00.2.010","AN 934-VHM ANIONICO - GR (MP)",30,"Automatico","069"],["01.069.00.2.011","ANIDRIDO MALEICO - GR (MP)",13,"Automatico","069"],["01.069.00.2.111","ANIONIC NE AFLOC 728 - GR (MP)",30,"Importação","069"],["01.026.00.0.002","ANTIESPUMANTE TE TIQ - GR (MP)",10,"Automatico","026"],["01.069.00.5.039","APCA - GR (MP)",19,"Automatico","069"],["01.069.00.0.247","APRESTOCRYL 447 - GR (MP)",10,"Automatico","069"],["01.069.00.0.019","AQ-1523 - GR (MP)",19,"Automatico","069"],["01.069.00.0.194","AREIA AQ 60 - 250 UMIDA - GR (MP)",21,"Manual","069"],["01.069.00.0.248","ARQUAD 2C-75 - GR (MP)",30,"Automatico","069"],["01.069.00.0.249","ARQUAD 2HT 75 E - GR (MP)",30,"Automatico","069"],["01.069.00.0.238","ATHON OH 70 FLUID - GR (MP)",30,"Automatico","069"],["01.069.00.0.020","ATMP - GR (MP)",14,"Automatico","069"],["01.069.00.0.021","AXFIX AX 6544 - GR (MP)",19,"Automatico","069"],["01.069.00.3.010","AZUL QUIMPRINT QB-150 - GR (MP)",30,"Automatico","069"],["01.069.00.2.013","BAYHYDROL A 2546 - GR (MP)",24,"Automatico","069"],["01.069.00.2.014","BAYHYDUR XP 2547 - GR (MP)",36,"Automatico","069"],["01.061.00.2.001","BELSIL PF 200 - GR (MP)",30,"Automatico","061"],["01.069.00.0.259","BENTONITA BRASGEL - GR (MP)",30,"Automatico","069"],["01.069.00.0.022","BENTONITA BT-5002/400 - GR (MP)",30,"Automatico","069"],["01.069.00.0.023","BENTONITA POLENITA EXTRA - GR (MP)",12,"Automatico","069"],["01.069.00.0.215","BIOTEX CR 140 - GR (MP)",25,"Automatico","069"],["01.069.00.2.113","BLACK INK - GR (MP)",30,"Automatico","069"],["01.069.00.2.016","BLUESIL FLD 47 V 1000 - GR (MP)",30,"Automatico","069"],["01.069.00.2.017","BLUESIL FLD 47 V 50 - GR (MP)",23,"Automatico","069"],["01.069.00.2.018","BORAX DECAH ETM - GR (MP)",20,"Automatico","069"],["01.069.00.2.019","BORAX DECAHIDRATADO - GR (MP)",30,"Automatico","069"],["01.069.00.0.026","BRANCOCRYL TEX 407 - GR (MP)",16,"Manual","069"],["01.069.00.0.255","BULAB 6024SC - GR (MP)",30,"Automatico","069"],["01.069.00.0.027","BUTILDIGLICOL - GR (MP)",30,"Automatico","069"],["01.069.00.0.028","BUTILGLICOL - GR (MP)",16,"Automatico","069"],["01.069.00.7.034","BYK 310 - GR (MP)",30,"Automatico","069"],["01.069.00.2.112","CATIONIC NE CFLOC 805 - GR (MP)",30,"Importação","069"],["01.069.00.0.029","CAULIM ATOMIZADO CR-S - GR (MP)",12,"Automatico","069"],["01.069.00.0.030","CAULIM COLOIDAL MCP-400 - GR (MP)",30,"Automatico","069"],["01.069.00.2.078","CELLOSIZE QP-4400 - GR (MP)",18,"Automatico","069"],["01.069.00.0.263","CELULOSE - GR (MP)",30,"Automatico","069"],["01.069.00.7.004","CERAFLOUR 1000 - GR (MP)",30,"Automatico","069"],["01.069.00.0.258","CHEMGARD 1 SO - GR (MP)",30,"Automatico","069"],["01.069.00.0.257","CHEMGARD 3 DS - GR (MP)",30,"Automatico","069"],["01.069.00.0.031","CLEAR LA/B 01 /LUMENCRYL EB /CHEMPOL TA 250 /CHEMPOL TA 237N /PROESPESSANTE EI - GR (MP)",32,"Automatico","069"],["01.069.00.2.077","CLORETO DE COLINA 98% - GR (MP)",47,"Automatico","069"],["01.034.00.2.015","CMC - CARBOXIMETILCELULOSE P4-100 - GR (MP)",90,"Importação","034"],["01.034.00.2.002","CMC - CARBOXIMETILCELULOSE P4-30 - GR (MP)",90,"Importação","034"],["01.034.00.2.003","CMC - CARBOXIMETILCELULOSE P4-400 - GR (MP)",90,"Importação","034"],["01.034.00.1.005","CMC - CARBOXIMETILCELULOSE PAC R - GR (MP)",90,"Importação","034"],["01.034.00.1.008","CMC - CARBOXIMETILCELULOSE T2-30 - GR (MP)",90,"Importação","034"],["01.034.00.1.009","CMC - FINNFIX 10 - GR (MP)",90,"Importação","034"],["01.034.00.2.014","CMC - FINNFIX 2 - GR (MP)",90,"Importação","034"],["01.034.00.2.005","CMC - FINNFIX 30 - GR (MP)",90,"Importação","034"],["01.034.00.2.012","CMC - FINNFIX 5 - GR (MP)",90,"Importação","034"],["01.034.00.2.013","CMC - GELYCEL P4-30C - GR (MP)",90,"Importação","034"],["01.034.00.1.012","CMC - RHEOLON 100G - GR (MP)",90,"Importação","034"],["01.034.00.1.013","CMC - RHEOLON 10G - GR (MP)",90,"Importação","034"],["01.034.00.2.008","CMC - RHEOLON 20000 - GR (MP)",90,"Importação","034"],["01.034.00.1.014","CMC - RHEOLON 30G - GR (MP)",90,"Importação","034"],["01.034.00.2.009","CMC - USK 60THT - GR (MP)",90,"Importação","034"],["01.034.00.1.017","CMC- CARBOXIMETILCELULOSE, TECH CL6-10 - GR (MP)",90,"Importação","034"],["01.034.00.0.009","CMC INDUSCEL CR-4001B TECNICO - GR (MP)",90,"Importação","034"],["01.034.00.0.002","CMC INDUSKOL T-2000 - GR (MP)",90,"Automatico","034"],["01.034.00.1.016","CMC-CARBOXIMETILCELULOSE, TECH CL6-5 - GR (MP)",90,"Importação","034"],["01.069.00.2.105","COATOSIL 1211 - GR (MP)",30,"Automatico","069"],["01.069.00.2.102","COATOSIL 2059 - GR (MP)",28,"Automatico","069"],["01.069.00.2.103","COATOSIL 3573 - GR (MP)",30,"Automatico","069"],["01.069.00.2.082","COATOSIL CLEAN - GR (MP)",30,"Automatico","069"],["01.069.00.2.081","COATOSIL DRI - GR (MP)",30,"Automatico","069"],["01.069.00.2.083","COATOSIL MP 200 - GR (MP)",30,"Automatico","069"],["01.069.00.2.104","COATOSIL PRIM 2 - GR (MP)",30,"Automatico","069"],["01.069.00.2.080","COATOSIL PROTEC - GR (MP)",30,"Automatico","069"],["01.036.00.0.001","COLA PVA FQ-685 - GR (MP)",15,"Automatico","036"],["01.069.00.0.239","COLA SILICATO - GR (MP)",30,"Automatico","069"],["01.060.00.1.002","COLD BOX RESIN PART I - GR (MP)",30,"Automatico","060"],["01.060.00.1.003","COLD BOX RESIN PART II - GR (MP)",30,"Automatico","060"],["01.069.00.2.107","COLLOIDAL SILICA - 30 - GR (MP)",30,"Importação","069"],["01.069.00.2.075","COLLOIDAL SILICA HS-1430 - GR (MP)",30,"Importação","069"],["01.069.00.2.123","COPOLIMERO DE BLOCO EO 10% PO - GR (MP)",30,"Automatico","069"],["01.069.00.0.032","CORAGUM - DEXTRINA 080800 / SODEX-907 - GR (MP)",21,"Automatico","069"],["01.080.00.5.002","CORANTE AZUL TRANSPERSE T3BG - GR (MP)",10,"Automatico","080"],["01.080.00.3.001","CORANTE VERDE - GR (MP)",10,"Automatico","080"],["01.069.00.7.005","DADMAC 65% - GR (MP)",30,"Automatico","069"],["01.084.00.2.003","DEG - DIETILENOGLICOL - GR (MP)",10,"Automatico","084"],["01.084.00.0.001","DEG - DIETILENOGLICOL / MEG - MONOETILENO GLICOL - GR (MP)",10,"Automatico","084"],["01.034.00.0.008","DENVERCEL CR-9003A - GR (MP)",90,"Manual","034"],["01.069.00.0.043","DIOXOLANE ULTRA PURE - GR (MP)",30,"Automatico","069"],["01.069.00.2.025","DIPROPILENOGLICOL - GR (MP)",30,"Automatico","069"],["01.069.00.2.026","DISPERBYK 108 - GR (MP)",30,"Automatico","069"],["01.069.00.0.044","DISPONIL AES 60 - GR (MP)",57,"Automatico","069"],["01.069.00.2.027","DISSOLVINE D-40 - GR (MP)",30,"Automatico","069"],["01.069.00.2.028","DISSOLVINE E-39 - GR (MP)",30,"Automatico","069"],["01.069.00.2.092","DNDFLOC A9071 - GR (MP)",8,"Automatico","069"],["01.069.00.2.029","DOWANOL DPM - GR (MP)",21,"Automatico","069"],["01.069.00.2.030","DOWSIL IE-6683 - GR (MP)",52,"Automatico","069"],["01.069.00.0.045","DPV LPS - GR (MP)",30,"Automatico","069"],["01.069.00.0.217","DRYMAX IMPERMEABILIZANTE - GR (MP)",9,"Automatico","069"],["01.069.00.5.034","DYNABRIGHT CBS - GR (MP)",30,"Automatico","069"],["01.069.00.0.046","ECC 4060 LUSTRE - GR (MP)",30,"Automatico","069"],["01.069.00.0.049","EMUL GME - GR (MP)",42,"Automatico","069"],["01.097.00.0.001","ENERGY TENSOATIVO - GR (MP)",30,"Automatico","097"],["01.069.00.2.087","EPOXY DEH 23 - GR (MP)",20,"Automatico","069"],["01.069.00.2.088","EPOXY DEH 52 - GR (MP)",20,"Automatico","069"],["01.069.00.2.089","EPOXY DEH 554 - GR (MP)",30,"Automatico","069"],["01.069.00.5.032","EPOXY DER 331 LCO - GR (MP)",25,"Automatico","069"],["01.069.00.7.026","EPOXY DER 721 - GR (MP)",39,"Automatico","069"],["01.069.00.7.027","EPOXY DER 731 - GR (MP)",39,"Automatico","069"],["01.069.00.7.028","EPY AIRSTONE 713H - GR (MP)",25,"Automatico","069"],["01.069.00.2.090","EPY DEH 487 - GR (MP)",20,"Manual","069"],["01.069.00.2.091","EPY DEH 545 - GR (MP)",30,"Automatico","069"],["01.040.00.0.001","ESPESSANTE AP 50 / WANCER 212 - GR (MP)",22,"Automatico","040"],["01.069.00.7.036","ESTER DIBASICO - GR (MP)",30,"Automatico","069"],["01.069.00.0.212","EVERSORB EP4 PAIL - GR (MP)",15,"Automatico","069"],["01.069.00.5.010","EX CELL 1001-XAROPE DE GLUCOSE - GR (MP)",26,"Manual","069"],["01.069.00.0.050","EXXSOL D40 - GR (MP)",30,"Automatico","069"],["01.069.00.0.051","FELDSPATO POTASSICO 325 PO - GR (MP)",17,"Automatico","069"],["01.069.00.0.052","FLOCPOL ALS - GR (MP)",19,"Automatico","069"],["01.069.00.2.035","FO 4350-SSH CATIONICO - GR (MP)",30,"Automatico","069"],["01.069.00.7.022","FORMIATO DE CALCIO - GR (MP)",30,"Automatico","069"],["01.069.00.0.054","FORTGEL 9800 - GR (MP)",30,"Automatico","069"],["01.069.00.5.014","FORTSOLV 5900 - GR (MP)",30,"Automatico","069"],["01.069.00.0.056","FRAGANCIA FRESH MINT - GR (MP)",32,"Automatico","069"],["01.069.00.2.036","FTALON 60/60 X - GR (MP)",20,"Automatico","069"],["01.069.00.0.057","GENAPOL PF 10 / DOWFAX 63N10L - GR (MP)",19,"Automatico","069"],["01.041.00.0.001","GLICERINA BI-DESTILADA - GR (MP)",9,"Automatico","041"],["01.069.00.0.224","GLUCODRY 40 - GR (MP)",4,"Automatico","069"],["01.069.00.0.058","GLUCOGIL 40/72 - GR (MP)",17,"Manual","069"],["01.069.00.0.060","GLUCONATO DE SODIO - GR (MP)",20,"Automatico","069"],["01.069.00.0.061","HDK N20 S10 - GR (MP)",21,"Automatico","069"],["01.042.00.0.001","HEDP - GR (MP)",90,"Automatico","042"],["01.042.00.2.006","HEDP 60% - IBC 1250 KG (MP)",90,"Automatico","042"],["01.069.00.2.118","HEXAFOR 6240 - GR (MP)",30,"Automatico","069"],["01.069.00.0.063","HEXAFOR 6282 - GR (MP)",30,"Automatico","069"],["01.069.00.2.039","HEXAFOR 6400 - GR (MP)",90,"Automatico","069"],["01.043.00.2.001","HEXAMETAFOSFATO DE SODIO - GR (MP)",90,"Automatico","043"],["","HIDROXIDO DE POTASSIO SOLIDO (ONU 1814 - RSC 80 CL/SUB 8 - GE II) - GR (MPQC)",30,"Importação",""],["01.069.00.2.086","HIDROXIDO DE POTASSIO SOLIDO (ONU 1814 - RSC 80 CL/SUB 8 - GE II) GR (MP)",30,"Importação","069"],["01.069.00.0.223","HIDROXIDO DE POTASSIO/POTASSA CAUSTICA - GR (MP)",30,"Importação","069"],["01.002.19.5.001","HIDROXIDO DE SODIO SOLIDO - SC 25 KG (MPU)",30,"Commodities","002"],["01.001.00.0.001","HIDROXIDO DE SODIO SOLUCAO - GR (MP)",30,"Commodities","001"],["01.001.01.2.001","HIDROXIDO DE SODIO SOLUCAO - GR (MPB)",30,"Commodities","001"],["01.001.19.0.001","HIDROXIDO DE SODIO SOLUCAO - GR (MPU)",30,"Commodities","001"],["00.001.27.2.001","HIDROXIDO DE SODIO SOLUCAO (ONU 1824 - RSC 80 CL/SUB 8 - GE II/III) [BS] - GR (RFA)",30,"Commodities","001"],["01.069.00.6.002","HIPOFOSFITO DE SODIO - GR (MP)",14,"Automatico","069"],["01.069.00.0.065","HORDAPHOS MDAH - GR (MP)",14,"Automatico","069"],["01.069.00.5.018","HOSTATINT AMARELO - GR (MP)",30,"Automatico","069"],["01.069.00.5.019","HOSTATINT PRETO - GR (MP)",30,"Automatico","069"],["01.069.00.3.005","HOSTATINT VERMELHO - GR (MP)",30,"Automatico","069"],["01.069.00.0.199","HUMECTEX DOS 70 - GR (MP)",30,"Automatico","069"],["01.069.00.0.067","IMACARBO 10 - GR (MP)",30,"Automatico","069"],["01.069.00.0.069","IMACARBO READY - GR (MP)",30,"Automatico","069"],["01.069.00.0.252","IMPERMEABILIZANTE PRI 468 - GR (MP)",4,"Automatico","069"],["01.069.00.0.231","IMPERWAN 1130 - GR (MP)",30,"Automatico","069"],["01.069.00.0.229","IMPERWAN FT-10 - GR (MP)",13,"Manual","069"],["01.069.00.0.071","INDUSFLOC 50 - LIQUIDO - GR (MP)",30,"Automatico","069"],["01.091.00.0.001","IPEL 1000 - GR (MP)",7,"Automatico","091"],["","IPEL BP 507 - GR (MP)",30,"Automatico",""],["01.091.00.0.003","IPEL BP 509 / ACTICIDE BR 7530 - GR (MP)",7,"Automatico","091"],["01.091.00.0.004","IPEL BP 575 - GR (MP)",7,"Automatico","091"],["01.091.00.0.005","IPEL FBP 418 - GR (MP)",7,"Automatico","091"],["01.091.00.0.006","IPEL FBP 490 / ACTICITE BRF1 - GR (MP)",7,"Automatico","091"],["01.069.00.0.222","ITA 3G PLUS 325 - GR (MP)",7,"Automatico","069"],["01.046.00.3.001","LAURIL ETER SULFATO DE SODIO 28% - GR (MP)",90,"Automatico","046"],["01.069.00.0.072","LEVASIL CS-15-450 - GR (MP)",30,"Automatico","069"],["01.069.00.0.074","LEVASIL CS-40-125 - GR (MP)",30,"Automatico","069"],["01.069.00.2.040","LEVASIL CS-50-28 - GR (MP)",30,"Automatico","069"],["01.069.00.0.256","LEVASIL TH-830 - GR (MP)",13,"Manual","069"],["01.092.00.0.001","LIGNOSULFONATO DE SODIO - GR (MP)",30,"Automatico","092"],["01.069.00.0.075","LIOCAT 29 - GR (MP)",30,"Automatico","069"],["01.069.00.0.241","LUMENCRYL EA 02 - GR (MP)",30,"Automatico","069"],["01.069.00.2.121","MAGNASOFT 2059 - GR (MP)",30,"Automatico","069"],["01.069.00.0.233","MAKON 10 - GR (MP)",17,"Automatico","069"],["01.093.00.0.001","MEA - MONOETANOLAMINA - GR (MP)",7,"Automatico","093"],["01.084.00.0.004","MEG - MONOETILENO GLICOL - GR (MP)",10,"Automatico","084"],["01.069.00.0.077","MEHQ (METIL ETER DE HIDROQUINONA) - GR (MP)",19,"Automatico","069"],["01.069.00.0.207","MEM 0349 EMULSION - GR (MP)",12,"Automatico","069"],["01.069.00.7.008","MERCAPTOETANOL - GR (MP)",30,"Automatico","069"],["01.095.00.0.001","METABISSULFITO DE SODIO - GR (MP)",90,"Automatico","095"],["01.008.00.1.001","METASSILICATO DE SODIO ANIDRO - GR (MP)",90,"Automatico","008"],["01.009.00.0.001","METASSILICATO DE SODIO PENTAHIDRATADO - GR (MP)",10,"Automatico","009"],["01.069.00.0.078","MICRON 8CD PAPEL - GR (MP)",20,"Automatico","069"],["01.069.00.7.035","MIOX SG - GR (MP)",30,"Automatico","069"],["01.069.00.0.079","MONOLEATO DE SORBITAN - GR (MP)",30,"Automatico","069"],["01.069.00.3.011","MOWICOLL WL 250 BR - GR (MP)",30,"Automatico","069"],["01.069.00.5.033","MOWILITH POWDER 2704 - GR (MP)",30,"Automatico","069"],["01.069.00.0.182","MUB TP 325 - GR (MP)",30,"Automatico","069"],["01.069.00.0.080","MUB TP-325 ELFUSA - GR (MP)",30,"Automatico","069"],["01.069.00.0.219","MUBZD TP 325 - GR (MP)",56,"Automatico","069"],["01.069.00.0.251","N805 - GR (MP)",30,"Automatico","069"],["01.069.00.3.009","NAMET - GR (MP)",30,"Automatico","069"],["01.069.00.7.009","NATROSOL 250 GR - GR (MP)",30,"Automatico","069"],["01.069.00.0.082","NATROSOL 250 MBR PA - GR (MP)",89,"Automatico","069"],["01.069.00.2.100","NEMOL L61 - GR (MP)",16,"Automatico","069"],["01.069.00.0.083","NITRATO DE CALCIO - GR (MP)",30,"Automatico","069"],["01.069.00.0.260","OLEATO DE SODIO 329 - GR (MP)",30,"Automatico","069"],["01.069.00.0.261","OLEATO DE SODIO 330 - GR (MP)",30,"Automatico","069"],["01.069.00.0.246","OLEO DE PALMA  - GR (MP)",12,"Automatico","069"],["01.069.00.2.044","OLEO MINERAL BRANCO - GR (MP)",30,"Automatico","069"],["01.069.00.0.088","PARAFORMALDEIDO TCN - SC 25 KG (MP)",30,"Automatico","069"],["01.069.00.0.089","PASTA PROTETIVA APT-100 - GR (MP)",4,"Manual","069"],["01.069.00.0.090","PASTA PROTETIVA TRANSPARENTE PPT 2100 - GR (MP)",20,"Manual","069"],["01.069.00.7.012","PEG 4000 POWDER - GR (MP)",31,"Automatico","069"],["01.053.00.0.001","PEROXIDO DE HIDROGENIO - GR (MP)",7,"Automatico","053"],["01.069.00.0.091","PERSULFATO DE SODIO - GR (MP)",25,"Automatico","069"],["01.060.00.1.001","PHENOLIC RESIN - GR (MP)",30,"Automatico","060"],["01.069.00.0.093","PIROFOSFATO DE SODIO - GR (MP)",30,"Automatico","069"],["01.069.00.7.038","POLICLOR CR244B - GR (MP)",30,"Automatico","069"],["01.052.00.0.001","POLICLORETO DE ALUMINIO PAC 18 - GR (MP)",5,"Automatico","052"],["01.052.00.2.001","POLICLORETO DE ALUMINIO PAC 30% - GR (MP)",5,"Automatico","052"],["01.052.00.0.005","POLICLORETO DE ALUMINIO PAC 9% 12% - GR (MP)",5,"Automatico","052"],["01.097.00.2.001","POLIETERE L 61 - GR (MP)",30,"Automatico","097"],["01.084.00.2.002","POLIETILENOGLICOL 4000 - GR (MP)",10,"Automatico","084"],["01.069.00.0.094","POLIFER 180/HX - GR (MP)",30,"Automatico","069"],["01.055.00.0.002","POLIFIX PG 1002 - GR (MP)",30,"Automatico","055"],["01.069.00.0.211","POLY POWER - GR (MP)",47,"Automatico","069"],["01.056.00.1.001","POLYDISPERSE D-1 / DTPMPA / SEQUEST DTMP / DEQUEST 2060 S - GR (MP)",10,"Automatico","056"],["01.042.00.2.001","POLYDISPERSE HEDP NA2 POWER - GR (MP)",90,"Manual","042"],["01.042.00.1.003","POLYDISPERSE HEDP NA4 POWER - GR (MP)",90,"Manual","042"],["01.102.00.2.001","POLYGLYCOL ML 2400 - GR (MP)",90,"Automatico","102"],["01.069.00.0.097","PRAIDMUL MEG I - GR (MP)",30,"Automatico","069"],["01.069.00.0.099","PRAIDMUL PEG 600 DO - GR (MP)",32,"Automatico","069"],["01.069.00.2.045","PRETO OXIDO BX50 - GR (MP)",30,"Automatico","069"],["01.069.00.2.046","PRETO TRANSCOR BCW - GR (MP)",30,"Automatico","069"],["01.069.00.0.186","PRIMAL AP-50 / WANCER 212 - GR (MP)",30,"Automatico","069"],["01.069.00.0.100","PRIMAL ASE-60 - GR (MP)",30,"Automatico","069"],["01.052.00.0.004","PROPAC 800 HT - GR (MP)",5,"Automatico","052"],["01.052.00.0.003","PROPAC H600 HX - GR (MP)",5,"Automatico","052"],["01.069.00.7.014","PVA 0588 120 MESH 120 PO - GR (MP)",14,"Automatico","069"],["01.069.00.7.015","PVA 2488 120 MESH 120 PO - GR (MP)",14,"Automatico","069"],["01.069.00.0.103","RESIDHERE AB 150 - GR (MP)",14,"Automatico","069"],["01.069.00.0.104","RESIWAN 3220 - GR (MP)",7,"Automatico","069"],["01.069.00.0.188","RHEOBYK 420 - GR (MP)",30,"Automatico","069"],["01.100.00.2.001","RY 1525 - GR (MP)",30,"Automatico","100"],["01.069.00.0.218","SABER PG 4 CL - AM - GR (MP)",5,"Automatico","069"],["01.069.00.0.105","SAL GRANULADO SEM IODO - GR (MP)",25,"Automatico","069"],["01.089.00.0.001","SATIAXANE CX 851 (GOMA XANTANA) - GR (MP)",10,"Automatico","089"],["01.069.00.0.106","SICOL 30 - GR (MP)",30,"Automatico","069"],["01.069.00.0.108","SILFOAM SE 39 BR - GR (MP)",53,"Automatico","069"],["01.069.00.5.022","SILFOAM SE 47 BR - GR (MP)",22,"Automatico","069"],["01.069.00.2.076","SILICA COLOIDAL HSD-3030 - GR (MP)",30,"Automatico","069"],["01.069.00.2.074","SILICA COLOIDAL HSD-5050 - GR (MP)",30,"Automatico","069"],["01.069.00.2.114","SILICA NANO A 30 - GR (MP)",30,"Automatico","069"],["01.069.00.0.235","SILICA SOLUTION A019 - GR (MP)",30,"Automatico","069"],["01.069.00.0.110","SILICATO DE POTASSIO PO - GR (MP)",30,"Automatico","069"],["01.003.00.0.001","SILICATO DE SODIO ALCALINO - GR (MP)",10,"Automatico","003"],["01.005.00.0.001","SILICATO DE SODIO NEUTRO - GR (MP)",7,"Automatico","005"],["01.003.00.0.002","SILICATO DE SODIO SEMI ALCALINO PQ 1,57 - GR (MP)",10,"Automatico","003"],["01.069.00.0.200","SILIKOL 300 - GR (MP)",19,"Automatico","069"],["01.069.00.2.079","SILQUEST A-1120 J - GR (MP)",30,"Automatico","069"],["01.069.00.7.032","SILQUEST A-137 SILANE - GR (MP)",30,"Automatico","069"],["01.069.00.0.111","SILRES BS-1001 - GR (MP)",30,"Automatico","069"],["01.069.00.2.119","SILRES BS-1306 - GR (MP)",30,"Automatico","069"],["01.069.00.2.097","SILRES BS-1346 - GR (MP)",30,"Automatico","069"],["01.069.00.0.112","SILRES BS-1360 - GR (MP)",58,"Automatico","069"],["01.069.00.2.098","SILRES BS-1703 SQ - GR (MP)",30,"Automatico","069"],["01.069.00.2.051","SILRES BS-1705 - GR (MP)",30,"Automatico","069"],["01.069.00.2.096","SILRES BS-1802 - GR (MP)",30,"Automatico","069"],["01.069.00.2.052","SILRES BS-290 - GR (MP)",64,"Automatico","069"],["01.069.00.2.095","SILRES BS-3003 - GR (MP)",30,"Automatico","069"],["01.069.00.2.054","SILRES BS-39 - GR (MP)",30,"Automatico","069"],["01.069.00.2.048","SILRES BS-4004 - GR (MP)",9,"Automatico","069"],["01.069.00.2.055","SILRES BS-46 - GR (MP)",46,"Automatico","069"],["01.069.00.5.038","SILRES BS-5137 - GR (MP)",30,"Automatico","069"],["01.069.00.2.049","SILRES BS-710 - GR (MP)",30,"Automatico","069"],["01.069.00.0.113","SODEX COL 855 - GR (MP)",13,"Automatico","069"],["01.069.00.0.225","SOLVESSO 100 - GR (MP)",30,"Automatico","069"],["01.069.00.0.226","SOLVESSO 150 - GR (MP)",30,"Automatico","069"],["01.069.00.7.029","SONGSORB CS UV1 - GR (MP)",30,"Automatico","069"],["01.069.00.0.114","SORBOSIL TC15 - GR (MP)",17,"Automatico","069"],["01.069.00.0.227","SPECTROGEL AP - GR (MP)",30,"Automatico","069"],["01.069.00.0.115","SPECTROGEL BP - GR (MP)",28,"Manual","069"],["01.069.00.2.084","SPUR+ 3030 PREPOLYMER - GR (MP)",30,"Automatico","069"],["01.069.00.5.036","STANLUX PASTE 130 - GR (MP)",30,"Automatico","069"],["01.069.00.0.240","STEPFAC 5000 - GR (MP)",8,"Automatico","069"],["01.109.00.0.003","SULFATO DE ALUMINIO LIQUIDO ISENTO DE FERRO 50% - GR (MP)",30,"Automatico","109"],["01.069.00.3.007","SULFATO DE AMONIO FERT - GR (MP)",10,"Automatico","069"],["01.069.00.0.118","SULFONOL NSDC LIQUIDO - GR (MP)",34,"Automatico","069"],["01.069.00.0.119","SULFONOL NSDC PO / DISPER NSNA PO - GR (MP)",30,"Automatico","069"],["01.069.00.0.203","SULFOTECH TSS 34 - GR (MP)",30,"Automatico","069"],["01.069.00.2.059","SUPERFLOC 496HMW CATIONICO - GR (MP)",30,"Automatico","069"],["01.069.00.0.236","SURFACE-ACITVE AGENT A008 - GR (MP)",30,"Automatico","069"],["01.069.00.0.201","SURFACTANTE - GR (MP)",30,"Automatico","069"],["01.069.00.0.126","TANWAX AC 40 - GR (MP)",23,"Automatico","069"],["01.069.00.0.192","TENSAPOL L-61 / DOWFAX / PLURONIC FT PE 610 - GR (MP)",30,"Automatico","069"],["01.069.00.2.109","TIANFLOC A 345 - GR (MP)",30,"Automatico","069"],["01.069.00.0.130","TIANFLOC A 878 - GR (MP)",30,"Automatico","069"],["01.069.00.0.131","TIANFLOC C 1220 - GR (MP)",30,"Automatico","069"],["01.069.00.2.116","TIANFLOC RY1525 - GR (MP)",30,"Automatico","069"],["01.069.00.2.117","TIANFLOC RY540C - GR (MP)",30,"Automatico","069"],["01.069.00.2.099","TINOPAL CBS-X - GR (MP)",30,"Automatico","069"],["01.069.00.0.132","TOLUENO - GR (MP)",30,"Automatico","069"],["01.069.00.0.133","TOLUENO SULFONATO DE SODIO 34% - GR (MP)",13,"Automatico","069"],["01.069.00.0.134","TRANSTINT PRETO CBS-PMA - GR (MP)",29,"Automatico","069"],["01.069.00.0.228","TREWASH LT - GR (MP)",30,"Automatico","069"],["01.069.00.5.035","TREWET PSE/M - GR (MP)",30,"Automatico","069"],["01.069.00.0.234","TRIACETATO GLIC-TRIACETINA IND - GR (MP)",30,"Automatico","069"],["01.069.00.2.110","TRIETANOLAMINA 99% - GR (MP)",51,"Automatico","069"],["01.069.00.0.195","TRIETILAMINA - GR (MP)",30,"Automatico","069"],["01.069.00.0.135","TRIGONOX AW 70 - GR (MP)",22,"Automatico","069"],["01.065.00.0.001","TRIPOLIFOSFATO DE SODIO - GR (MP)",90,"Automatico","065"],["01.069.00.0.136","TYZOR TNBT - GR (MP)",30,"Automatico","069"],["01.069.00.0.137","UCAR FILMER IBT BT303 - GR (MP)",30,"Automatico","069"],["01.069.00.7.019","UCAR FILMER LV BT303 - GR (MP)",30,"Automatico","069"],["01.069.00.0.138","UCAR FILMR LV - GR (MP)",30,"Automatico","069"],["01.069.00.0.139","ULTRAFILM 260 LV - GR (MP)",16,"Automatico","069"],["01.069.00.0.140","ULTRANEX N 95 - GR (MP)",36,"Automatico","069"],["01.069.00.0.141","URANOL NL - GR (MP)",10,"Automatico","069"],["01.066.00.0.001","UREIA TECNICA/INDUSTRIAL - SC 25 KG (MP)",7,"Automatico","066"],["01.069.00.0.244","UREWAN 307 - GR (MP)",30,"Automatico","069"],["01.069.00.0.245","UREWAN 320 - GR (MP)",30,"Automatico","069"],["01.069.00.0.242","UREWAN 361 - GR (MP)",30,"Automatico","069"],["01.069.00.0.243","UREWAN 377 - GR (MP)",30,"Automatico","069"],["01.069.00.7.020","VETTALIT 1000 - GR (MP)",16,"Automatico","069"],["01.069.00.2.067","VINNAPAS 8034-H - GR (MP)",10,"Automatico","069"],["01.069.00.0.204","W ACR-20 ANTICRISTAL - GR (MP)",18,"Automatico","069"],["01.069.00.2.085","WACKER AK 50 - GR (MP)",20,"Automatico","069"],["01.069.00.0.265","WANBAC 719 - GR (MP)",30,"Automatico","069"],["01.069.00.0.237","WANBAC HCW - GR (MP)",5,"Automatico","069"],["01.069.00.0.144","WANBAC WBT - GR (MP)",11,"Automatico","069"],["01.069.00.0.145","WANCER 200 (CT-1000R) - GR (MP)",16,"Automatico","069"],["01.069.00.0.147","WANCER 228 - GR (MP)",30,"Automatico","069"],["01.069.00.0.213","WANCOLL PS 987 - GR (MP)",17,"Automatico","069"],["01.069.00.0.149","WANCRIL 1015 / WANCRIL W50 - GR (MP)",16,"Automatico","069"],["01.069.00.0.264","WANCRIL 1019 - GR (MP)",30,"Automatico","069"],["01.069.00.0.150","WANCRIL 338 - GR (MP)",30,"Automatico","069"],["01.069.00.0.214","WANCRIL E 10 - GR (MP)",17,"Automatico","069"],["01.069.00.0.151","WANCRIL IMP 09 - GR (MP)",30,"Automatico","069"],["01.069.00.0.152","WANCRIL TL 12 - GR (MP)",14,"Automatico","069"],["01.069.00.0.154","WANFOAM CR 25 - GR (MP)",34,"Automatico","069"],["01.069.00.0.221","WANPEX 1510 - GR (MP)",30,"Automatico","069"],["01.069.00.2.108","WHITELUM AS - GR (MP)",30,"Automatico","069"],["01.069.00.0.232","WHITELUM FS - GR (MP)",30,"Automatico","069"],["01.069.00.0.157","XARIN 306 - GR (MP)",30,"Automatico","069"],["01.069.00.0.158","XARIN 307 - GR (MP)",30,"Automatico","069"],["01.069.00.0.159","XIAMETER MEM 0039 - GR (MP)",30,"Automatico","069"],["01.069.00.7.030","XIAMETER OFS-6040 SILANE - GR (MP)",30,"Automatico","069"],["01.069.00.8.003","XIAMETER PMX-200 50 CST - GR (MP)",30,"Automatico","069"],["01.069.00.0.160","XILENO - GR (MP)",16,"Automatico","069"],["01.069.00.2.115","ZEOLITA NATURAL - GR (MP)",30,"Automatico","069"],["01.069.00.2.122","ZIBOZAN IND 200 - GR (MP)",30,"Automatico","069"],["02.202.0.005","BOMBONA 50 L HOMOLOGADA",20,"Automatico","202"],["02.202.0.006","BOMBONA 20 L RECICLADA",20,"Automatico","202"],["02.202.0.007","BOMBONA 50 L RECICLADA",20,"Automatico","202"],["02.202.0.008","BOMBONA 200 L TAMPA FIXA RECICLADA",20,"Automatico","202"],["02.202.0.009","BOMBONA 200 L TAMPA FIXA HOMOLOGADA",20,"Automatico","202"],["02.203.0.001","CONTAINER PLASTICO IBC COM BASE DE MADEIRA 1000 L",15,"Manual","203"],["02.203.0.004","CONTAINER PLASTICO IBC BASE DE FERRO 1000L",15,"Manual","203"],["02.203.0.008","CONTAINER PLASTICO IBC BOLHA NOVA COM BASE DE FERRO 1000 L",15,"Manual","203"],["02.204.0.002","ETIQUETA SIMBOLOGIA RISCO CORROSIVO 8 ROLO COM 1000 UN 10X10CM",15,"Automatico","204"],["02.204.0.003","ETIQUETA SIMBOLOGIA RISCO INFLAMAVEL 3 ROLO COM 1000 UN 10X10CM",15,"Automatico","204"],["02.204.0.011","ETIQUETA BOPP PG ROLO COM 200 UN 100MM X 250MM 51M",15,"Automatico","204"],["02.204.0.012","ETIQUETA BOPP PG BRILHANTE IMPRESSAO 2 CORES RL COM 440 UN. 0,60 X 1,00M",15,"Automatico","204"],["02.205.0.001","FILME STRETCH 500MM X 25 MICRAS X 3",20,"Automatico","205"],["02.206.0.001","LATA COM TAMPA DE PRESSAO 225ML",25,"Automatico","206"],["02.206.0.002","LATA COM TAMPA METALICA NATURAL SEM VERNIZ 900ML",25,"Automatico","206"],["02.206.0.003","LATA RETANGULAR SEM LITOGRAFIA 5L",25,"Automatico","206"],["02.206.0.004","LATA CILINDRICA SEM LITOGRAFIA 900ML",25,"Automatico","206"],["02.207.0.002","PALLET PARA EXPORTACAO 1,15M X 1,15M",15,"Manual","207"],["02.207.0.003","PALLET 1,05M X 1,25M",15,"Manual","207"],["02.208.0.001","EMBALAGEM DE PAPELAO PARA 04 LATAS RETANG. 5L - 375X225X295 CX N6",20,"Automatico","208"],["02.208.0.002","EMBALAGEM DE PAPELAO PARA 06 LATAS (ALTA) 900ML - 260X180X200 CX N4",20,"Automatico","208"],["02.208.0.003","EMBALAGEM DE PAPELAO PARA 08 LATAS 900ML - 230X230X250 CX N5",20,"Automatico","208"],["02.208.0.004","EMBALAGEM DE PAPELAO PARA 12 FRASCOS ALCALINOS RETANG. 1L CX N7",20,"Automatico","208"],["02.209.0.004","SACO PLASTICO LEITOSO COM IMPRESSAO 56X80X0,30 - BRANCO",45,"Automatico","209"],["02.209.0.005","SACO PLASTICO COM IMPRESSAO 56X80X0,30 - LARANJA",45,"Automatico","209"],["02.209.0.006","SACO PLASTICO COM IMPRESSAO 56X80X0,20 - VERDE",45,"Automatico","209"],["02.209.0.007","SACO PLASTICO LEITOSO COM IMPRESSAO 56X80X0,20 - FAIXA VERMELHA",45,"Automatico","209"],["02.209.0.010","SACO PLASTICO COM IMPRESSAO 56X80X0,30 - AMARELO",45,"Automatico","209"],["02.209.0.014","SACO MULTIFOLHADO AMARELO 45X80X0,27",45,"Automatico","209"],["02.209.0.015","SACO MULTIFOLHADO FAIXA VERMELHA 45X80X0,27",45,"Automatico","209"],["02.209.0.017","SACO MULTIFOLHADO FAIXA VERMELHA 55X80X0,25",45,"Automatico","209"],["02.211.0.002","FRASCO RETANGULAR. PET BRANCO COM ALCA 1000ML",40,"Automatico","211"],["01.069.00.2.120","SILICA COLOIDAL HSN-30 - GR (MP)",30,"Automatico",""],["","FO 4290 SSH - GR (MP)",30,"Manual",""],["","AREIA AQ 90 - 500 UG - GR (MP)",7,"Automatico",""],["","QUALICIM NA 40 - GR (MP)",30,"Manual",""],["","ATAWET 2000 - GR (MP)",30,"Manual",""],["","ATHON FB 550 - GR (MP)",30,"Manual",""],["","BARRILHA LEVE (CARBONATO DE SODIO) - GR (MP)",30,"Manual",""],["","COLLOIDAL SILICA HS-830 - GR (MP)",30,"Manual",""],["","COLLOIDAL SILICA HSD-10050 - GR (MP)",30,"Manual",""],["","DIETILENOGLICOL - GR (MP)",30,"Automatico",""],["","ECOFLOC 1700-A - GR (MP)",30,"Manual",""],["","FEISPARTIC F2850 - GR (MP)",30,"Manual",""],["","FEISPARTIC F420 - GR (MP)",30,"Manual",""],["","FEISPARTIC F520 - GR (MP)",30,"Manual",""],["","HIDROPAC 18 (CLORETO DE POLIALUMINIO) - GR (MP)",30,"Automatico",""],["","HIDROXIDO DE SODIO SOLUCAO 32% - GR (MP)",30,"Manual",""],["","PROPILENOGLICOL - GR (MP)",30,"Manual",""],["","PROTECTOSIL SC CONCENTRATE - GR (MP)",30,"Manual",""],["","SULFATO DE FERRO (MP)",30,"Manual",""],["","SURFATA DISPERSE 12 - GR (MP)",30,"Manual",""],["","WANNATE HT-90BS BT303 - TECH - GR (MP)",30,"Automatico",""],["","BACQUAT 80 - GR (MP)",7,"Manual",""],["","POLICLORETO DE ALUMINIO PAC18 - GR (MP)",30,"Commodities",""],["","AQUASOL TH-308 - GR (MP)",30,"Automatico",""],["","COLLOIDAL SILICA - 30 M - GR (MP)",90,"Importação",""],["","COMGEL 601 - GR (MP)",30,"Manual",""],["","OLEO DE MILHO REFINADO - GR (MP)",30,"Manual",""],["","POLIETERE L 62 - GR (MP)",30,"Automatico",""],["","PVA 2688 120 MESH 120 PO - GR (MP)",30,"Manual",""],["","SOLUCAO DE SULFIDRATO 42 % - GR (MP)",30,"Manual",""],["","UNIQ ISO 520 - GR (MP)",30,"Manual",""]]};
+
+    const POR_STORAGE_KEY = 'pg_por_dataset_v3';
+    let porState = null;
+    let currentPORSubTab = 'lista';
+    let porActiveFilter = 'ALL';
+    let porSearchQuery = '';
+    let leadTimeSearchQuery = '';
+
+    function initPORState() {
+      try {
+        const saved = localStorage.getItem(POR_STORAGE_KEY);
+        if (saved) {
+          porState = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Erro ao ler localStorage do POR', e);
+      }
+
+      if (!porState || !porState.listaMP || porState.listaMP.length === 0) {
+        const raw = INITIAL_POR_COMPACT;
+        const listaMP = raw.mp.map((m, idx) => ({
+          id: idx + 1,
+          materiaPrima: m[0],
+          saldo: m[1],
+          custoUnitario: m[2],
+          saldoReais: m[3],
+          media6M: m[4],
+          media6MStatus: m[5],
+          desvP12M: m[6],
+          tipo: m[7] || 'Automatico',
+          leadTime: m[8],
+          safetyStock: m[9],
+          por: m[10],
+          porStatus: m[11],
+          flag: m[12],
+          dde: m[13],
+          eoq: m[14],
+          eoqPor: m[15],
+          pedidoAberto: m[16],
+          rConsumo: m[17],
+          eoqPorReais: m[18]
+        }));
+
+        const leadTimes = raw.lt.map((l, idx) => ({
+          id: idx + 1,
+          codigo: l[0],
+          descricao: l[1],
+          leadTimePOR: l[2],
+          tipo: l[3],
+          familia: l[4]
+        }));
+
+        porState = {
+          dataReferencia: raw.dataReferencia,
+          custoRessuprimento: raw.custoRessuprimento,
+          waccEstoque: raw.waccEstoque,
+          zFactor: raw.zFactor,
+          listaMP,
+          leadTimes
+        };
+
+        savePORState();
+      }
+    }
+
+    function savePORState() {
+      if (porState) {
+        try {
+          localStorage.setItem(POR_STORAGE_KEY, JSON.stringify(porState));
+        } catch (e) {
+          console.warn('Erro ao salvar no localStorage do POR', e);
+        }
+      }
+    }
+
+    function recalculatePORItem(item) {
+      const z = porState.zFactor || 1.036433389; // NORM.S.INV(85%)
+      const lt = parseFloat(item.leadTime) || 15;
+      const custoPed = porState.custoRessuprimento || 100;
+      const wacc = porState.waccEstoque || 0.20;
+
+      // 1. Estoque de Segurança
+      if (item.desvP12M > 0 && lt > 0) {
+        item.safetyStock = z * item.desvP12M * (Math.sqrt(lt) / 30);
+      } else {
+        item.safetyStock = 0;
+      }
+
+      // 2. Ponto de Reordem (POR)
+      if (item.media6MStatus === 'S/C' || item.media6MStatus === 'Zerado') {
+        item.por = 0;
+        item.porStatus = item.media6MStatus;
+      } else {
+        item.por = ((lt / 30) * item.media6M) + item.safetyStock;
+        item.porStatus = '';
+      }
+
+      // 3. Flag de Compra: Saldo <= POR
+      if (item.porStatus === 'Zerado' || item.porStatus === 'S/C' || item.por <= 0) {
+        item.flag = '';
+      } else if (item.tipo === 'Manual') {
+        item.flag = (item.saldo <= item.por) ? 'Manual' : '';
+      } else {
+        item.flag = (item.saldo <= item.por) ? 'Order' : '';
+      }
+
+      // 4. Dias de Estoque (DDE)
+      if (item.saldo < 0) {
+        item.dde = 'Est.Neg.';
+      } else if (item.media6MStatus === 'Zerado' || item.media6MStatus === 'S/C' || item.media6M <= 0) {
+        item.dde = '';
+      } else {
+        item.dde = (item.saldo / item.media6M) * 30;
+      }
+
+      // 5. Lote Econômico de Compra (EOQ)
+      if (String(item.flag).toLowerCase() === 'order') {
+        if (item.saldo < 0 || item.custoUnitario <= 0) {
+          item.eoq = 'Check';
+          item.eoqPor = 'Check';
+          item.eoqPorReais = 0;
+        } else {
+          const demandaAnual = item.media6M * 12;
+          const h = item.custoUnitario * wacc;
+          item.eoq = Math.sqrt((2 * demandaAnual * custoPed) / h);
+          item.eoqPor = item.eoq + item.por;
+          item.eoqPorReais = item.eoqPor * item.custoUnitario;
+        }
+      } else {
+        item.eoq = 0;
+        item.eoqPor = 0;
+        item.eoqPorReais = 0;
+      }
+    }
+
+    function switchPORSubTab(subTabId) {
+      currentPORSubTab = subTabId;
+      const subTabs = ['lista', 'leadtime', 'pedidos'];
+      subTabs.forEach(s => {
+        const btn = document.getElementById('subtab-por-' + s);
+        const view = document.getElementById('por-subview-' + s);
+        const isActive = (s === subTabId);
+        if (view) {
+          if (isActive) {
+            view.classList.remove('hidden');
+            view.classList.add('flex');
+          } else {
+            view.classList.add('hidden');
+            view.classList.remove('flex');
+          }
+        }
+        if (btn) {
+          if (isActive) {
+            btn.className = 'por-subtab-btn inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-2xs transition-all cursor-pointer';
+          } else {
+            btn.className = 'por-subtab-btn inline-flex items-center gap-1.5 rounded-lg bg-white hover:bg-emerald-50 text-zinc-700 border border-zinc-200 px-3.5 py-1.5 text-xs font-semibold shadow-2xs transition-all cursor-pointer';
+          }
+        }
+      });
+
+      if (subTabId === 'lista') renderPORListaMP();
+      else if (subTabId === 'leadtime') renderPORLeadTime();
+      else if (subTabId === 'pedidos') renderPORCruzamentoPedidos();
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderPainelPOR() {
+      if (!porState) initPORState();
+      switchPORSubTab(currentPORSubTab);
+    }
+
+    function getActiveOrdersForMP(materiaPrima) {
+      if (!materiaPrima || !rows || rows.length === 0) return [];
+      const key = normalizeKey(materiaPrima);
+      return rows.filter(r => {
+        if (normalizeKey(r.materiaPrima) === key) {
+          return !r.dataChegada || r.dataChegada.trim() === '';
+        }
+        return false;
+      });
+    }
+
+    function renderPORListaMP() {
+      if (!porState) initPORState();
+      const tbody = document.getElementById('porTableBody');
+      if (!tbody) return;
+
+      const items = porState.listaMP;
+      let orderCount = 0;
+      let manualCount = 0;
+      let comPedidoCount = 0;
+      let semPedidoCount = 0;
+      let valorSugeridoTotal = 0;
+
+      items.forEach(it => {
+        const isOrder = String(it.flag).toLowerCase() === 'order';
+        const isManual = String(it.flag).toLowerCase() === 'manual';
+        if (isOrder) orderCount++;
+        if (isManual) manualCount++;
+
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        if (isOrder) {
+          if (activeOrders.length > 0) comPedidoCount++;
+          else semPedidoCount++;
+          if (typeof it.eoqPorReais === 'number') valorSugeridoTotal += it.eoqPorReais;
+        }
+      });
+
+      if (document.getElementById('badgeTotalPOROrders')) document.getElementById('badgeTotalPOROrders').innerText = orderCount;
+      if (document.getElementById('subtabBadgeOrders')) document.getElementById('subtabBadgeOrders').innerText = orderCount;
+      if (document.getElementById('porKpiTotalMP')) document.getElementById('porKpiTotalMP').innerText = items.length;
+      if (document.getElementById('porKpiOrder')) document.getElementById('porKpiOrder').innerText = orderCount;
+      if (document.getElementById('porKpiManual')) document.getElementById('porKpiManual').innerText = manualCount;
+      if (document.getElementById('porKpiComPedido')) document.getElementById('porKpiComPedido').innerText = comPedidoCount;
+      if (document.getElementById('porKpiSemPedido')) document.getElementById('porKpiSemPedido').innerText = semPedidoCount;
+      if (document.getElementById('porKpiValorSugerido')) {
+        document.getElementById('porKpiValorSugerido').innerText = 'R$ ' + Math.round(valorSugeridoTotal).toLocaleString('pt-BR');
+      }
+
+      let filtered = items.filter(it => {
+        const isOrder = String(it.flag).toLowerCase() === 'order';
+        const isManual = String(it.flag).toLowerCase() === 'manual';
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+
+        if (porActiveFilter === 'ORDER' && !isOrder) return false;
+        if (porActiveFilter === 'MANUAL' && !isManual) return false;
+        if (porActiveFilter === 'SEM_PEDIDO' && (!isOrder || activeOrders.length > 0)) return false;
+        if (porActiveFilter === 'COM_PEDIDO' && (!isOrder || activeOrders.length === 0)) return false;
+        if (porActiveFilter === 'ZERADOS' && it.saldo > 0) return false;
+
+        if (porSearchQuery) {
+          const q = porSearchQuery.toLowerCase();
+          const pInfo = getProductInfo(it.materiaPrima);
+          const matchMP = (it.materiaPrima || '').toLowerCase().includes(q);
+          const matchCod = (pInfo.codigo || '').toLowerCase().includes(q);
+          const matchMPCod = (pInfo.mp || '').toLowerCase().includes(q);
+          if (!matchMP && !matchCod && !matchMPCod) return false;
+        }
+
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        const aOrder = String(a.flag).toLowerCase() === 'order' ? 1 : 0;
+        const bOrder = String(b.flag).toLowerCase() === 'order' ? 1 : 0;
+        if (aOrder !== bOrder) return bOrder - aOrder;
+
+        const aDDE = typeof a.dde === 'number' ? a.dde : 9999;
+        const bDDE = typeof b.dde === 'number' ? b.dde : 9999;
+        return aDDE - bDDE;
+      });
+
+      let html = '';
+      filtered.forEach((it, idx) => {
+        const pInfo = getProductInfo(it.materiaPrima);
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const isOrder = String(it.flag).toLowerCase() === 'order';
+        const isManual = String(it.flag).toLowerCase() === 'manual';
+
+        let flagBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-600">OK</span>';
+        let rowClass = 'hover:bg-zinc-50/80 transition-colors';
+
+        if (isOrder) {
+          rowClass = 'bg-rose-50/40 hover:bg-rose-50/70 transition-colors font-medium';
+          flagBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-pulse shadow-2xs">ORDER</span>';
+        } else if (isManual) {
+          rowClass = 'bg-amber-50/30 hover:bg-amber-50/60 transition-colors';
+          flagBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">MANUAL</span>';
+        }
+
+        let pedidosStatusHtml = '';
+        if (activeOrders.length > 0) {
+          const totalQtd = activeOrders.reduce((acc, o) => acc + (parseFloat(String(o.quantidade).replace(/\./g, '').replace(',', '.')) || 0), 0);
+          const firstOrd = activeOrders[0];
+          pedidosStatusHtml = '<div class="flex items-center gap-1" title="Pedido #' + escapeHtml(firstOrd.pedido || 'S/N') + '">' +
+            '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 shrink-0">' +
+            '<i data-lucide="package-check" class="h-3 w-3 text-emerald-700"></i>' +
+            '<span>#' + escapeHtml(firstOrd.pedido || 'S/N') + '</span>' +
+            '</span>' +
+            '<span class="text-[10px] font-mono text-zinc-600 truncate max-w-[90px]">' + totalQtd.toLocaleString('pt-BR') + ' ' + escapeHtml(firstOrd.unidade || 'KG') + '</span>' +
+            '</div>';
+        } else if (isOrder) {
+          pedidosStatusHtml = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-300 shadow-2xs">' +
+            '<i data-lucide="alert-circle" class="h-3 w-3 text-red-600"></i>' +
+            '<span>Sem Pedido</span>' +
+            '</span>';
+        } else {
+          pedidosStatusHtml = '<span class="text-zinc-300 font-mono text-xs">-</span>';
+        }
+
+        const fmtNum = (n) => (typeof n === 'number' && !isNaN(n)) ? n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : (n || '-');
+        const fmtDDE = typeof it.dde === 'number' ? (it.dde.toFixed(0) + 'd') : (it.dde || '-');
+
+        html += '<tr class="' + rowClass + '">' +
+          '<td class="px-2.5 py-1.5 text-center font-mono font-bold text-zinc-400 text-[10px]">' + (idx + 1) + '</td>' +
+          '<td class="px-3 py-1.5">' +
+            '<div class="flex items-center gap-1.5 group/mp">' +
+              '<button type="button" onclick="copyCustomText(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', this)" class="h-5 w-5 rounded flex items-center justify-center text-zinc-400 hover:text-pg hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all shrink-0 cursor-pointer shadow-2xs" title="Copiar nome do produto">' +
+                '<i data-lucide="copy" class="h-3 w-3"></i>' +
+              '</button>' +
+              (pInfo.codigo ? '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200 shrink-0">' + escapeHtml(pInfo.codigo) + '</span>' : '') +
+              (pInfo.mp ? '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">' + escapeHtml(pInfo.mp) + '</span>' : '') +
+              '<span class="font-semibold text-zinc-900 cursor-help truncate max-w-[340px]" data-mp="' + escapeHtml(it.materiaPrima) + '" onmouseenter="showProductTooltip(event, this)" onmousemove="moveProductTooltip(event)" onmouseleave="hideProductTooltip()" title="' + escapeHtml(it.materiaPrima) + '">' +
+                escapeHtml(it.materiaPrima) +
+              '</span>' +
+            '</div>' +
+          '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono font-bold text-zinc-900 tabular-nums">' + fmtNum(it.saldo) + '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono text-zinc-700 tabular-nums">' + fmtNum(it.media6M) + '</td>' +
+          '<td class="px-2 py-1.5 text-center font-mono font-semibold ' + (typeof it.dde === 'number' && it.dde <= 15 ? 'text-rose-700 bg-rose-100/50 rounded' : 'text-zinc-600') + ' tabular-nums">' + fmtDDE + '</td>' +
+          '<td class="px-2 py-1.5 text-center font-mono text-zinc-700 tabular-nums">' + it.leadTime + 'd</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono text-zinc-600 tabular-nums">' + fmtNum(it.safetyStock) + '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono font-black text-zinc-900 bg-zinc-100/60 tabular-nums">' + fmtNum(it.por) + '</td>' +
+          '<td class="px-2.5 py-1.5 text-center">' + flagBadge + '</td>' +
+          '<td class="px-3 py-1.5">' + pedidosStatusHtml + '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono text-zinc-600 tabular-nums">' + fmtNum(it.eoq) + '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono font-black text-emerald-800 tabular-nums">' + fmtNum(it.eoqPor) + '</td>' +
+          '<td class="px-2 py-1.5 text-center">' +
+            (isOrder ? 
+              ('<button type="button" onclick="gerarPedidoAPartirDoPOR(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', ' + Math.round(it.eoqPor || it.por || 0) + ')" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-[10px] font-bold shadow-2xs transition-all cursor-pointer" title="Criar solicitação de compra na Gestão de Pedidos">' +
+                '<i data-lucide="plus-circle" class="h-3 w-3"></i><span>Criar</span>' +
+              '</button>') :
+              ('<button type="button" onclick="abrirLeadTimeDoProduto(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\')" class="inline-flex items-center justify-center h-6 w-6 rounded border border-zinc-200 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-all cursor-pointer" title="Ver lead time">' +
+                '<i data-lucide="clock" class="h-3 w-3"></i>' +
+              '</button>')
+            ) +
+          '</td>' +
+        '</tr>';
+      });
+
+      if (filtered.length === 0) {
+        html = '<tr><td colspan="13" class="p-8 text-center text-zinc-500 text-xs">Nenhum produto corresponde aos filtros selecionados.</td></tr>';
+      }
+
+      tbody.innerHTML = html;
+      document.getElementById('porTableCount').innerText = 'Exibindo ' + filtered.length + ' de ' + items.length + ' matérias-primas';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderPORLeadTime() {
+      if (!porState) initPORState();
+      const tbody = document.getElementById('leadTimeTableBody');
+      if (!tbody) return;
+
+      const items = porState.leadTimes;
+      let filtered = items;
+
+      if (leadTimeSearchQuery) {
+        const q = leadTimeSearchQuery.toLowerCase();
+        filtered = filtered.filter(l => {
+          return (l.descricao || '').toLowerCase().includes(q) || 
+                 (l.codigo || '').toLowerCase().includes(q) || 
+                 (l.familia || '').toLowerCase().includes(q);
+        });
+      }
+
+      let html = '';
+      filtered.forEach((lt, idx) => {
+        html += '<tr class="hover:bg-zinc-50/80 transition-colors">' +
+          '<td class="px-3 py-2 text-center font-mono font-bold text-zinc-400">' + (idx + 1) + '</td>' +
+          '<td class="px-3 py-2 font-mono font-bold text-sky-800">' + escapeHtml(lt.codigo || '-') + '</td>' +
+          '<td class="px-3 py-2 font-semibold text-zinc-900">' + escapeHtml(lt.descricao) + '</td>' +
+          '<td class="px-3 py-2 text-zinc-600">' + escapeHtml(lt.familia || '-') + '</td>' +
+          '<td class="px-3 py-2 text-center font-mono font-black text-emerald-800 bg-emerald-50/50 tabular-nums">' + lt.leadTimePOR + ' dias</td>' +
+          '<td class="px-3 py-2 text-center">' +
+            '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ' + (lt.tipo === 'Manual' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300') + '">' +
+              escapeHtml(lt.tipo || 'Automatico') +
+            '</span>' +
+          '</td>' +
+          '<td class="px-3 py-2 text-center">' +
+            '<button type="button" onclick="openEditLeadTimeModal(' + lt.id + ')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 text-xs font-bold transition-all cursor-pointer shadow-2xs">' +
+              '<i data-lucide="edit-3" class="h-3 w-3"></i><span>Editar</span>' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+      });
+
+      if (filtered.length === 0) {
+        html = '<tr><td colspan="7" class="p-8 text-center text-zinc-500 text-xs">Nenhum registro de Lead Time encontrado.</td></tr>';
+      }
+
+      tbody.innerHTML = html;
+      document.getElementById('leadTimeTableCount').innerText = 'Exibindo ' + filtered.length + ' de ' + items.length + ' itens cadastrados';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderPORCruzamentoPedidos() {
+      if (!porState) initPORState();
+      const container = document.getElementById('cruzamentoPedidosContainer');
+      if (!container) return;
+
+      const orderItems = porState.listaMP.filter(it => String(it.flag).toLowerCase() === 'order');
+      let cardsHtml = '';
+
+      orderItems.forEach(it => {
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const hasOrders = activeOrders.length > 0;
+
+        cardsHtml += '<div class="rounded-xl border ' + (hasOrders ? 'border-emerald-200 bg-white' : 'border-rose-300 bg-rose-50/40') + ' p-4 shadow-card flex flex-col justify-between gap-3">' +
+          '<div>' +
+            '<div class="flex items-start justify-between gap-2 border-b border-zinc-100 pb-2">' +
+              '<h4 class="text-xs font-bold text-zinc-900 leading-snug">' + escapeHtml(it.materiaPrima) + '</h4>' +
+              '<span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black ' + (hasOrders ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-600 text-white animate-pulse') + '">' +
+                (hasOrders ? 'Pedido em Andamento' : 'URGENTE: Sem Pedido') +
+              '</span>' +
+            '</div>' +
+
+            '<div class="grid grid-cols-3 gap-2 mt-2.5 text-xs">' +
+              '<div class="bg-zinc-50 p-2 rounded-lg">' +
+                '<span class="text-[10px] uppercase font-bold text-zinc-400 block">Saldo Atual</span>' +
+                '<strong class="font-mono text-zinc-900 font-bold">' + it.saldo.toLocaleString('pt-BR') + '</strong>' +
+              '</div>' +
+              '<div class="bg-zinc-50 p-2 rounded-lg">' +
+                '<span class="text-[10px] uppercase font-bold text-zinc-400 block">P.O.R</span>' +
+                '<strong class="font-mono text-zinc-900 font-bold">' + Math.round(it.por).toLocaleString('pt-BR') + '</strong>' +
+              '</div>' +
+              '<div class="bg-emerald-50 p-2 rounded-lg">' +
+                '<span class="text-[10px] uppercase font-bold text-emerald-700 block">Sugestão</span>' +
+                '<strong class="font-mono text-emerald-900 font-bold">' + Math.round(it.eoqPor || it.por).toLocaleString('pt-BR') + '</strong>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="mt-3">' +
+              '<span class="text-[11px] font-bold text-zinc-700 block mb-1">Pedidos na Gestão de Pedidos:</span>' +
+              (hasOrders ? 
+                ('<div class="space-y-1">' +
+                  activeOrders.map(o => 
+                    '<div class="flex items-center justify-between p-1.5 rounded bg-emerald-50/80 border border-emerald-200 text-xs">' +
+                      '<span class="font-bold text-emerald-950 font-mono">Pedido #' + escapeHtml(o.pedido || 'S/N') + '</span>' +
+                      '<span class="font-mono text-zinc-700">' + o.quantidade + ' ' + (o.unidade || 'KG') + '</span>' +
+                      '<span class="text-[10px] text-emerald-800">Prev: ' + (o.previsaoEntrega || '-') + '</span>' +
+                    '</div>'
+                  ).join('') +
+                '</div>') : 
+                ('<div class="p-2 rounded bg-rose-100/60 border border-rose-300 text-xs text-rose-900 font-medium flex items-center justify-between">' +
+                  '<span>Nenhum pedido em aberto. Ruptura de estoque iminente!</span>' +
+                  '<button type="button" onclick="gerarPedidoAPartirDoPOR(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', ' + Math.round(it.eoqPor || it.por || 0) + ')" class="px-2.5 py-1 rounded bg-rose-700 hover:bg-rose-800 text-white font-bold text-[10px] shadow-2xs cursor-pointer">' +
+                    'Criar Pedido' +
+                  '</button>' +
+                '</div>')
+              ) +
+            '</div>' +
+          '</div>' +
+
+          '<div class="pt-2 border-t border-zinc-100 flex items-center justify-between">' +
+            '<span class="text-[10px] text-zinc-400 font-mono">Lead time: ' + it.leadTime + 'd | DDE: ' + (typeof it.dde === 'number' ? it.dde.toFixed(0) + 'd' : '-') + '</span>' +
+            '<button type="button" onclick="abrirLeadTimeDoProduto(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\')" class="text-xs text-emerald-700 hover:underline font-semibold cursor-pointer">' +
+              'Ajustar Lead Time &rarr;' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      });
+
+      container.innerHTML = cardsHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setPORFilter(type) {
+      porActiveFilter = type;
+      document.querySelectorAll('.por-flt-btn').forEach(b => {
+        b.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-all cursor-pointer';
+      });
+      const activeBtn = document.getElementById('por-flt-' + type);
+      if (activeBtn) {
+        if (type === 'ORDER') activeBtn.className = 'por-flt-btn px-3 py-1.5 text-xs font-black rounded-lg bg-rose-600 text-white shadow-2xs transition-all cursor-pointer';
+        else if (type === 'SEM_PEDIDO') activeBtn.className = 'por-flt-btn px-3 py-1.5 text-xs font-black rounded-lg bg-red-700 text-white shadow-2xs transition-all cursor-pointer';
+        else activeBtn.className = 'por-flt-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer';
+      }
+      renderPORListaMP();
+    }
+
+    function onPORSearch(val) {
+      porSearchQuery = val;
+      renderPORListaMP();
+    }
+
+    function clearPORSearch() {
+      porSearchQuery = '';
+      const inp = document.getElementById('porSearchInput');
+      if (inp) inp.value = '';
+      renderPORListaMP();
+    }
+
+    function onLeadTimeSearch(val) {
+      leadTimeSearchQuery = val;
+      renderPORLeadTime();
+    }
+
+    function abrirLeadTimeDoProduto(materiaPrima) {
+      switchPORSubTab('leadtime');
+      const inp = document.getElementById('leadTimeSearchInput');
+      if (inp) {
+        inp.value = materiaPrima;
+        leadTimeSearchQuery = materiaPrima;
+        renderPORLeadTime();
+      }
+    }
+
+    function openEditLeadTimeModal(id) {
+      if (!porState) initPORState();
+      const ltItem = porState.leadTimes.find(l => l.id === id);
+      if (!ltItem) return;
+
+      document.getElementById('editLTId').value = ltItem.id;
+      document.getElementById('editLTDescricao').innerText = ltItem.descricao + (ltItem.codigo ? ' (Cód: ' + ltItem.codigo + ')' : '');
+      document.getElementById('editLTDias').value = ltItem.leadTimePOR || 15;
+      document.getElementById('editLTTipo').value = ltItem.tipo || 'Automatico';
+
+      const modal = document.getElementById('modalEditLeadTime');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeEditLeadTimeModal() {
+      const modal = document.getElementById('modalEditLeadTime');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleSaveLeadTime(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('editLTId').value);
+      const dias = parseFloat(document.getElementById('editLTDias').value) || 15;
+      const tipo = document.getElementById('editLTTipo').value;
+
+      const ltItem = porState.leadTimes.find(l => l.id === id);
+      if (!ltItem) return;
+
+      ltItem.leadTimePOR = dias;
+      ltItem.tipo = tipo;
+
+      const key = normalizeKey(ltItem.descricao);
+      let updatedCount = 0;
+
+      porState.listaMP.forEach(it => {
+        if (normalizeKey(it.materiaPrima) === key || (it.materiaPrima && it.materiaPrima.toUpperCase().includes(key))) {
+          it.leadTime = dias;
+          it.tipo = tipo;
+          recalculatePORItem(it);
+          updatedCount++;
+        }
+      });
+
+      savePORState();
+      closeEditLeadTimeModal();
+
+      showToast('Lead Time de "' + ltItem.descricao.slice(0, 28) + '..." atualizado para ' + dias + ' dias! P.O.R e Estoque de Segurança recalculados.', 'check-circle');
+
+      renderPORLeadTime();
+      renderPORListaMP();
+    }
+
+    function gerarPedidoAPartirDoPOR(materiaPrima, quantidade) {
+      const newRow = {
+        id: rows.length + 1,
+        materiaPrima: materiaPrima,
+        fornecedor: '',
+        pedido: '',
+        pedidoColor: '#27272a',
+        dataPedido: '',
+        urgencia: 'ALTA',
+        status: 'SEM PEDIDO',
+        quantidade: quantidade > 0 ? String(quantidade) : '',
+        unidade: 'KG',
+        embalagem: '',
+        previsaoEntrega: '',
+        solicitacao: '',
+        dataSolicitada: new Date().toISOString().slice(0, 10),
+        statusEntrega: '',
+        dataChegada: '',
+        obs: 'Gerado a partir do Ponto de Reordem (P.O.R)'
+      };
+
+      rows.unshift(newRow);
+      saveState();
+
+      switchAppTab('pedidos');
+      renderTable();
+
+      showToast('Nova solicitação criada na Gestão de Pedidos para "' + materiaPrima.slice(0, 30) + '..." com qtd sugerida de ' + quantidade.toLocaleString('pt-BR') + ' KG', 'plus-circle');
+    }
+
+    async function exportPORToExcel() {
+      if (typeof ExcelJS === 'undefined') {
+        showToast('Biblioteca ExcelJS não carregada', 'alert-circle');
+        return;
+      }
+
+      if (!porState) initPORState();
+      const items = porState.listaMP;
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'PCP PG Química';
+      wb.created = new Date();
+
+      const ws = wb.addWorksheet('PONTO DE REORDEM MP', { views: [{ showGridLines: true }] });
+
+      ws.columns = [
+        { header: 'Nº', key: 'id', width: 6 },
+        { header: 'MATÉRIA-PRIMA', key: 'materiaPrima', width: 44 },
+        { header: 'SALDO ATUAL', key: 'saldo', width: 15 },
+        { header: 'CUSTO UNIT.', key: 'custoUnitario', width: 14 },
+        { header: 'CONSUMO 6M', key: 'media6M', width: 15 },
+        { header: 'DDE (DIAS)', key: 'dde', width: 12 },
+        { header: 'LEAD TIME', key: 'leadTime', width: 12 },
+        { header: 'EST. SEGURANÇA', key: 'safetyStock', width: 16 },
+        { header: 'P.O.R', key: 'por', width: 15 },
+        { header: 'FLAG DECISÃO', key: 'flag', width: 15 },
+        { header: 'LOT ECONÔMICO (EOQ)', key: 'eoq', width: 18 },
+        { header: 'SUGESTÃO COMPRA', key: 'eoqPor', width: 18 },
+        { header: 'SUGESTÃO R$', key: 'eoqPorReais', width: 18 }
+      ];
+
+      const headerRow = ws.getRow(1);
+      headerRow.height = 26;
+      headerRow.eachCell((c) => {
+        c.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF065F46' } };
+        c.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+
+      items.forEach((it, i) => {
+        const row = ws.addRow({
+          id: i + 1,
+          materiaPrima: it.materiaPrima,
+          saldo: it.saldo,
+          custoUnitario: it.custoUnitario,
+          media6M: typeof it.media6M === 'number' ? it.media6M : 0,
+          dde: typeof it.dde === 'number' ? Math.round(it.dde) : (it.dde || ''),
+          leadTime: it.leadTime,
+          safetyStock: Math.round(it.safetyStock || 0),
+          por: Math.round(it.por || 0),
+          flag: it.flag || 'OK',
+          eoq: typeof it.eoq === 'number' ? Math.round(it.eoq) : 0,
+          eoqPor: typeof it.eoqPor === 'number' ? Math.round(it.eoqPor) : 0,
+          eoqPorReais: typeof it.eoqPorReais === 'number' ? Math.round(it.eoqPorReais) : 0
+        });
+
+        if (String(it.flag).toLowerCase() === 'order') {
+          row.getCell(10).font = { bold: true, color: { argb: 'FFDC2626' } };
+          row.getCell(10).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+        }
+      });
+
+      ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: items.length + 1, column: 13 } };
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'PG_QUIMICA_PONTO_DE_REORDEM_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      showToast('Relatório completo do P.O.R exportado com sucesso!', 'file-spreadsheet');
+    }
+
+    async function handlePORFileUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      showToast('Processando planilha enviada...', 'loader');
+      try {
+        const wb = new ExcelJS.Workbook();
+        const arrayBuffer = await file.arrayBuffer();
+        await wb.xlsx.load(arrayBuffer);
+
+        const ws = wb.getWorksheet('Lista MP') || wb.worksheets[0];
+        if (!ws) {
+          showToast('Aba Lista MP não encontrada na planilha', 'alert-triangle');
+          return;
+        }
+
+        let updated = 0;
+        for (let r = 2; r <= ws.rowCount; r++) {
+          const row = ws.getRow(r);
+          const mp = row.getCell(1).value;
+          if (!mp) continue;
+
+          const key = normalizeKey(String(mp));
+          const match = porState.listaMP.find(it => normalizeKey(it.materiaPrima) === key);
+          if (match) {
+            const saldoVal = row.getCell(3).value?.result ?? row.getCell(3).value;
+            if (typeof saldoVal === 'number') {
+              match.saldo = saldoVal;
+              recalculatePORItem(match);
+              updated++;
+            }
+          }
+        }
+
+        savePORState();
+        renderPORListaMP();
+        showToast('Planilha atualizada com sucesso! ' + updated + ' saldos atualizados e P.O.R recalculado.', 'check-circle');
+      } catch (err) {
+        console.error('Erro ao ler planilha enviada:', err);
+        showToast('Não foi possível ler o arquivo enviado. Verifique o formato.', 'alert-circle');
+      }
+    }
+
+    function copyCustomText(text, btnEl) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copiado: ' + text.slice(0, 28) + '...', 'check');
+      }).catch(() => fallbackCopyText(text));
+    }
+
+
     // Inicialização
+    initPORState();
+    renderPORListaMP();
     renderTable();
   </script>
 <div id="product-hover-tooltip" style="display:none; position:fixed; z-index:999999;"></div>
