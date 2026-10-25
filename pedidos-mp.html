@@ -4180,6 +4180,49 @@
       if (pCount) pCount.innerText = pendentes;
     }
 
+    
+    // =========================================================================
+    // FILTRO DE ITEM ESPECÍFICO EM PEDIDOS CRÍTICOS AO CLICAR NO ALERTA
+    // =========================================================================
+    let criticosSingleItemIndex = null;
+
+    function openItemInCriticos(originalIndex, event) {
+      if (event) event.stopPropagation();
+      const item = rows[originalIndex];
+      if (!item) return;
+
+      criticosSingleItemIndex = originalIndex;
+
+      // Limpa outros filtros para focar exclusivamente neste item
+      criticosFilterSeverity = 'TODOS';
+      criticosSearchQuery = '';
+      const searchInp = document.getElementById('criticosSearchInput');
+      if (searchInp) searchInp.value = '';
+
+      switchAppTab('criticos');
+      renderPainelCriticos();
+
+      showToast('Visualizando retorno de compras exclusivo deste pedido', 'bell-ring');
+
+      // Scroll suave até o card e animação de destaque
+      setTimeout(() => {
+        const card = document.getElementById('crit-card-' + originalIndex) || document.querySelector('#criticosCardsContainer > div');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('ring-2', 'ring-amber-500', 'ring-offset-2');
+          setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-amber-500', 'ring-offset-2');
+          }, 3500);
+        }
+      }, 100);
+    }
+
+    function clearCriticosSingleItemFilter() {
+      criticosSingleItemIndex = null;
+      renderPainelCriticos();
+      showToast('Exibindo todos os pedidos críticos', 'list-filter');
+    }
+
     function renderPainelCriticos() {
       const allDelayed = getDelayedItems();
       const cardsContainer = document.getElementById('criticosCardsContainer');
@@ -4241,8 +4284,27 @@
       if (document.getElementById('criticosCountSemPedido')) document.getElementById('criticosCountSemPedido').innerText = semPedidoCount;
 
       // 2. Filtrar
-      let filtered = allDelayed.filter(d => {
-        if (criticosSearchQuery) {
+      let filtered = allDelayed;
+
+      // Se foi aberto via alerta de item específico da Gestão de Pedidos:
+      if (criticosSingleItemIndex !== null) {
+        filtered = filtered.filter(d => d.originalIndex === criticosSingleItemIndex);
+        if (filtered.length === 0) {
+          // Fallback caso não seja estritamente delayed: busca por produto
+          const targetItem = rows[criticosSingleItemIndex];
+          if (targetItem) {
+            filtered = [{
+              ...targetItem,
+              originalIndex: criticosSingleItemIndex,
+              delayDays: calculateDelayDays(targetItem) || 1,
+              qtyNum: parseFloat(String(targetItem.quantidade).replace(/\./g, '').replace(',', '.')) || 0,
+              computedStatus: computeStatus(targetItem) || targetItem.status || 'COM JUSTIFICATIVA'
+            }];
+          }
+        }
+      } else {
+        filtered = filtered.filter(d => {
+          if (criticosSearchQuery) {
           const pInfo = getProductInfo(d.materiaPrima);
           const matchMP = (d.materiaPrima || '').toLowerCase().includes(criticosSearchQuery);
           const matchCod = (pInfo.codigo || '').toLowerCase().includes(criticosSearchQuery);
@@ -4264,8 +4326,9 @@
           return !d.pedido || d.pedido.trim() === '' || d.pedido === '-';
         }
 
-        return true;
-      });
+          return true;
+        });
+      }
 
       // 3. Ordenar
       filtered.sort((a, b) => {
@@ -4276,6 +4339,36 @@
         if (criticosSortField === 'forn_asc') return (a.fornecedor || '').localeCompare(b.fornecedor || '');
         return 0;
       });
+
+      // 4. Banner de Item Específico Selecionado via Alerta
+      let singleBannerHtml = '';
+      if (criticosSingleItemIndex !== null && filtered.length > 0) {
+        const selItem = filtered[0];
+        singleBannerHtml = `
+          <div class="col-span-full mb-2 flex items-center justify-between p-3 rounded-xl bg-amber-50/90 border border-amber-300 text-amber-950 shadow-sm animate-fadeIn">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white shadow-2xs shrink-0">
+                <i data-lucide="bell-ring" class="h-4 w-4"></i>
+              </span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold uppercase tracking-wider text-amber-800">Visualização Exclusiva do Item:</span>
+                  <span class="text-xs font-bold text-zinc-900">${escapeHtml(selItem.materiaPrima)}</span>
+                </div>
+                <div class="text-[11px] text-amber-900/80 mt-0.5">
+                  Exibindo o feedback e retorno do comprador preenchido para este pedido específico.
+                </div>
+              </div>
+            </div>
+            <button type="button" 
+                    onclick="clearCriticosSingleItemFilter()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-zinc-100 text-zinc-800 border border-amber-300 text-xs font-bold shadow-2xs transition-all cursor-pointer hover:border-amber-400">
+              <i data-lucide="x" class="h-3.5 w-3.5 text-zinc-500"></i>
+              <span>Ver Todos os Pedidos Críticos</span>
+            </button>
+          </div>
+        `;
+      }
 
       // 4. Renderizar: Cards ou Tabela
       if (filtered.length === 0) {
@@ -4311,7 +4404,7 @@
         }
 
         cardsHtml += `
-          <div class="rounded-xl border border-zinc-200/90 bg-white shadow-card p-4 transition-all hover:shadow-md hover:border-zinc-300 flex flex-col gap-3">
+          <div id="crit-card-${item.originalIndex}" class="rounded-xl border border-zinc-200/90 bg-white shadow-card p-4 transition-all hover:shadow-md hover:border-zinc-300 flex flex-col gap-3">
             
             <!-- Linha 1: Cabeçalho do Card, Código, MP e Severidade -->
             <div class="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-100 pb-3">
@@ -4494,7 +4587,7 @@
           </div>
         `;
       });
-      cardsContainer.innerHTML = cardsHtml;
+      cardsContainer.innerHTML = singleBannerHtml + cardsHtml;
 
       // RENDERIZAR TABELA GERENCIAL COMPACTA
       let tableHtml = '';
@@ -5049,13 +5142,9 @@
               </div>
             </td>
             <td class="px-1 py-1 text-center font-mono text-[10px] text-zinc-400 tabular-nums">${idx + 1}</td>
-            <!-- Coluna Matéria-Prima: com Passe o Mouse para ver Código e MP + Badges Visuais + Alerta de Retorno de Compras -->
-            <td class="px-2.5 py-1.5 font-medium text-zinc-900 min-w-[580px]">
-              <div class="flex items-center gap-1.5 group/mp w-full"
-                   data-mp="${escapeHtml(r.materiaPrima)}"
-                   onmouseenter="showProductTooltip(event, this)"
-                   onmousemove="moveProductTooltip(event)"
-                   onmouseleave="hideProductTooltip()">
+            <!-- Coluna Matéria-Prima: Badges, Símbolo de Alerta de Justificativa e Descrição -->
+            <td class="px-2.5 py-1 font-medium text-zinc-900 min-w-[560px] whitespace-nowrap">
+              <div class="flex items-center gap-1.5 group/mp w-full">
                 <!-- Botão de Copiar na frente da descrição do produto -->
                 <button type="button" 
                         onclick="copyProductDescription(${idx}, this)" 
@@ -5064,9 +5153,20 @@
                   <i data-lucide="copy" class="h-3 w-3"></i>
                 </button>
 
-                <!-- Badges Visuais Compactos de Código e MP para identificação rápida -->
-                ${pInfo.codigo ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200 shrink-0 cursor-help shadow-2xs" title="Código do Produto (Saldo Diário)" data-mp="${escapeHtml(r.materiaPrima)}" onmouseenter="showProductTooltip(event, this)">${escapeHtml(pInfo.codigo)}</span>` : ''}
-                ${pInfo.mp ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 cursor-help shadow-2xs" title="Código MP (Sistema)" data-mp="${escapeHtml(r.materiaPrima)}" onmouseenter="showProductTooltip(event, this)">${escapeHtml(pInfo.mp)}</span>` : ''}
+                <!-- Badges Visuais Compactos de Código e MP -->
+                ${pInfo.codigo ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200 shrink-0 cursor-help shadow-2xs" title="Código do Produto (Saldo Diário)" data-mp="${escapeHtml(r.materiaPrima)}" onmouseenter="showProductTooltip(event, this)" onmousemove="moveProductTooltip(event)" onmouseleave="hideProductTooltip()">${escapeHtml(pInfo.codigo)}</span>` : ''}
+                ${pInfo.mp ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 cursor-help shadow-2xs" title="Código MP (Sistema)" data-mp="${escapeHtml(r.materiaPrima)}" onmouseenter="showProductTooltip(event, this)" onmousemove="moveProductTooltip(event)" onmouseleave="hideProductTooltip()">${escapeHtml(pInfo.mp)}</span>` : ''}
+
+                <!-- Símbolo de Alerta: quando houver justificativa/retorno de compras, exibe botão interativo que abre Pedidos Críticos mostrando apenas este item -->
+                ${tratativa && (tratativa.motivoAtraso || tratativa.causaRaiz || tratativa.novaPrevisao) ? `
+                  <button type="button"
+                          onclick="openItemInCriticos(${idx}, event)"
+                          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0 hover:scale-105"
+                          title="🔔 Possui justificativa de compras! Clique para abrir os detalhes na aba Pedidos Críticos.">
+                    <i data-lucide="bell-ring" class="h-3 w-3 text-amber-600 animate-pulse"></i>
+                    <span class="text-[9.5px] font-bold">Feedback Compras</span>
+                  </button>
+                ` : ''}
 
                 <div class="flex-1 min-w-0">
                   <input type="text"
@@ -5080,7 +5180,6 @@
                          onchange="updateCell(${idx}, 'materiaPrima', this.value)">
                 </div>
               </div>
-              ${tratativaAlertHtml}
             </td>
             <td class="px-1 py-1">
               <input type="text" class="table-cell-input text-zinc-600" value="${escapeHtml(r.fornecedor)}" placeholder="Fornecedor..." onchange="updateCell(${idx}, 'fornecedor', this.value)">
