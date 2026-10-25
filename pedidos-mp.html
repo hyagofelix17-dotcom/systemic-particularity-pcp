@@ -3910,6 +3910,53 @@
       renderPainelCriticos();
     }
 
+    function excluirTratativaCriticos(originalIndex) {
+      const item = rows[originalIndex];
+      if (!item) return;
+
+      const desc = item.materiaPrima ? item.materiaPrima.slice(0, 36) : 'este item';
+      if (!confirm('Deseja realmente excluir a tratativa de compras de "' + desc + '"?\n\nO alerta do sino (🔔) será automaticamente removido da aba Gestão de Pedidos.')) {
+        return;
+      }
+
+      // 1. Limpa os campos de tratativa na linha atual
+      item.causaRaiz = '';
+      item.novaPrevisao = '';
+      item.statusCobranca = 'Pendente';
+      item.motivoAtraso = '';
+      item.dataTratativa = '';
+
+      // 2. Limpa também em qualquer outra linha do mesmo produto para que o alerta saia por completo
+      if (item.materiaPrima) {
+        const key = normalizeKey(item.materiaPrima);
+        rows.forEach((r, idx) => {
+          if (idx !== originalIndex && normalizeKey(r.materiaPrima) === key) {
+            r.causaRaiz = '';
+            r.novaPrevisao = '';
+            r.statusCobranca = 'Pendente';
+            r.motivoAtraso = '';
+            r.dataTratativa = '';
+          }
+        });
+      }
+
+      // 3. Salva no localStorage
+      saveState();
+
+      // 4. Se estava filtrado pelo item único, limpa o filtro de visualização
+      if (criticosSingleItemIndex === originalIndex) {
+        criticosSingleItemIndex = null;
+      }
+
+      // 5. Re-renderiza ambas as abas e KPIs
+      updateCriticosKPIsOnly();
+      renderPainelCriticos();
+      renderTable();
+
+      showToast('Tratativa excluída com sucesso! Alerta do sino removido da Gestão de Pedidos.', 'trash-2');
+    }
+
+
     function setCriticosFilter(filterType) {
       criticosFilterSeverity = filterType;
       document.querySelectorAll('.criticos-filter-btn').forEach(b => {
@@ -4484,6 +4531,14 @@
                     <i data-lucide="save" class="h-3.5 w-3.5"></i>
                     <span>Salvar Tratativa</span>
                   </button>
+                  <!-- Botão de Excluir Tratativa -->
+                  <button type="button" 
+                          onclick="excluirTratativaCriticos(${item.originalIndex})" 
+                          class="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 px-2.5 py-1 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                          title="Excluir tratativa e remover o alerta do sino na Gestão de Pedidos">
+                    <i data-lucide="trash-2" class="h-3.5 w-3.5 text-rose-600"></i>
+                    <span>Excluir Tratativa</span>
+                  </button>
                   <!-- Botão de Cobrança Rápida -->
                   <button type="button" 
                           onclick="copyCobrancaMessage(${item.originalIndex}, this)" 
@@ -4569,16 +4624,25 @@
                           onchange="updateCriticosField(${item.originalIndex}, 'motivoAtraso', this.value)"
                           class="w-full rounded-md border border-amber-300/90 bg-white p-2.5 text-xs text-zinc-800 placeholder-zinc-400 focus:bg-white focus:border-pg focus:ring-1 focus:ring-pg focus:outline-none transition-all">${escapeHtml(item.motivoAtraso || '')}</textarea>
                 
-                <div class="flex items-center justify-between mt-2 pt-2 border-t border-amber-200/50">
+                <div class="flex items-center justify-between mt-2 pt-2 border-t border-amber-200/50 flex-wrap gap-2">
                   <span class="text-[10px] text-amber-800 italic flex items-center gap-1">
-                    <i data-lucide="info" class="h-3 w-3"></i> Ao salvar, a resposta aparecerá automaticamente como alerta na Gestão de Pedidos.
+                    <i data-lucide="info" class="h-3 w-3"></i> O retorno de compras sincroniza automaticamente com o sino (🔔) na Gestão de Pedidos.
                   </span>
-                  <button type="button" 
-                          onclick="salvarTratativaCriticos(${item.originalIndex}, this)" 
-                          class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3.5 py-1 text-xs font-bold shadow-2xs transition-all cursor-pointer hover:shadow-xs">
-                    <i data-lucide="save" class="h-3.5 w-3.5"></i>
-                    <span>Salvar Tratativa de Compras</span>
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button type="button" 
+                            onclick="excluirTratativaCriticos(${item.originalIndex})" 
+                            class="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 px-3 py-1 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                            title="Excluir tratativa e remover o alerta do sino na Gestão de Pedidos">
+                      <i data-lucide="trash-2" class="h-3.5 w-3.5 text-rose-600"></i>
+                      <span>Excluir Tratativa</span>
+                    </button>
+                    <button type="button" 
+                            onclick="salvarTratativaCriticos(${item.originalIndex}, this)" 
+                            class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3.5 py-1 text-xs font-bold shadow-2xs transition-all cursor-pointer hover:shadow-xs">
+                      <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                      <span>Salvar Tratativa de Compras</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -4670,6 +4734,12 @@
                         class="inline-flex h-7 w-7 items-center justify-center rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer shadow-2xs"
                         title="Salvar Tratativa de Compras deste Pedido">
                   <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                </button>
+                <button type="button" 
+                        onclick="excluirTratativaCriticos(${item.originalIndex})" 
+                        class="inline-flex h-7 w-7 items-center justify-center rounded border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-2xs"
+                        title="Excluir Tratativa e remover sino na Gestão de Pedidos">
+                  <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
                 </button>
                 <button type="button" 
                         onclick="copyCobrancaMessage(${item.originalIndex}, this)" 
