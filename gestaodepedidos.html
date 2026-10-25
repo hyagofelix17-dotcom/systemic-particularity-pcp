@@ -6287,6 +6287,55 @@
       if (window.lucide) lucide.createIcons();
     }
 
+    function calculatePORLeadTimeMetrics(it) {
+      const lt = parseFloat(it.leadTime) || 0;
+      const hoje = new Date();
+      
+      let chegadaStr = 'Imediato';
+      let chegadaIso = '';
+      if (lt > 0) {
+        const dataChegada = new Date(hoje.getTime() + (lt * 24 * 60 * 60 * 1000));
+        chegadaStr = dataChegada.toLocaleDateString('pt-BR');
+        chegadaIso = dataChegada.toISOString().slice(0, 10);
+      } else {
+        chegadaStr = hoje.toLocaleDateString('pt-BR');
+        chegadaIso = hoje.toISOString().slice(0, 10);
+      }
+
+      const qtdSugerida = typeof it.eoqPor === 'number' && it.eoqPor > 0 ? it.eoqPor : (typeof it.por === 'number' && it.por > 0 ? it.por : 0);
+      const mediaMensal = typeof it.media6M === 'number' && it.media6M > 0 ? it.media6M : 0;
+      const consumoDiario = mediaMensal > 0 ? (mediaMensal / 30) : 0;
+
+      let diasSupridos = null;
+      let diasTotais = null;
+      let diasSupridosText = '-';
+      let diasTotaisText = '-';
+
+      if (consumoDiario > 0 && qtdSugerida > 0) {
+        diasSupridos = Math.round(qtdSugerida / consumoDiario);
+        diasSupridosText = diasSupridos + 'd';
+
+        const saldoAtual = typeof it.saldo === 'number' ? it.saldo : 0;
+        diasTotais = Math.round((saldoAtual + qtdSugerida) / consumoDiario);
+        if (diasTotais < 0) diasTotais = 0;
+        diasTotaisText = diasTotais + 'd';
+      } else if (mediaMensal === 0) {
+        diasSupridosText = 'Demanda sob consulta';
+        diasTotaisText = '-';
+      }
+
+      return {
+        leadTime: lt,
+        chegadaStr,
+        chegadaIso,
+        diasSupridos,
+        diasSupridosText,
+        diasTotais,
+        diasTotaisText,
+        consumoDiario
+      };
+    }
+
     function renderPainelPOR() {
       if (!porState) initPORState();
       switchPORSubTab(currentPORSubTab);
@@ -6377,6 +6426,7 @@
       filtered.forEach((it, idx) => {
         const pInfo = getProductInfo(it.materiaPrima);
         const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const metrics = calculatePORLeadTimeMetrics(it);
         const isOrder = String(it.flag).toLowerCase() === 'order';
         const isManual = String(it.flag).toLowerCase() === 'manual';
 
@@ -6437,7 +6487,11 @@
           '<td class="px-2.5 py-1.5 text-center">' + flagBadge + '</td>' +
           '<td class="px-3 py-1.5">' + pedidosStatusHtml + '</td>' +
           '<td class="px-2.5 py-1.5 text-right font-mono text-zinc-600 tabular-nums">' + fmtNum(it.eoq) + '</td>' +
-          '<td class="px-2.5 py-1.5 text-right font-mono font-black text-emerald-800 tabular-nums">' + fmtNum(it.eoqPor) + '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono tabular-nums">' +
+            '<span class="font-black text-emerald-900 block leading-tight">' + fmtNum(it.eoqPor) + '</span>' +
+            (metrics.diasSupridosText !== '-' ? ('<span class="text-[9.5px] font-semibold text-emerald-700 block font-mono leading-tight" title="Comprando a quantidade sugerida, supre aproximadamente ' + metrics.diasSupridosText + ' de consumo médio">~' + metrics.diasSupridosText + ' suprimento</span>') : '') +
+            (metrics.leadTime > 0 ? ('<span class="text-[9px] text-zinc-500 block font-mono leading-tight" title="Se colocado hoje com Lead Time de ' + metrics.leadTime + 'd, chega em ' + metrics.chegadaStr + '">Chega: ' + metrics.chegadaStr + '</span>') : '') +
+          '</td>' +
           '<td class="px-2 py-1.5 text-center">' +
             (isOrder ? 
               ('<button type="button" onclick="gerarPedidoAPartirDoPOR(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', ' + Math.round(it.eoqPor || it.por || 0) + ')" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-[10px] font-bold shadow-2xs transition-all cursor-pointer" title="Criar solicitação de compra na Gestão de Pedidos">' +
@@ -6518,6 +6572,7 @@
       orderItems.forEach(it => {
         const activeOrders = getActiveOrdersForMP(it.materiaPrima);
         const hasOrders = activeOrders.length > 0;
+        const metrics = calculatePORLeadTimeMetrics(it);
 
         cardsHtml += '<div class="rounded-xl border ' + (hasOrders ? 'border-emerald-200 bg-white' : 'border-rose-300 bg-rose-50/40') + ' p-4 shadow-card flex flex-col justify-between gap-3">' +
           '<div>' +
@@ -6537,9 +6592,33 @@
                 '<span class="text-[10px] uppercase font-bold text-zinc-400 block">P.O.R</span>' +
                 '<strong class="font-mono text-zinc-900 font-bold">' + Math.round(it.por).toLocaleString('pt-BR') + '</strong>' +
               '</div>' +
-              '<div class="bg-emerald-50 p-2 rounded-lg">' +
+              '<div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200/60">' +
                 '<span class="text-[10px] uppercase font-bold text-emerald-700 block">Sugestão</span>' +
                 '<strong class="font-mono text-emerald-900 font-bold">' + Math.round(it.eoqPor || it.por).toLocaleString('pt-BR') + '</strong>' +
+                (metrics.diasSupridosText !== '-' ? '<span class="text-[9.5px] text-emerald-700 font-semibold block mt-0.5">~' + metrics.diasSupridosText + ' de estoque</span>' : '') +
+              '</div>' +
+            '</div>' +
+
+            // NOVO: BLOCO ANALÍTICO DE SUGESTÃO (SE COLOCAR HOJE CHEGARÁ QUANDO & DIAS DE SUPRIMENTO)
+            '<div class="mt-2.5 rounded-lg border border-emerald-200/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/40 to-emerald-50/70 p-2.5 flex flex-col gap-1.5">' +
+              '<div class="flex items-center justify-between text-xs flex-wrap gap-1">' +
+                '<span class="flex items-center gap-1.5 text-zinc-700 font-medium text-[11px]">' +
+                  '<i data-lucide="calendar-clock" class="h-3.5 w-3.5 text-emerald-700 shrink-0"></i>' +
+                  '<span>Se colocar o pedido hoje:</span>' +
+                '</span>' +
+                '<span class="font-mono text-[11px] font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-300 shadow-2xs">' +
+                  'Chegará em: <strong>' + metrics.chegadaStr + '</strong> (+' + metrics.leadTime + 'd)' +
+                '</span>' +
+              '</div>' +
+              '<div class="flex items-center justify-between text-xs flex-wrap gap-1 pt-1.5 border-t border-emerald-200/60">' +
+                '<span class="flex items-center gap-1.5 text-zinc-700 font-medium text-[11px]">' +
+                  '<i data-lucide="hourglass" class="h-3.5 w-3.5 text-teal-700 shrink-0"></i>' +
+                  '<span>Suprimento da quantidade sugerida:</span>' +
+                '</span>' +
+                '<span class="font-mono text-[11px] font-bold text-teal-950 bg-white px-2 py-0.5 rounded border border-teal-300 shadow-2xs">' +
+                  'Suprirá: <strong>' + metrics.diasSupridosText + '</strong>' +
+                  (metrics.diasTotaisText !== '-' ? (' <span class="text-zinc-500 font-normal font-sans text-[10px]">(Total c/ Saldo: ' + metrics.diasTotaisText + ')</span>') : '') +
+                '</span>' +
               '</div>' +
             '</div>' +
 
@@ -6672,6 +6751,9 @@
     }
 
     function gerarPedidoAPartirDoPOR(materiaPrima, quantidade) {
+      const it = (porState && porState.listaMP) ? porState.listaMP.find(m => m.materiaPrima === materiaPrima) : null;
+      const metrics = it ? calculatePORLeadTimeMetrics(it) : null;
+
       const newRow = {
         id: rows.length + 1,
         materiaPrima: materiaPrima,
@@ -6684,12 +6766,12 @@
         quantidade: quantidade > 0 ? String(quantidade) : '',
         unidade: 'KG',
         embalagem: '',
-        previsaoEntrega: '',
+        previsaoEntrega: (metrics && metrics.chegadaIso) ? metrics.chegadaIso : '',
         solicitacao: '',
         dataSolicitada: new Date().toISOString().slice(0, 10),
         statusEntrega: '',
         dataChegada: '',
-        obs: 'Gerado a partir do Ponto de Reordem (P.O.R)'
+        obs: 'Gerado via P.O.R (Sugerido: ' + (quantidade || 0).toLocaleString('pt-BR') + ' KG' + (metrics ? ' | Suprirá: ' + metrics.diasSupridosText + ' | Chegada prevista: ' + metrics.chegadaStr : '') + ')'
       };
 
       rows.unshift(newRow);
@@ -6698,7 +6780,8 @@
       switchAppTab('pedidos');
       renderTable();
 
-      showToast('Nova solicitação criada na Gestão de Pedidos para "' + materiaPrima.slice(0, 30) + '..." com qtd sugerida de ' + quantidade.toLocaleString('pt-BR') + ' KG', 'plus-circle');
+      const prevMsg = (metrics && metrics.chegadaStr) ? (' | Chegada prevista: ' + metrics.chegadaStr + ' (~' + metrics.diasSupridosText + ' suprimento)') : '';
+      showToast('Nova solicitação criada na Gestão de Pedidos para "' + materiaPrima.slice(0, 26) + '..."' + prevMsg, 'plus-circle');
     }
 
     async function exportPORToExcel() {
@@ -6729,7 +6812,10 @@
         { header: 'FLAG DECISÃO', key: 'flag', width: 15 },
         { header: 'LOT ECONÔMICO (EOQ)', key: 'eoq', width: 18 },
         { header: 'SUGESTÃO COMPRA', key: 'eoqPor', width: 18 },
-        { header: 'SUGESTÃO R$', key: 'eoqPorReais', width: 18 }
+        { header: 'SUGESTÃO R$', key: 'eoqPorReais', width: 18 },
+        { header: 'CHEGADA SE PEDIR HOJE', key: 'chegadaSePedirHoje', width: 24 },
+        { header: 'DIAS SUPRIDOS COMPRA', key: 'diasSupridos', width: 22 },
+        { header: 'DIAS TOTAIS C/ SALDO', key: 'diasTotais', width: 20 }
       ];
 
       const headerRow = ws.getRow(1);
@@ -6754,7 +6840,10 @@
           flag: it.flag || 'OK',
           eoq: typeof it.eoq === 'number' ? Math.round(it.eoq) : 0,
           eoqPor: typeof it.eoqPor === 'number' ? Math.round(it.eoqPor) : 0,
-          eoqPorReais: typeof it.eoqPorReais === 'number' ? Math.round(it.eoqPorReais) : 0
+          eoqPorReais: typeof it.eoqPorReais === 'number' ? Math.round(it.eoqPorReais) : 0,
+          chegadaSePedirHoje: (calculatePORLeadTimeMetrics(it)).chegadaStr,
+          diasSupridos: (calculatePORLeadTimeMetrics(it)).diasSupridos !== null ? (calculatePORLeadTimeMetrics(it)).diasSupridos : '',
+          diasTotais: (calculatePORLeadTimeMetrics(it)).diasTotais !== null ? (calculatePORLeadTimeMetrics(it)).diasTotais : ''
         });
 
         if (String(it.flag).toLowerCase() === 'order') {
