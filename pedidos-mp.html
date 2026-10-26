@@ -189,6 +189,16 @@
           <span class="rounded-full bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs" id="badgeTotalPOROrders">34</span>
         </button>
 
+        <!-- Aba 5: Análise Inteligente (Gerente de Planejamento de Materiais & S&OP) -->
+        <button type="button" 
+                id="tab-btn-analise" 
+                onclick="switchAppTab('analise')" 
+                class="flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-indigo-700 hover:border-indigo-400 hover:text-indigo-950 transition-all cursor-pointer">
+          <i data-lucide="brain-circuit" class="h-4.5 w-4.5 text-indigo-600"></i>
+          <span>Análise Inteligente</span>
+          <span class="rounded-full bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs" id="badgeAnaliseCriticos">0</span>
+        </button>
+
         <!-- Aba 3: Gestão de Pedidos IBC's (Não modificada ainda conforme solicitado) -->
         <button type="button" 
                 id="tab-btn-ibcs" 
@@ -1136,12 +1146,21 @@
               Ajuste o prazo de entrega (dias) e o tipo de ressuprimento. O P.O.R e o Estoque de Segurança são recalculados automaticamente!
             </p>
           </div>
-          <div class="flex items-center gap-2 max-w-sm w-full">
-            <input type="text" 
-                   id="leadTimeSearchInput" 
-                   placeholder="Buscar por código ou descrição..." 
-                   oninput="onLeadTimeSearch(this.value)"
-                   class="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs text-zinc-800 focus:bg-white focus:border-emerald-600 focus:outline-none">
+          <div class="flex items-center gap-2.5 max-w-md w-full">
+            <div class="relative flex-1">
+              <input type="text" 
+                     id="leadTimeSearchInput" 
+                     placeholder="Buscar por código ou descrição..." 
+                     oninput="onLeadTimeSearch(this.value)"
+                     class="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs text-zinc-800 focus:bg-white focus:border-emerald-600 focus:outline-none">
+            </div>
+            <button type="button" 
+                    onclick="openNovoLeadTimeModal()" 
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs transition-all cursor-pointer shrink-0"
+                    title="Cadastrar novo produto no Banco de Dados de Lead Time">
+              <i data-lucide="plus-circle" class="h-3.5 w-3.5"></i>
+              <span>Incluir</span>
+            </button>
           </div>
         </div>
 
@@ -1166,7 +1185,7 @@
           </div>
           <div class="p-2.5 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between text-xs text-zinc-500">
             <span id="leadTimeTableCount">Carregando itens...</span>
-            <span class="text-[11px] text-zinc-400">Total cadastrado: 466 produtos</span>
+            <span id="leadTimeTotalCount" class="text-[11px] text-zinc-500 font-semibold">Total cadastrado: 466 produtos</span>
           </div>
         </div>
 
@@ -1190,6 +1209,114 @@
 
       </div>
 
+    </div>
+
+    <!-- MODAL DE CADASTRO DE NOVO PRODUTO NO BANCO DE LEAD TIME -->
+    <div id="modalNovoLeadTime" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xl animate-scaleUp">
+        <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <span class="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-2xs">
+              <i data-lucide="plus-circle" class="h-4.5 w-4.5 text-emerald-700"></i>
+            </span>
+            <div>
+              <h3 class="text-sm font-bold text-zinc-900">Incluir Produto no Banco de Lead Time</h3>
+              <p class="text-[11px] text-zinc-500">Cadastre uma nova matéria-prima para controle de prazos e ressuprimento</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeNovoLeadTimeModal()" class="text-zinc-400 hover:text-zinc-700 p-1 cursor-pointer">
+            <i data-lucide="x" class="h-4.5 w-4.5"></i>
+          </button>
+        </div>
+
+        <form onsubmit="handleSaveNovoLeadTime(event)" class="mt-4 flex flex-col gap-3.5">
+          
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-700 mb-1">
+              Descrição da Matéria-Prima / Produto: <span class="text-rose-600">*</span>
+            </label>
+            <input type="text" 
+                   id="novoLTDescricao" 
+                   required
+                   list="sugestoesMPList"
+                   placeholder="Ex: NOVO COMPONENTE QUÍMICO - GR (MP)" 
+                   class="w-full rounded-lg border border-zinc-300 bg-zinc-50 p-2.5 text-xs text-zinc-800 font-semibold focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none uppercase">
+            <datalist id="sugestoesMPList">
+              <!-- Sugestões preenchidas dinamicamente via JS -->
+            </datalist>
+            <span class="text-[10px] text-zinc-400 mt-0.5 block">Nome comercial ou descrição oficial com embalagem/unidade.</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-zinc-700 mb-1">Código PCP (Opcional):</label>
+              <input type="text" 
+                     id="novoLTCodigo" 
+                     placeholder="Ex: 10582" 
+                     class="w-full rounded-lg border border-zinc-300 bg-zinc-50 p-2 text-xs text-zinc-800 font-mono focus:bg-white focus:border-emerald-600 outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-zinc-700 mb-1">Família / Grupo (Opcional):</label>
+              <input type="text" 
+                     id="novoLTFamilia" 
+                     placeholder="Ex: Polímeros, Solventes, etc." 
+                     class="w-full rounded-lg border border-zinc-300 bg-zinc-50 p-2 text-xs text-zinc-800 focus:bg-white focus:border-emerald-600 outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-zinc-700 mb-1">
+                Lead Time de Entrega (Dias): <span class="text-rose-600">*</span>
+              </label>
+              <div class="relative">
+                <input type="number" 
+                       id="novoLTDias" 
+                       required
+                       min="1" 
+                       max="365" 
+                       value="30"
+                       class="w-full rounded-lg border border-zinc-300 bg-zinc-50 p-2 text-xs text-zinc-800 font-mono font-bold focus:bg-white focus:border-emerald-600 outline-none pr-12">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400 font-medium">dias</span>
+              </div>
+              <span class="text-[10px] text-zinc-400 mt-0.5 block">Prazo contratual do fornecedor.</span>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-zinc-700 mb-1">Tipo de Ressuprimento:</label>
+              <select id="novoLTTipo" class="w-full rounded-lg border border-zinc-300 bg-zinc-50 p-2 text-xs text-zinc-800 font-medium focus:bg-white focus:border-emerald-600 outline-none cursor-pointer">
+                <option value="Manual">Manual</option>
+                <option value="Automatico">Automatico</option>
+                <option value="Importação">Importação</option>
+                <option value="Commodities">Commodities</option>
+              </select>
+              <span class="text-[10px] text-zinc-400 mt-0.5 block">Classificação de cálculo do P.O.R.</span>
+            </div>
+          </div>
+
+          <div class="rounded-lg bg-emerald-50/70 border border-emerald-200/80 p-2.5 text-xs text-emerald-900 flex items-start gap-2">
+            <i data-lucide="info" class="h-4 w-4 text-emerald-600 shrink-0 mt-0.5"></i>
+            <span class="text-[11px] leading-relaxed">
+              Ao cadastrar, o produto ficará disponível imediatamente no <strong>Banco de Lead Time</strong> e seus parâmetros serão vinculados para cálculos de P.O.R, Estoque de Segurança e Análise Inteligente.
+            </span>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 border-t border-zinc-100 pt-3 mt-1">
+            <button type="button" 
+                    onclick="closeNovoLeadTimeModal()" 
+                    class="px-3.5 py-1.5 rounded-lg border border-zinc-300 bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-50 transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" 
+                    class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer">
+              <i data-lucide="check" class="h-3.5 w-3.5"></i>
+              <span>Cadastrar Produto</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DE LEAD TIME -->
@@ -1303,6 +1430,250 @@
       </div>
 
     </div> <!-- FIM DO #view-ibcs -->
+
+    <!-- =======================================================================
+         ABA 5: ANÁLISE INTELIGENTE (GERENTE DE PLANEJAMENTO DE MATERIAIS & S&OP)
+         ======================================================================= -->
+    <div id="view-analise" class="hidden flex-col gap-4">
+      
+      <!-- Banner Executivo Institucional: Gerente de Planejamento de Materiais -->
+      <div class="rounded-xl border border-indigo-200/90 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 shadow-card relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg border border-indigo-400/30">
+              <i data-lucide="brain-circuit" class="h-6 w-6"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-base font-bold text-white tracking-tight">Painel Executivo de Planejamento de Materiais &amp; S&amp;OP</h2>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 border border-indigo-400/40 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-200">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Atuação Gerencial Ativa
+                </span>
+                <span class="rounded bg-slate-800/80 px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-slate-700">PCP &bull; PG Química</span>
+              </div>
+              <p class="mt-1 text-xs text-indigo-100/80 max-w-3xl leading-relaxed">
+                Diagnóstico minucioso e individual de cada matéria-prima integrando <strong>Saldo Atual, Consumo Médio Diário, DDE, Ponto de Reordem, Lead Time e Carteira de Pedidos</strong>. Gera pareceres técnicos e pautas estratégicas estruturadas para apresentação imediata em reuniões de Diretoria, Suprimentos e Produção.
+              </p>
+            </div>
+          </div>
+
+          <!-- Botões de Ação Global da Análise -->
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button type="button" 
+                    onclick="abrirModalPautaReuniao()" 
+                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer">
+              <i data-lucide="clipboard-list" class="h-4 w-4"></i>
+              <span>Gerar Pauta da Reunião</span>
+            </button>
+            <button type="button" 
+                    onclick="exportarAnaliseCSV()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-all cursor-pointer" 
+                    title="Exportar dossiê executivo para Excel/CSV">
+              <i data-lucide="file-spreadsheet" class="h-3.5 w-3.5"></i>
+              <span>Exportar CSV</span>
+            </button>
+            <button type="button" 
+                    id="btnToggleExpandirAnalise" 
+                    onclick="toggleExpandirTodosAnalise()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-all cursor-pointer"
+                    title="Expandir ou recolher pareceres detalhados">
+              <i data-lucide="chevrons-up-down" class="h-3.5 w-3.5"></i>
+              <span id="labelToggleExpandir">Recolher Todos</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade de 6 KPIs Estratégicos de Gestão de Materiais -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- KPI 1: Total Auditado -->
+        <div class="rounded-xl border border-zinc-200/80 bg-white p-3 shadow-2xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-zinc-500 mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider">Auditados</span>
+            <i data-lucide="database" class="h-4 w-4 text-zinc-400"></i>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xl font-black font-mono text-zinc-900 tabular-nums" id="kpiAnaliseTotal">570</span>
+            <span class="text-[10px] text-zinc-500 font-medium">materiais</span>
+          </div>
+          <div class="mt-1 text-[10px] text-zinc-400 font-medium truncate">100% da base ativa</div>
+        </div>
+
+        <!-- KPI 2: Ruptura Iminente (< 15 dias) -->
+        <div class="rounded-xl border border-rose-300 bg-rose-50/70 p-3 shadow-2xs flex flex-col justify-between cursor-pointer hover:bg-rose-100/70 transition-all" onclick="filtrarAnalisePorKPI('CRITICO_RUPTURA')">
+          <div class="flex items-center justify-between text-rose-700 mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider">Ruptura (&lt;15d)</span>
+            <i data-lucide="flame" class="h-4 w-4 text-rose-600"></i>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xl font-black font-mono text-rose-700 tabular-nums" id="kpiAnaliseRuptura">0</span>
+            <span class="text-[10px] text-rose-800 font-bold">urgentes</span>
+          </div>
+          <div class="mt-1 text-[10px] text-rose-700 font-semibold truncate">Parada iminente</div>
+        </div>
+
+        <!-- KPI 3: P.O.R Atingido Sem Pedido -->
+        <div class="rounded-xl border border-amber-300 bg-amber-50/70 p-3 shadow-2xs flex flex-col justify-between cursor-pointer hover:bg-amber-100/70 transition-all" onclick="filtrarAnalisePorKPI('COMPRA_URGENTE')">
+          <div class="flex items-center justify-between text-amber-800 mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider">P.O.R S/ Pedido</span>
+            <i data-lucide="shopping-cart" class="h-4 w-4 text-amber-700"></i>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xl font-black font-mono text-amber-900 tabular-nums" id="kpiAnaliseCompraUrgente">0</span>
+            <span class="text-[10px] text-amber-800 font-bold">comprar já</span>
+          </div>
+          <div class="mt-1 text-[10px] text-amber-700 font-semibold truncate">Emitir requisição</div>
+        </div>
+
+        <!-- KPI 4: Pedidos Atrasados na Carteira -->
+        <div class="rounded-xl border border-orange-300 bg-orange-50/70 p-3 shadow-2xs flex flex-col justify-between cursor-pointer hover:bg-orange-100/70 transition-all" onclick="filtrarAnalisePorKPI('PEDIDO_ATRASADO')">
+          <div class="flex items-center justify-between text-orange-800 mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider">Pedidos Atrasados</span>
+            <i data-lucide="alert-triangle" class="h-4 w-4 text-orange-600"></i>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xl font-black font-mono text-orange-900 tabular-nums" id="kpiAnalisePedidosAtrasados">0</span>
+            <span class="text-[10px] text-orange-800 font-bold">em cobrança</span>
+          </div>
+          <div class="mt-1 text-[10px] text-orange-700 font-semibold truncate">Fornecedor atrasou</div>
+        </div>
+
+        <!-- KPI 5: Pedido no Prazo / Sob Controle -->
+        <div class="rounded-xl border border-sky-300 bg-sky-50/70 p-3 shadow-2xs flex flex-col justify-between cursor-pointer hover:bg-sky-100/70 transition-all" onclick="filtrarAnalisePorKPI('PEDIDO_ANDAMENTO')">
+          <div class="flex items-center justify-between text-sky-800 mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider">Em Trânsito</span>
+            <i data-lucide="truck" class="h-4 w-4 text-sky-600"></i>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xl font-black font-mono text-sky-900 tabular-nums" id="kpiAnalisePedidosPrazo">0</span>
+            <span class="text-[10px] text-sky-800 font-medium">no prazo</span>
+          </div>
+          <div class="mt-1 text-[10px] text-sky-700 font-medium truncate">Aguardando entrega</div>
+        </div>
+
+        <!-- KPI 6: Estoque Saudável -->
+        <div class="rounded-xl border border-emerald-300 bg-emerald-50/70 p-3 shadow-2xs flex flex-col justify-between cursor-pointer hover:bg-emerald-100/70 transition-all" onclick="filtrarAnalisePorKPI('SEGURO')">
+          <div class="flex items-center justify-between text-emerald-800 mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider">Estoque Seguro</span>
+            <i data-lucide="shield-check" class="h-4 w-4 text-emerald-600"></i>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xl font-black font-mono text-emerald-900 tabular-nums" id="kpiAnaliseSeguro">0</span>
+            <span class="text-[10px] text-emerald-800 font-medium">cobertos</span>
+          </div>
+          <div class="mt-1 text-[10px] text-emerald-700 font-medium truncate">Operação normal</div>
+        </div>
+      </div>
+
+      <!-- Barra de Controle & Filtros Inteligentes -->
+      <div class="rounded-xl border border-zinc-200/90 bg-white p-3.5 shadow-card flex flex-col gap-3">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          
+          <!-- Busca Textual Rápida -->
+          <div class="relative flex-1 min-w-[280px]">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"></i>
+            <input type="text" 
+                   id="analiseSearchInput" 
+                   oninput="onAnaliseSearchInput(this.value)" 
+                   placeholder="Buscar material, código, fornecedor, OC ou palavra-chave..." 
+                   class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-zinc-200 bg-zinc-50/50 text-zinc-800 placeholder-zinc-400 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+            <button type="button" 
+                    id="btnLimparBuscaAnalise" 
+                    onclick="limparBuscaAnalise()" 
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5">
+              <i data-lucide="x" class="h-3.5 w-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Filtros Estruturados (Selects) -->
+          <div class="flex flex-wrap items-center gap-2">
+            
+            <!-- Diagnóstico / Gravidade -->
+            <div class="flex items-center gap-1.5">
+              <label class="text-[11px] font-bold text-zinc-500 shrink-0">Diagnóstico:</label>
+              <select id="analiseFilterGravidade" 
+                      onchange="onAnaliseFilterChange()" 
+                      class="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 font-medium focus:bg-white focus:border-indigo-500 outline-none cursor-pointer">
+                <option value="TODOS">Todos os Materiais (570)</option>
+                <option value="CRITICOS_TODOS">🚨 Todos em Risco (Ruptura ou P.O.R)</option>
+                <option value="CRITICO_RUPTURA">🔴 Ruptura Iminente (&lt; 15 dias)</option>
+                <option value="COMPRA_URGENTE">🟠 P.O.R Atingido Sem Pedido</option>
+                <option value="PEDIDO_ATRASADO">⚠️ Pedidos Atrasados na Carteira</option>
+                <option value="PEDIDO_ANDAMENTO">🔵 Pedidos em Trânsito no Prazo</option>
+                <option value="COM_TRATATIVA">💬 Com Retorno do Comprador</option>
+                <option value="SEGURO">🟢 Estoque Saudável / Coberto</option>
+                <option value="SUPERESTOQUE">🟣 Capital Imobilizado (&gt; 180 dias)</option>
+                <option value="SOB_DEMANDA">📦 Sob Demanda / Sem Consumo 6M</option>
+              </select>
+            </div>
+
+            <!-- Ação Recomendada -->
+            <div class="flex items-center gap-1.5">
+              <label class="text-[11px] font-bold text-zinc-500 shrink-0">Ação:</label>
+              <select id="analiseFilterAcao" 
+                      onchange="onAnaliseFilterChange()" 
+                      class="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 font-medium focus:bg-white focus:border-indigo-500 outline-none cursor-pointer">
+                <option value="TODAS">Todas as Ações</option>
+                <option value="EMITIR_OC">Emitir Requisição / OC Urgente</option>
+                <option value="COBRAR_COMPRAS">Cobrança Imediata c/ Compras</option>
+                <option value="MONITORAR">Monitorar Recebimento Programado</option>
+                <option value="BLOQUEAR_COMPRAS">Bloquear Compras (Overstock)</option>
+                <option value="SEM_ACAO">Sem Ação (Operação Normal)</option>
+              </select>
+            </div>
+
+            <!-- Ordenação -->
+            <div class="flex items-center gap-1.5">
+              <label class="text-[11px] font-bold text-zinc-500 shrink-0">Ordenar:</label>
+              <select id="analiseSort" 
+                      onchange="onAnaliseFilterChange()" 
+                      class="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 font-medium focus:bg-white focus:border-indigo-500 outline-none cursor-pointer">
+                <option value="DDE_ASC">Prioridade Máxima (Menor Cobertura)</option>
+                <option value="QTD_DESC">Maior Quantidade Sugerida (KG)</option>
+                <option value="CMD_DESC">Maior Consumo Diário (KG/dia)</option>
+                <option value="NOME_ASC">Nome do Material (A-Z)</option>
+                <option value="SALDO_DESC">Maior Saldo Físico (KG)</option>
+                <option value="VALOR_DESC">Maior Valor Estimado (R$)</option>
+              </select>
+            </div>
+
+            <!-- Botão Limpar Filtros -->
+            <button type="button" 
+                    onclick="limparFiltrosAnalise()" 
+                    class="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-semibold transition-all cursor-pointer">
+              Limpar
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra Inferior com Contagem e Badges Rápidos -->
+        <div class="flex items-center justify-between pt-2 border-t border-zinc-100 text-xs flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-zinc-700" id="badgeAnaliseFiltrados">Mostrando 0 de 0 materiais</span>
+            <span class="text-zinc-400">&bull;</span>
+            <span class="text-zinc-500 text-[11px]">Dossiê executivo atualizado com base nos estoques e pedidos em aberto</span>
+          </div>
+
+          <!-- Atalhos Rápidos por Chip -->
+          <div class="flex items-center gap-1 text-[11px]">
+            <span class="text-zinc-400 text-[10px] font-bold uppercase">Atalhos:</span>
+            <button type="button" onclick="setAnaliseQuickChip('CRITICO_RUPTURA')" class="px-2 py-0.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-800 font-semibold cursor-pointer">🔴 Ruptura</button>
+            <button type="button" onclick="setAnaliseQuickChip('COMPRA_URGENTE')" class="px-2 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold cursor-pointer">🟠 Comprar Já</button>
+            <button type="button" onclick="setAnaliseQuickChip('PEDIDO_ATRASADO')" class="px-2 py-0.5 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold cursor-pointer">⚠️ Atrasados</button>
+            <button type="button" onclick="setAnaliseQuickChip('COM_TRATATIVA')" class="px-2 py-0.5 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold cursor-pointer">💬 Com Tratativa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container Dinâmico dos Cards Analíticos -->
+      <div id="analiseCardsContainer" class="flex flex-col gap-3.5">
+        <!-- Renderizado dinamicamente via renderPainelAnaliseInteligente() -->
+      </div>
+
+    </div> <!-- FIM DO #view-analise -->
+
 
   </main>
 
@@ -4204,7 +4575,7 @@
 
     function switchAppTab(tabId) {
       currentAppTab = tabId;
-      const tabs = ['pedidos', 'criticos', 'por', 'ibcs'];
+      const tabs = ['pedidos', 'criticos', 'por', 'ibcs', 'analise'];
       
       tabs.forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
@@ -4240,6 +4611,12 @@
             } else {
               btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-emerald-800 hover:border-emerald-300 hover:text-emerald-950 transition-all cursor-pointer';
             }
+          } else if (t === 'analise') {
+            if (isActive) {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-indigo-600 px-5 py-3 text-sm font-bold text-indigo-800 bg-indigo-50/50 transition-all cursor-pointer';
+            } else {
+              btn.className = 'flex items-center gap-2.5 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-indigo-700 hover:border-indigo-300 hover:text-indigo-950 transition-all cursor-pointer';
+            }
           } else {
             if (isActive) {
               btn.className = 'flex items-center gap-2.5 border-b-2 border-sky-600 px-5 py-3 text-sm font-bold text-sky-800 bg-sky-50/50 transition-all cursor-pointer';
@@ -4254,6 +4631,8 @@
         renderPainelCriticos();
       } else if (tabId === 'por') {
         renderPainelPOR();
+      } else if (tabId === 'analise') {
+        renderPainelAnaliseInteligente();
       } else if (tabId === 'pedidos') {
         renderTable();
       }
@@ -6541,11 +6920,7 @@
           '<td class="px-2.5 py-1.5 text-center">' + flagBadge + '</td>' +
           '<td class="px-3 py-1.5">' + pedidosStatusHtml + '</td>' +
           '<td class="px-2.5 py-1.5 text-right font-mono text-zinc-600 tabular-nums">' + fmtNum(it.eoq) + '</td>' +
-          '<td class="px-2.5 py-1.5 text-right font-mono tabular-nums">' +
-            '<span class="font-black text-emerald-900 block leading-tight">' + fmtNum(it.eoqPor) + '</span>' +
-            (metrics.diasSupridosText !== '-' ? ('<span class="text-[9.5px] font-semibold text-emerald-700 block font-mono leading-tight" title="Comprando a quantidade sugerida, supre aproximadamente ' + metrics.diasSupridosText + ' de consumo médio">~' + metrics.diasSupridosText + ' suprimento</span>') : '') +
-            (metrics.leadTime > 0 ? ('<span class="text-[9px] text-zinc-500 block font-mono leading-tight" title="Se colocado hoje com Lead Time de ' + metrics.leadTime + 'd, chega em ' + metrics.chegadaStr + '">Chega: ' + metrics.chegadaStr + '</span>') : '') +
-          '</td>' +
+          '<td class="px-2.5 py-1.5 text-right font-mono font-black text-emerald-800 tabular-nums">' + fmtNum(it.eoqPor) + '</td>' +
           '<td class="px-2 py-1.5 text-center">' +
             (isOrder ? 
               ('<button type="button" onclick="gerarPedidoAPartirDoPOR(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', ' + Math.round(it.eoqPor || it.por || 0) + ')" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-[10px] font-bold shadow-2xs transition-all cursor-pointer" title="Criar solicitação de compra na Gestão de Pedidos">' +
@@ -6618,6 +6993,9 @@
 
       tbody.innerHTML = html;
       document.getElementById('leadTimeTableCount').innerText = 'Exibindo ' + filtered.length + ' de ' + items.length + ' itens cadastrados';
+      if (document.getElementById('leadTimeTotalCount')) {
+        document.getElementById('leadTimeTotalCount').innerText = 'Total cadastrado: ' + items.length + ' produtos';
+      }
       if (window.lucide) lucide.createIcons();
     }
 
@@ -6655,7 +7033,6 @@
               '<div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200/60">' +
                 '<span class="text-[10px] uppercase font-bold text-emerald-700 block">Sugestão</span>' +
                 '<strong class="font-mono text-emerald-900 font-bold">' + Math.round(it.eoqPor || it.por).toLocaleString('pt-BR') + '</strong>' +
-                (metrics.diasSupridosText !== '-' ? '<span class="text-[9.5px] text-emerald-700 font-semibold block mt-0.5">~' + metrics.diasSupridosText + ' de estoque</span>' : '') +
               '</div>' +
             '</div>' +
 
@@ -6837,7 +7214,150 @@
       }
     }
 
-    function openEditLeadTimeModal(id) {
+    
+    function openNovoLeadTimeModal() {
+      if (!porState) initPORState();
+
+      // Resetar formulário
+      const descInput = document.getElementById('novoLTDescricao');
+      const codInput = document.getElementById('novoLTCodigo');
+      const famInput = document.getElementById('novoLTFamilia');
+      const diasInput = document.getElementById('novoLTDias');
+      const tipoSelect = document.getElementById('novoLTTipo');
+
+      if (descInput) descInput.value = '';
+      if (codInput) codInput.value = '';
+      if (famInput) famInput.value = '';
+      if (diasInput) diasInput.value = '30';
+      if (tipoSelect) tipoSelect.value = 'Manual';
+
+      // Preencher datalist com sugestões de matérias-primas
+      const datalist = document.getElementById('sugestoesMPList');
+      if (datalist && porState.listaMP) {
+        const existingKeys = new Set(porState.leadTimes.map(l => normalizeKey(l.descricao)));
+        const optionsHtml = porState.listaMP
+          .filter(m => m.materiaPrima && !existingKeys.has(normalizeKey(m.materiaPrima)))
+          .slice(0, 50)
+          .map(m => '<option value="' + escapeHtml(m.materiaPrima) + '">')
+          .join('');
+        datalist.innerHTML = optionsHtml;
+      }
+
+      const modal = document.getElementById('modalNovoLeadTime');
+      if (modal) modal.classList.remove('hidden');
+      if (descInput) descInput.focus();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeNovoLeadTimeModal() {
+      const modal = document.getElementById('modalNovoLeadTime');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleSaveNovoLeadTime(e) {
+      e.preventDefault();
+      if (!porState) initPORState();
+
+      const descInput = document.getElementById('novoLTDescricao');
+      const codInput = document.getElementById('novoLTCodigo');
+      const famInput = document.getElementById('novoLTFamilia');
+      const diasInput = document.getElementById('novoLTDias');
+      const tipoSelect = document.getElementById('novoLTTipo');
+
+      const descricao = descInput ? descInput.value.trim().toUpperCase() : '';
+      const codigo = codInput ? codInput.value.trim() : '';
+      const familia = famInput ? famInput.value.trim() : '';
+      const dias = diasInput ? (parseFloat(diasInput.value) || 30) : 30;
+      const tipo = tipoSelect ? tipoSelect.value : 'Manual';
+
+      if (!descricao) {
+        showToast('Informe a descrição da matéria-prima!', 'alert-circle');
+        return;
+      }
+
+      const key = normalizeKey(descricao);
+
+      // Verificar se já existe cadastrado no banco de Lead Time
+      const existing = porState.leadTimes.find(l => normalizeKey(l.descricao) === key);
+      if (existing) {
+        // Atualiza o existente
+        existing.leadTimePOR = dias;
+        existing.tipo = tipo;
+        if (codigo) existing.codigo = codigo;
+        if (familia) existing.familia = familia;
+      } else {
+        // Cria um novo registro
+        const nextId = (porState.leadTimes.reduce((max, l) => Math.max(max, l.id || 0), 0)) + 1;
+        const novoItem = {
+          id: nextId,
+          codigo: codigo || '-',
+          descricao: descricao,
+          familia: familia || '-',
+          leadTimePOR: dias,
+          tipo: tipo
+        };
+        // Adiciona no início da lista para aparecer imediatamente em primeiro lugar!
+        porState.leadTimes.unshift(novoItem);
+      }
+
+      // Sincronizar com porState.listaMP
+      let mpFound = false;
+      porState.listaMP.forEach(it => {
+        if (normalizeKey(it.materiaPrima) === key) {
+          it.leadTime = dias;
+          it.tipo = tipo;
+          recalculatePORItem(it);
+          mpFound = true;
+        }
+      });
+
+      // Se o material ainda não existia na listaMP, cadastrar com saldo inicial zero
+      if (!mpFound) {
+        const newMP = {
+          id: porState.listaMP.length + 1,
+          materiaPrima: descricao,
+          saldo: 0,
+          custoUnitario: 0,
+          saldoReais: 0,
+          media6M: 0,
+          media6MStatus: 'S/C',
+          desvP12M: 0,
+          tipo: tipo,
+          leadTime: dias,
+          safetyStock: 0,
+          por: 0,
+          porStatus: 'S/C',
+          flag: 'CHECK',
+          dde: '',
+          eoq: 0,
+          eoqPor: 0,
+          pedidoAberto: '',
+          rConsumo: 0,
+          eoqPorReais: 0
+        };
+        porState.listaMP.unshift(newMP);
+      }
+
+      savePORState();
+      closeNovoLeadTimeModal();
+
+      // Limpar busca de lead time para o novo item aparecer no topo com clareza
+      const sInp = document.getElementById('leadTimeSearchInput');
+      if (sInp) {
+        sInp.value = '';
+        leadTimeSearchQuery = '';
+      }
+
+      renderPORLeadTime();
+      renderPORListaMP();
+      if (typeof renderPainelAnaliseInteligente === 'function') {
+        renderPainelAnaliseInteligente();
+      }
+
+      showToast('Produto "' + descricao.slice(0, 26) + '..." incluído com sucesso no Banco de Dados de Lead Time!', 'check-circle');
+    }
+
+function openEditLeadTimeModal(id) {
       if (!porState) initPORState();
       const ltItem = porState.leadTimes.find(l => l.id === id);
       if (!ltItem) return;
@@ -7058,11 +7578,963 @@
     }
 
 
+
+    // =========================================================================
+    // MÓDULO: ANÁLISE INTELIGENTE (GERENTE DE PLANEJAMENTO DE MATERIAIS & S&OP)
+    // =========================================================================
+    let analiseSearchQuery = '';
+    let analiseFilterGravidade = 'TODOS';
+    let analiseFilterAcao = 'TODAS';
+    let analiseSortField = 'DDE_ASC';
+    let analiseExpandAll = true;
+    let analiseCollapsedSet = new Set();
+
+    function getAnaliseDiagnostico(item, activeOrders, metrics) {
+      const saldo = typeof item.saldo === 'number' ? item.saldo : 0;
+      const mediaMensal = typeof item.media6M === 'number' && item.media6M > 0 ? item.media6M : 0;
+      const cmd = metrics.consumoDiario || (mediaMensal > 0 ? (mediaMensal / 30) : 0);
+      const por = typeof item.por === 'number' ? item.por : 0;
+      const ss = typeof item.safetyStock === 'number' ? item.safetyStock : 0;
+      const eoqPor = typeof item.eoqPor === 'number' && item.eoqPor > 0 ? item.eoqPor : (por > 0 ? por : 0);
+      const lt = metrics.leadTime || 0;
+      const isFlagOrder = String(item.flag).toLowerCase() === 'order' || (por > 0 && saldo <= por);
+
+      let ddeDays = 999;
+      if (cmd > 0) {
+        ddeDays = Math.round(saldo / cmd);
+        if (ddeDays < 0) ddeDays = 0;
+      } else {
+        ddeDays = saldo > 0 ? 999 : 0;
+      }
+
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      const temPedido = activeOrders.length > 0;
+      let totalQtdPedidos = 0;
+      let primeiraChegada = null;
+      let hasDelayedOrder = false;
+      let tratativaComprador = null;
+
+      activeOrders.forEach(o => {
+        const q = parseFloat(String(o.quantidade).replace(/\./g, '').replace(',', '.')) || 0;
+        totalQtdPedidos += q;
+        if (o.dataPrevisao) {
+          const d = new Date(o.dataPrevisao + 'T00:00:00');
+          if (!isNaN(d.getTime())) {
+            if (!primeiraChegada || d < primeiraChegada) primeiraChegada = d;
+            if (d < hoje) hasDelayedOrder = true;
+          }
+        }
+        if (o.tratativa && o.tratativa.motivoAtraso) {
+          tratativaComprador = o.tratativa;
+        }
+      });
+
+      const primeiraChegadaStr = primeiraChegada ? primeiraChegada.toLocaleDateString('pt-BR') : 'Não informada';
+      const dataEsgotamentoStr = (cmd > 0 && ddeDays < 365) ? 
+        new Date(Date.now() + ddeDays * 86400000).toLocaleDateString('pt-BR') : 'Sem risco a curto prazo';
+
+      let category = 'SEGURO';
+      let categoriaLabel = 'Estoque Saudável';
+      let badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5"><i data-lucide="shield-check" class="h-3.5 w-3.5"></i><span>ESTOQUE SEGURO</span></span>';
+      let acaoTipo = 'SEM_ACAO';
+      let acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200">Operação Normal &bull; Sem Pendências</span>';
+      let acaoTexto = 'Manter operação normal. Não requer intervenção imediata de compras.';
+
+      let parecer = '';
+      let talkingCompras = '';
+      let talkingPCP = '';
+      let talkingAta = '';
+
+      const saldoFmt = saldo.toLocaleString('pt-BR') + ' KG';
+      const cmdFmt = cmd > 0 ? (cmd.toFixed(1) + ' KG/dia') : 'Sob Demanda';
+      const porFmt = Math.round(por).toLocaleString('pt-BR') + ' KG';
+      const ssFmt = Math.round(ss).toLocaleString('pt-BR') + ' KG';
+      const eoqFmt = Math.round(eoqPor).toLocaleString('pt-BR') + ' KG';
+
+      if (saldo <= 0 && cmd > 0) {
+        category = 'CRITICO_RUPTURA';
+        categoriaLabel = 'Ruptura Iminente (Estoque Zerado)';
+        badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-600 text-white shadow-xs animate-pulse inline-flex items-center gap-1.5"><i data-lucide="alert-octagon" class="h-3.5 w-3.5"></i><span>ESTOQUE ZERADO &bull; RUPTURA</span></span>';
+        if (!temPedido) {
+          acaoTipo = 'EMITIR_OC';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-black bg-rose-700 text-white shadow-2xs">EMISSÃO EMERGENCIAL DE OC + FRETE DEDICADO</span>';
+          acaoTexto = 'Emitir Requisição Emergencial de ' + eoqFmt + ' com solicitação expressa de frete dedicado.';
+          parecer = 'PARADA DE LINHA / ESTOQUE ZERADO: Material com saldo nulo e fábrica com consumo ativo de ' + cmdFmt + '. Não há ordens de compra em carteira. Com lead time de ' + lt + ' dias deste fornecedor, a fábrica já opera em desabastecimento. Ação mandatória: emissão imediata da requisição de compra de ' + eoqFmt + ' e alinhamento com compras para lote emergencial pronta-entrega.';
+          talkingCompras = 'Existe saldo a pronta entrega no mercado ou fabricante concorrente homologado para embarque em 24h?';
+          talkingPCP = 'Congelar ou transferir imediatamente as ordens de fabricação que dependem desta matéria-prima até a confirmação da descarga.';
+          talkingAta = 'Aprovada compra de emergência de ' + eoqFmt + ' via frete dedicado com prioridade zero de recebimento.';
+        } else {
+          acaoTipo = 'COBRAR_COMPRAS';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-black bg-rose-700 text-white shadow-2xs">URGÊNCIA MÁXIMA &bull; COBRAR DESCARGA</span>';
+          acaoTexto = 'Cobrar recebimento prioritário dos ' + totalQtdPedidos.toLocaleString('pt-BR') + ' KG em trânsito com chegada prevista para ' + primeiraChegadaStr + '.';
+          parecer = 'ESTOQUE ZERADO COM PEDIDO EM ANDAMENTO: Fábrica sem saldo físico, resguardada por ' + activeOrders.length + ' pedido(s) em carteira totalizando ' + totalQtdPedidos.toLocaleString('pt-BR') + ' KG (primeira entrega estimada: ' + primeiraChegadaStr + '). ' +
+            (hasDelayedOrder ? 'ALERTA: Há pedido vencido em trânsito! ' : '') +
+            (tratativaComprador ? 'Retorno do comprador: "' + tratativaComprador.motivoAtraso + '". ' : 'Pendente de comprovação de embarque. ') +
+            'Qualquer hora de atraso impacta diretamente a produção.';
+          talkingCompras = 'O caminhão já está no pátio ou tem comprovante de emissão de CTe/rastreio atualizado?';
+          talkingPCP = 'Almoxarifado e CQ avisados para liberação expressa da matéria-prima assim que a carreta encostar na doca.';
+          talkingAta = 'Compras em acompanhamento hora a hora do pedido em trânsito para abastecimento imediato das linhas.';
+        }
+      } else if (cmd > 0 && ddeDays <= 15) {
+        category = 'CRITICO_RUPTURA';
+        categoriaLabel = 'Ruptura Iminente (< 15 dias)';
+        badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300 inline-flex items-center gap-1.5"><i data-lucide="flame" class="h-3.5 w-3.5 text-rose-600"></i><span>RISCO IMINENTE DE RUPTURA (' + ddeDays + 'd)</span></span>';
+        if (!temPedido) {
+          acaoTipo = 'EMITIR_OC';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-black bg-rose-600 text-white shadow-2xs">EMISSÃO IMEDIATA DE REQUISIÇÃO</span>';
+          acaoTexto = 'Disparar processo de compra de ' + eoqFmt + ' com urgência antes do esgotamento em ' + dataEsgotamentoStr + '.';
+          parecer = 'ZONA CRÍTICA DE DESABASTECIMENTO: Saldo atual de ' + saldoFmt + ' garante apenas ' + ddeDays + ' dias de consumo (' + cmdFmt + '), esgotando-se em ' + dataEsgotamentoStr + '. Não constam pedidos colocados. Considerando o lead time de ' + lt + ' dias, se o pedido for emitido hoje a previsão de chegada é apenas ' + metrics.chegadaStr + ', gerando um potencial gap de desabastecimento. Compra urgente mandatória.';
+          talkingCompras = 'Negociar redução de lead time de ' + lt + ' para menos de ' + ddeDays + ' dias ou fracionamento de entrega com o fornecedor.';
+          talkingPCP = 'Ajustar programação de bateladas para priorizar fórmulas sem este componente a partir de ' + dataEsgotamentoStr + '.';
+          talkingAta = 'Abertura imediata de OC para ' + eoqFmt + '; Compras negociará envio expresso com o fornecedor.';
+        } else {
+          acaoTipo = 'COBRAR_COMPRAS';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-black bg-amber-600 text-white shadow-2xs">FOLLOW-UP DIÁRIO &bull; CHEGADA PROGRAMADA</span>';
+          acaoTexto = 'Follow-up diário com comprador para garantir chegada de ' + totalQtdPedidos.toLocaleString('pt-BR') + ' KG até ' + primeiraChegadaStr + '.';
+          parecer = 'ESTOQUE CRÍTICO COM COBERTURA POR PEDIDO: Saldo de ' + saldoFmt + ' dura ' + ddeDays + ' dias (' + dataEsgotamentoStr + '). Há ' + activeOrders.length + ' pedido(s) em carteira (' + totalQtdPedidos.toLocaleString('pt-BR') + ' KG) com previsão de entrega em ' + primeiraChegadaStr + '. ' +
+            (hasDelayedOrder ? 'ATENÇÃO: Pedido em atraso com fornecedor! ' : '') +
+            (tratativaComprador ? 'Justificativa do comprador: "' + tratativaComprador.motivoAtraso + '". ' : 'Sem justificativa registrada. ') +
+            'Exige monitoramento diário da logística de entrega.';
+          talkingCompras = 'Confirmar se a transportadora manteve o agendamento de entrega para ' + primeiraChegadaStr + '.';
+          talkingPCP = 'Plano de produção está resguardado desde que o pedido descarregue até ' + dataEsgotamentoStr + '.';
+          talkingAta = 'Acompanhamento intensivo do pedido em trânsito com previsão alinhada à data limite de estoque.';
+        }
+      } else if (isFlagOrder) {
+        if (!temPedido) {
+          category = 'COMPRA_URGENTE';
+          categoriaLabel = 'P.O.R Atingido (Sem Pedido)';
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1.5"><i data-lucide="shopping-cart" class="h-3.5 w-3.5 text-amber-700"></i><span>P.O.R ATINGIDO &bull; COMPRAR JÁ</span></span>';
+          acaoTipo = 'EMITIR_OC';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-700 text-white shadow-2xs">COLOCAR PEDIDO DE COMPRA (' + eoqFmt + ')</span>';
+          acaoTexto = 'Emitir solicitação de compra de ' + eoqFmt + ' conforme lote econômico do P.O.R.';
+          parecer = 'DISPARO DE REORDEM (P.O.R ATINGIDO): Saldo de ' + saldoFmt + ' rompeu o Ponto de Reordem (' + porFmt + '). Consumo médio de ' + cmdFmt + ' e cobertura de ' + ddeDays + ' dias. Nenhuma ordem de compra ativa em carteira. Com Lead Time de ' + lt + ' dias, a compra sugerida de ' + eoqFmt + ' deve ser emitida nesta semana para recompor o Estoque de Segurança (' + ssFmt + ') e garantir mais ' + metrics.diasSupridosText + ' de produção.';
+          talkingCompras = 'Validar tabela de preços e prazo contratual de ' + lt + ' dias com o fornecedor homologado.';
+          talkingPCP = 'Consumo segue dentro da média móvel projetada. Linha abastecida durante o ciclo de lead time.';
+          talkingAta = 'Aprovada colocação de pedido de compra de ' + eoqFmt + ' para recomposição de estoque de segurança.';
+        } else if (hasDelayedOrder) {
+          category = 'PEDIDO_ATRASADO';
+          categoriaLabel = 'Pedido em Carteira c/ Atraso';
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-orange-100 text-orange-900 border border-orange-300 inline-flex items-center gap-1.5"><i data-lucide="alert-triangle" class="h-3.5 w-3.5 text-orange-700"></i><span>PEDIDO ATRASADO NA CARTEIRA</span></span>';
+          acaoTipo = 'COBRAR_COMPRAS';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-orange-700 text-white shadow-2xs">COBRANÇA FORMAL AO COMPRADOR</span>';
+          acaoTexto = 'Cobrar atualização urgente do comprador para pedido atrasado na carteira.';
+          parecer = 'RISCO LOGÍSTICO POR ATRASO DE FORNECEDOR: Saldo atual de ' + saldoFmt + ' (' + ddeDays + ' dias de estoque). Consta pedido em carteira com prazo contratual já expirado. ' +
+            (tratativaComprador ? 'Retorno do comprador registrado: "' + tratativaComprador.motivoAtraso + '" (Nova data informada: ' + (tratativaComprador.novaPrevisao || 'a confirmar') + '). ' : 'Pendente de tratativa formal pelo comprador. ') +
+            'Atraso contínuo consumirá a margem de segurança do P.O.R.';
+          talkingCompras = 'Qual foi a contrapartida ou penalidade contratual exigida do fornecedor pelo atraso? Nova previsão formalizada?';
+          talkingPCP = 'Monitorar saldo remanescente diariamente até a efetivação da entrega.';
+          talkingAta = 'Cobrada ação enérgica de compras junto à gerência do fornecedor para embarque imediato.';
+        } else {
+          category = 'PEDIDO_ANDAMENTO';
+          categoriaLabel = 'Em Trânsito / No Prazo';
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-900 border border-sky-300 inline-flex items-center gap-1.5"><i data-lucide="truck" class="h-3.5 w-3.5 text-sky-700"></i><span>PEDIDO EM TRÂNSITO NO PRAZO</span></span>';
+          acaoTipo = 'MONITORAR';
+          acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-700 text-white shadow-2xs">MONITORAR RECEBIMENTO PROGRAMADO</span>';
+          acaoTexto = 'Acompanhar agendamento e recebimento na fábrica em ' + primeiraChegadaStr + '.';
+          parecer = 'REPOSIÇÃO REGULARIZADA EM TRÂNSITO: Saldo de ' + saldoFmt + ' opera abaixo do P.O.R (' + porFmt + '), porém a fábrica está devidamente resguardada por ' + activeOrders.length + ' pedido(s) em carteira totalizando ' + totalQtdPedidos.toLocaleString('pt-BR') + ' KG com previsão para ' + primeiraChegadaStr + '. O estoque cobre com segurança os ' + ddeDays + ' dias restantes até a descarga.';
+          talkingCompras = 'Apenas checar se a nota fiscal e agendamento de doca foram emitidos.';
+          talkingPCP = 'Programação de produção alinhada à chegada de matéria-prima na semana de ' + primeiraChegadaStr + '.';
+          talkingAta = 'Pedido em trânsito regular, sem intercorrências operacionais.';
+        }
+      } else if (cmd > 0 && ddeDays > 180) {
+        category = 'SUPERESTOQUE';
+        categoriaLabel = 'Capital Imobilizado (> 180 dias)';
+        badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-purple-100 text-purple-900 border border-purple-300 inline-flex items-center gap-1.5"><i data-lucide="archive" class="h-3.5 w-3.5 text-purple-700"></i><span>SUPERESTOQUE &bull; DDE ' + ddeDays + 'd</span></span>';
+        acaoTipo = 'BLOQUEAR_COMPRAS';
+        acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-700 text-white shadow-2xs">SUSPENDER NOVAS AQUISIÇÕES</span>';
+        acaoTexto = 'Bloquear novas solicitações de compra e monitorar giro de estoque.';
+        parecer = 'ATENÇÃO A CAPITAL IMOBILIZADO: Saldo expressivo de ' + saldoFmt + ' confere cobertura de ' + ddeDays + ' dias (' + (ddeDays/30).toFixed(1) + ' meses de fábrica). O valor imobilizado estimado é de ' + (typeof item.saldoReais === 'number' ? ('R$ ' + item.saldoReais.toLocaleString('pt-BR')) : 'relevante') + '. Não abrir novas requisições de compra. Recomenda-se diálogo com Comercial e P&D para acelerar o consumo em campanhas estratégicas.';
+        talkingCompras = 'Bloquear qualquer processo de compra desta matéria-prima nos próximos 90 a 180 dias.';
+        talkingPCP = 'Avaliar utilização prioritária deste lote em ordens de produção adequadas para reduzir o volume em armazém.';
+        talkingAta = 'Classificado em política de desoneração de estoque; compras temporariamente congeladas.';
+      } else if (cmd === 0) {
+        category = 'SOB_DEMANDA';
+        categoriaLabel = 'Sob Demanda / Sem Consumo 6M';
+        badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-zinc-100 text-zinc-700 border border-zinc-300 inline-flex items-center gap-1.5"><i data-lucide="package" class="h-3.5 w-3.5 text-zinc-500"></i><span>SOB DEMANDA / EVENTUAL</span></span>';
+        acaoTipo = 'SEM_ACAO';
+        acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-200 text-zinc-800">COMPRA SOB ENCOMENDA ESPECÍFICA</span>';
+        acaoTexto = 'Gerir estritamente por pedido firme de venda (Make-to-Order).';
+        parecer = 'MATERIAL DE DEMANDA ESPORÁDICA: Saldo físico de ' + saldoFmt + ' sem histórico de consumo regular nos últimos 6 meses. Gestão deve permanecer sob demanda pontual de projetos ou campanhas sob medida, sem manutenção de estoque de segurança contínuo.';
+        talkingCompras = 'Manter cotação atualizada e conferir lote mínimo exigido pelo fornecedor para compras pontuais.';
+        talkingPCP = 'Confirmar com laboratório se este produto continua ativo no portfólio de fórmulas homologadas.';
+        talkingAta = 'Material mantido sob gestão sob demanda, sem estoque pulmão.';
+      } else {
+        category = 'SEGURO';
+        categoriaLabel = 'Estoque Saudável / Coberto';
+        badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300 inline-flex items-center gap-1.5"><i data-lucide="shield-check" class="h-3.5 w-3.5 text-emerald-700"></i><span>ESTOQUE EQUILIBRADO (' + ddeDays + 'd)</span></span>';
+        acaoTipo = 'SEM_ACAO';
+        acaoBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-700 text-white shadow-2xs">OPERAÇÃO SEGURA &bull; EM EQUILÍBRIO</span>';
+        acaoTexto = 'Operação em equilíbrio. Nenhuma ação requerida.';
+        parecer = 'OPERAÇÃO EM PERFEITO EQUILÍBRIO: Saldo atual de ' + saldoFmt + ' garante ' + ddeDays + ' dias de cobertura regular (' + cmdFmt + '), mantendo-se confortavelmente acima do Ponto de Reordem (' + porFmt + ') e do Estoque de Segurança (' + ssFmt + '). Fluxo de fábrica e demanda plenamente provisionados. Nenhuma necessidade de compra imediata.';
+        talkingCompras = 'Nenhuma pendência comercial com fornecedores deste material.';
+        talkingPCP = 'Abastecimento 100% garantido para o plano de produção vigente.';
+        talkingAta = 'Estoque saudável e em nível adequado de segurança.';
+      }
+
+      return {
+        category,
+        categoriaLabel,
+        badgeHtml,
+        acaoTipo,
+        acaoBadge,
+        acaoTexto,
+        parecer,
+        talkingCompras,
+        talkingPCP,
+        talkingAta,
+        ddeDays,
+        cmd,
+        dataEsgotamentoStr,
+        primeiraChegadaStr,
+        totalQtdPedidos,
+        temPedido,
+        hasDelayedOrder,
+        tratativaComprador
+      };
+    }
+
+    function renderPainelAnaliseInteligente() {
+      if (!porState) initPORState();
+      const container = document.getElementById('analiseCardsContainer');
+      if (!container) return;
+
+      const items = porState.listaMP || [];
+      const query = analiseSearchQuery.trim().toLowerCase();
+
+      // Métricas globais dos KPIs
+      let countTotal = items.length;
+      let countRuptura = 0;
+      let countCompraUrgente = 0;
+      let countPedidosAtrasados = 0;
+      let countPedidosPrazo = 0;
+      let countSeguro = 0;
+      let countSuperestoque = 0;
+      let countCriticosGeral = 0;
+
+      const analyzedList = items.map(it => {
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const metrics = calculatePORLeadTimeMetrics(it);
+        const diag = getAnaliseDiagnostico(it, activeOrders, metrics);
+
+        if (diag.category === 'CRITICO_RUPTURA') {
+          countRuptura++;
+          countCriticosGeral++;
+        } else if (diag.category === 'COMPRA_URGENTE') {
+          countCompraUrgente++;
+          countCriticosGeral++;
+        } else if (diag.category === 'PEDIDO_ATRASADO') {
+          countPedidosAtrasados++;
+          countCriticosGeral++;
+        } else if (diag.category === 'PEDIDO_ANDAMENTO') {
+          countPedidosPrazo++;
+        } else if (diag.category === 'SUPERESTOQUE') {
+          countSuperestoque++;
+        } else if (diag.category === 'SEGURO') {
+          countSeguro++;
+        }
+
+        return {
+          it,
+          activeOrders,
+          metrics,
+          diag
+        };
+      });
+
+      // Atualizar Badges de KPIs no Header
+      if (document.getElementById('kpiAnaliseTotal')) document.getElementById('kpiAnaliseTotal').innerText = countTotal;
+      if (document.getElementById('kpiAnaliseRuptura')) document.getElementById('kpiAnaliseRuptura').innerText = countRuptura;
+      if (document.getElementById('kpiAnaliseCompraUrgente')) document.getElementById('kpiAnaliseCompraUrgente').innerText = countCompraUrgente;
+      if (document.getElementById('kpiAnalisePedidosAtrasados')) document.getElementById('kpiAnalisePedidosAtrasados').innerText = countPedidosAtrasados;
+      if (document.getElementById('kpiAnalisePedidosPrazo')) document.getElementById('kpiAnalisePedidosPrazo').innerText = countPedidosPrazo;
+      if (document.getElementById('kpiAnaliseSeguro')) document.getElementById('kpiAnaliseSeguro').innerText = countSeguro;
+      if (document.getElementById('badgeAnaliseCriticos')) {
+        const totalAtencao = countRuptura + countCompraUrgente + countPedidosAtrasados;
+        document.getElementById('badgeAnaliseCriticos').innerText = totalAtencao;
+        document.getElementById('badgeAnaliseCriticos').className = 'rounded-full ' + (totalAtencao > 0 ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-zinc-100 text-zinc-600') + ' px-2 py-0.5 text-xs font-mono font-bold tabular-nums shadow-2xs';
+      }
+
+      // Filtragem
+      let filtered = analyzedList.filter(entry => {
+        const it = entry.it;
+        const diag = entry.diag;
+        const activeOrders = entry.activeOrders;
+
+        // 1. Filtro Textual
+        if (query) {
+          const terms = query.split(/\s+/);
+          const fullText = (
+            it.materiaPrima + ' ' +
+            (it.tipo || '') + ' ' +
+            (it.porStatus || '') + ' ' +
+            diag.categoriaLabel + ' ' +
+            diag.acaoTexto + ' ' +
+            activeOrders.map(o => (o.pedido || '') + ' ' + (o.fornecedor || '')).join(' ')
+          ).toLowerCase();
+
+          const allMatch = terms.every(term => fullText.includes(term));
+          if (!allMatch) return false;
+        }
+
+        // 2. Filtro de Gravidade / Diagnóstico
+        if (analiseFilterGravidade === 'CRITICOS_TODOS') {
+          if (diag.category !== 'CRITICO_RUPTURA' && diag.category !== 'COMPRA_URGENTE' && diag.category !== 'PEDIDO_ATRASADO') return false;
+        } else if (analiseFilterGravidade === 'COM_TRATATIVA') {
+          if (!diag.tratativaComprador) return false;
+        } else if (analiseFilterGravidade !== 'TODOS') {
+          if (diag.category !== analiseFilterGravidade) return false;
+        }
+
+        // 3. Filtro de Ação Recomendada
+        if (analiseFilterAcao !== 'TODAS') {
+          if (diag.acaoTipo !== analiseFilterAcao) return false;
+        }
+
+        return true;
+      });
+
+      // Ordenação
+      filtered.sort((a, b) => {
+        if (analiseSortField === 'DDE_ASC') {
+          return (a.diag.ddeDays - b.diag.ddeDays) || (b.it.saldo - a.it.saldo);
+        } else if (analiseSortField === 'QTD_DESC') {
+          const qA = a.it.eoqPor || a.it.por || 0;
+          const qB = b.it.eoqPor || b.it.por || 0;
+          return qB - qA;
+        } else if (analiseSortField === 'CMD_DESC') {
+          return (b.diag.cmd || 0) - (a.diag.cmd || 0);
+        } else if (analiseSortField === 'SALDO_DESC') {
+          return (b.it.saldo || 0) - (a.it.saldo || 0);
+        } else if (analiseSortField === 'VALOR_DESC') {
+          const vA = a.it.eoqPorReais || a.it.saldoReais || 0;
+          const vB = b.it.eoqPorReais || b.it.saldoReais || 0;
+          return vB - vA;
+        } else if (analiseSortField === 'NOME_ASC') {
+          return a.it.materiaPrima.localeCompare(b.it.materiaPrima);
+        }
+        return 0;
+      });
+
+      // Atualizar badge de filtrados
+      if (document.getElementById('badgeAnaliseFiltrados')) {
+        document.getElementById('badgeAnaliseFiltrados').innerText = 'Mostrando ' + filtered.length + ' de ' + items.length + ' materiais auditados';
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="rounded-xl border border-zinc-200 bg-white p-12 text-center shadow-card flex flex-col items-center justify-center">' +
+          '<div class="h-12 w-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">' +
+            '<i data-lucide="filter-x" class="h-6 w-6"></i>' +
+          '</div>' +
+          '<h3 class="text-sm font-bold text-zinc-900">Nenhum material encontrado com os filtros aplicados</h3>' +
+          '<p class="mt-1 text-xs text-zinc-500 max-w-sm">Tente limpar os termos de busca ou selecionar outro nível de gravidade de diagnóstico.</p>' +
+          '<button type="button" onclick="limparFiltrosAnalise()" class="mt-4 px-4 py-2 rounded-lg bg-indigo-600 text-white font-bold text-xs shadow-xs hover:bg-indigo-700 cursor-pointer">Limpar Filtros</button>' +
+        '</div>';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      // Renderizar Cards Individuais Detalhados
+      let cardsHtml = '';
+
+      filtered.forEach((entry, idx) => {
+        const it = entry.it;
+        const diag = entry.diag;
+        const metrics = entry.metrics;
+        const activeOrders = entry.activeOrders;
+        const itemId = it.id || idx;
+
+        const isCollapsed = analiseCollapsedSet.has(itemId) || (!analiseExpandAll && !analiseCollapsedSet.has(-itemId));
+
+        // Borda e cor do card conforme gravidade
+        let borderClass = 'border-zinc-200/90 bg-white';
+        let ddeBadgeBg = 'bg-zinc-100 text-zinc-800 border-zinc-200';
+        if (diag.category === 'CRITICO_RUPTURA') {
+          borderClass = 'border-rose-300 bg-gradient-to-b from-rose-50/20 to-white ring-1 ring-rose-200/60';
+          ddeBadgeBg = 'bg-rose-100 text-rose-900 border-rose-300 font-black';
+        } else if (diag.category === 'COMPRA_URGENTE') {
+          borderClass = 'border-amber-300 bg-gradient-to-b from-amber-50/20 to-white ring-1 ring-amber-200/60';
+          ddeBadgeBg = 'bg-amber-100 text-amber-900 border-amber-300 font-black';
+        } else if (diag.category === 'PEDIDO_ATRASADO') {
+          borderClass = 'border-orange-300 bg-gradient-to-b from-orange-50/20 to-white ring-1 ring-orange-200/60';
+          ddeBadgeBg = 'bg-orange-100 text-orange-900 border-orange-300 font-black';
+        } else if (diag.category === 'SUPERESTOQUE') {
+          borderClass = 'border-purple-200 bg-gradient-to-b from-purple-50/20 to-white';
+          ddeBadgeBg = 'bg-purple-100 text-purple-900 border-purple-300';
+        } else if (diag.category === 'PEDIDO_ANDAMENTO') {
+          borderClass = 'border-sky-200 bg-white';
+          ddeBadgeBg = 'bg-sky-100 text-sky-900 border-sky-300';
+        }
+
+        // Tabela de Pedidos Ativos
+        let pedidosHtml = '';
+        if (activeOrders.length > 0) {
+          pedidosHtml = '<div class="mt-2.5 rounded-lg border border-zinc-200 bg-zinc-50/60 p-2.5 flex flex-col gap-2">' +
+            '<div class="flex items-center justify-between text-xs">' +
+              '<span class="font-bold text-zinc-800 flex items-center gap-1.5">' +
+                '<i data-lucide="clipboard-list" class="h-3.5 w-3.5 text-indigo-600"></i>' +
+                '<span>Carteira de Pedidos em Trânsito (' + activeOrders.length + ' ativo' + (activeOrders.length > 1 ? 's' : '') + ')</span>' +
+              '</span>' +
+              '<span class="font-mono text-[11px] font-bold text-zinc-600">Total: ' + diag.totalQtdPedidos.toLocaleString('pt-BR') + ' KG</span>' +
+            '</div>' +
+            '<div class="flex flex-col gap-1.5">';
+
+          activeOrders.forEach(o => {
+            const isLate = o.dataPrevisao && (new Date(o.dataPrevisao + 'T00:00:00') < new Date().setHours(0,0,0,0));
+            pedidosHtml += '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] p-2 rounded bg-white border border-zinc-200/80 shadow-2xs">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="font-mono font-bold text-zinc-900 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">' + (o.pedido || 'S/N') + '</span>' +
+                '<span class="text-zinc-700 font-semibold truncate max-w-[200px]" title="' + escapeHtml(o.fornecedor || '') + '">' + escapeHtml(o.fornecedor || 'Fornecedor não inf.') + '</span>' +
+                '<span class="font-mono text-zinc-900 font-bold">' + (o.quantidade || '0') + ' KG</span>' +
+              '</div>' +
+              '<div class="flex items-center gap-2">' +
+                '<span class="text-zinc-500">Prev: <strong class="' + (isLate ? 'text-rose-700 underline font-bold' : 'text-zinc-800') + '">' + (o.dataPrevisao ? new Date(o.dataPrevisao + 'T00:00:00').toLocaleDateString('pt-BR') : '-') + '</strong></span>' +
+                (isLate ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">Atrasado</span>' : '<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800">No Prazo</span>') +
+              '</div>' +
+            '</div>';
+
+            if (o.tratativa && o.tratativa.motivoAtraso) {
+              pedidosHtml += '<div class="ml-2 pl-2.5 border-l-2 border-indigo-500 text-[11px] bg-indigo-50/70 p-2 rounded-r border border-indigo-200/60 text-indigo-950 flex flex-col gap-0.5">' +
+                '<div class="flex items-center justify-between font-bold text-indigo-900">' +
+                  '<span class="flex items-center gap-1"><i data-lucide="message-square" class="h-3 w-3 text-indigo-600"></i>Retorno do Comprador ' + (o.tratativa.dataTratativa ? ('(' + o.tratativa.dataTratativa + ')') : '') + ':</span>' +
+                  '<span class="text-[10px] text-indigo-700 font-mono">Nova Prev: ' + (o.tratativa.novaPrevisao || 'A confirmar') + '</span>' +
+                '</div>' +
+                '<p class="text-indigo-900 leading-relaxed font-sans italic">"' + escapeHtml(o.tratativa.motivoAtraso) + '"</p>' +
+              '</div>';
+            }
+          });
+
+          pedidosHtml += '</div></div>';
+        } else if (it.flag && String(it.flag).toLowerCase() === 'order') {
+          pedidosHtml = '<div class="mt-2 rounded-lg border border-rose-200 bg-rose-50/50 p-2.5 text-xs text-rose-800 flex items-center justify-between">' +
+            '<span class="flex items-center gap-2 font-semibold">' +
+              '<i data-lucide="alert-circle" class="h-4 w-4 text-rose-600 shrink-0"></i>' +
+              '<span>Nenhuma Ordem de Compra emitida no sistema. Ponto de Reordem atingido!</span>' +
+            '</span>' +
+            '<button type="button" onclick="gerarPedidoAPartirDoPOR(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', ' + Math.round(it.eoqPor || it.por || 0) + ')" class="px-2.5 py-1 rounded bg-rose-700 hover:bg-rose-800 text-white font-bold text-[10px] shadow-2xs cursor-pointer">Emitir OC Agora</button>' +
+          '</div>';
+        }
+
+        cardsHtml += '<div class="rounded-xl border ' + borderClass + ' p-4 shadow-card flex flex-col gap-3 transition-all" id="analise-card-' + itemId + '">' +
+          
+          // Header do Card
+          '<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 border-b border-zinc-100 pb-3">' +
+            '<div class="flex-1">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<h3 class="text-sm font-bold text-zinc-950 leading-snug tracking-tight">' + escapeHtml(it.materiaPrima) + '</h3>' +
+                diag.badgeHtml +
+                '<span class="px-2 py-0.5 rounded text-[10px] font-mono text-zinc-500 bg-zinc-100 border border-zinc-200">' + (it.tipo || 'PCP') + '</span>' +
+              '</div>' +
+              '<div class="flex items-center gap-2 text-xs text-zinc-500 mt-1 flex-wrap">' +
+                '<span>Consumo: <strong class="text-zinc-800 font-mono">' + (diag.cmd > 0 ? (diag.cmd.toFixed(1) + ' KG/dia') : 'Sob Demanda') + '</strong></span>' +
+                '<span class="text-zinc-300">&bull;</span>' +
+                '<span>Esgotamento previsto: <strong class="' + (diag.ddeDays <= 15 ? 'text-rose-700 font-bold' : 'text-zinc-800') + '">' + diag.dataEsgotamentoStr + '</strong></span>' +
+              '</div>' +
+            '</div>' +
+
+            // Badges Direitos & Toggle
+            '<div class="flex items-center gap-2 shrink-0 self-start sm:self-auto">' +
+              '<span class="px-2.5 py-1 rounded-lg border text-xs font-mono font-bold tabular-nums shadow-2xs ' + ddeBadgeBg + '" title="Dias de Estoque Restantes (DDE)">' +
+                (diag.ddeDays === 999 ? 'DDE: Sob Demanda' : ('DDE: ' + diag.ddeDays + ' dias')) +
+              '</span>' +
+              '<button type="button" onclick="toggleCardAnalise(' + itemId + ')" class="h-8 w-8 rounded-lg border border-zinc-200 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-800 flex items-center justify-center transition-all cursor-pointer" title="Expandir/Recolher Dossiê">' +
+                '<i data-lucide="' + (isCollapsed ? 'chevron-down' : 'chevron-up') + '" class="h-4 w-4"></i>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+
+          // BOX EXECUTIVO: PARECER DO GERENTE DE PLANEJAMENTO DE MATERIAIS
+          '<div class="rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/90 via-slate-50/70 to-indigo-50/60 p-3.5 shadow-2xs flex flex-col gap-2">' +
+            '<div class="flex items-center justify-between text-xs flex-wrap gap-2">' +
+              '<span class="font-bold text-indigo-950 flex items-center gap-1.5">' +
+                '<i data-lucide="user-check" class="h-4 w-4 text-indigo-700"></i>' +
+                '<span class="uppercase tracking-wider text-[11px]">Parecer do Gerente de Planejamento de Materiais</span>' +
+              '</span>' +
+              diag.acaoBadge +
+            '</div>' +
+            '<p class="text-xs text-indigo-950/90 leading-relaxed font-sans font-medium">' +
+              diag.parecer +
+            '</p>' +
+          '</div>';
+
+        // Detalhamento Colapsável
+        if (!isCollapsed) {
+          cardsHtml += '<div class="flex flex-col gap-3 pt-1">' +
+            
+            // Grid de 4 Pilares de Decisão
+            '<div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">' +
+              
+              // Pilar 1: Estoque & Demanda
+              '<div class="bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-200/80 flex flex-col justify-between gap-1">' +
+                '<span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">1. Estoque &amp; Demanda</span>' +
+                '<div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Saldo Físico: <strong class="font-mono text-zinc-900">' + it.saldo.toLocaleString('pt-BR') + ' KG</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Média Móvel (6M): <strong class="font-mono text-zinc-800">' + (it.media6M > 0 ? (Math.round(it.media6M).toLocaleString('pt-BR') + ' KG') : '-') + '</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Consumo Diário: <strong class="font-mono text-zinc-800">' + (diag.cmd > 0 ? (diag.cmd.toFixed(1) + ' KG/d') : '-') + '</strong></div>' +
+                '</div>' +
+              '</div>' +
+
+              // Pilar 2: Parâmetros P.O.R
+              '<div class="bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-200/80 flex flex-col justify-between gap-1">' +
+                '<span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">2. Parâmetros Reordem</span>' +
+                '<div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Estoque Seg. (SS): <strong class="font-mono text-zinc-900">' + Math.round(it.safetyStock).toLocaleString('pt-BR') + ' KG</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">P.O.R: <strong class="font-mono text-zinc-900 font-bold">' + Math.round(it.por).toLocaleString('pt-BR') + ' KG</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Sugestão (EOQ): <strong class="font-mono text-emerald-800 font-bold">' + Math.round(it.eoqPor || it.por).toLocaleString('pt-BR') + ' KG</strong></div>' +
+                '</div>' +
+              '</div>' +
+
+              // Pilar 3: Suprimentos & Lead Time
+              '<div class="bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-200/80 flex flex-col justify-between gap-1">' +
+                '<span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">3. Suprimentos &amp; SLA</span>' +
+                '<div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Lead Time Fornecedor: <strong class="font-mono text-zinc-900">' + metrics.leadTime + ' dias</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Pedido hoje chega em: <strong class="font-mono text-emerald-900 font-bold">' + metrics.chegadaStr + '</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Sugestão suprirá: <strong class="font-mono text-zinc-900">' + metrics.diasSupridosText + '</strong></div>' +
+                '</div>' +
+              '</div>' +
+
+              // Pilar 4: Carteira & Custos
+              '<div class="bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-200/80 flex flex-col justify-between gap-1">' +
+                '<span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">4. Carteira &amp; Valor</span>' +
+                '<div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Pedidos em Aberto: <strong class="font-mono text-zinc-900">' + activeOrders.length + ' OC(s)</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Volume em Trânsito: <strong class="font-mono text-zinc-900">' + diag.totalQtdPedidos.toLocaleString('pt-BR') + ' KG</strong></div>' +
+                  '<div class="text-[11px] text-zinc-600 flex justify-between">Valor Estimado Sug.: <strong class="font-mono text-zinc-800">' + (typeof it.eoqPorReais === 'number' && it.eoqPorReais > 0 ? ('R$ ' + Math.round(it.eoqPorReais).toLocaleString('pt-BR')) : '-') + '</strong></div>' +
+                '</div>' +
+              '</div>' +
+
+            '</div>' +
+
+            // Pedidos & Tratativas do Comprador
+            pedidosHtml +
+
+            // Pauta Estratégica para a Reunião (Talking Points para a mesa)
+            '<div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3 flex flex-col gap-2 text-xs">' +
+              '<div class="flex items-center gap-1.5 font-bold text-slate-800">' +
+                '<i data-lucide="messages-square" class="h-4 w-4 text-slate-600"></i>' +
+                '<span class="uppercase tracking-wider text-[10.5px]">Pauta Estratégica para a Reunião (Talking Points S&amp;OP / Comitê)</span>' +
+              '</div>' +
+              '<div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px]">' +
+                '<div class="bg-white p-2 rounded border border-slate-200/80 shadow-2xs">' +
+                  '<span class="text-indigo-900 font-bold block mb-0.5">🗣️ Alinhamento com Compras:</span>' +
+                  '<p class="text-zinc-700 leading-snug">' + diag.talkingCompras + '</p>' +
+                '</div>' +
+                '<div class="bg-white p-2 rounded border border-slate-200/80 shadow-2xs">' +
+                  '<span class="text-emerald-900 font-bold block mb-0.5">🏭 Alinhamento com Produção (PCP):</span>' +
+                  '<p class="text-zinc-700 leading-snug">' + diag.talkingPCP + '</p>' +
+                '</div>' +
+                '<div class="bg-white p-2 rounded border border-slate-200/80 shadow-2xs">' +
+                  '<span class="text-amber-900 font-bold block mb-0.5">📋 Proposta de Decisão para Ata:</span>' +
+                  '<p class="text-zinc-700 leading-snug font-medium">' + diag.talkingAta + '</p>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+          '</div>';
+        }
+
+        // Rodapé de Ações do Card
+        cardsHtml += '<div class="flex items-center justify-between pt-2 border-t border-zinc-100 text-xs flex-wrap gap-2">' +
+          '<div class="text-[11px] text-zinc-500 flex items-center gap-1">' +
+            '<i data-lucide="check-circle" class="h-3.5 w-3.5 text-emerald-600"></i>' +
+            '<span>Recomendação: <strong class="text-zinc-800">' + diag.acaoTexto + '</strong></span>' +
+          '</div>' +
+          '<div class="flex items-center gap-1.5">' +
+            '<button type="button" onclick="copiarDossieMaterial(' + itemId + ')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 font-semibold text-[11px] transition-all cursor-pointer" title="Copiar resumo formatado para o clipboard">' +
+              '<i data-lucide="copy" class="h-3 w-3"></i><span>Copiar Resumo</span>' +
+            '</button>' +
+            '<button type="button" onclick="localizarMaterialNaTabela(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 font-semibold text-[11px] transition-all cursor-pointer" title="Ver na Gestão de Pedidos">' +
+              '<i data-lucide="search" class="h-3 w-3"></i><span>Ver na Tabela</span>' +
+            '</button>' +
+            (it.flag && String(it.flag).toLowerCase() === 'order' ? 
+              ('<button type="button" onclick="gerarPedidoAPartirDoPOR(\'' + escapeHtml(it.materiaPrima).replace(/'/g, "\\'") + '\', ' + Math.round(it.eoqPor || it.por || 0) + ')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-2xs transition-all cursor-pointer">' +
+                '<i data-lucide="plus-circle" class="h-3 w-3"></i><span>Criar Pedido (' + Math.round(it.eoqPor || it.por).toLocaleString('pt-BR') + ' KG)</span>' +
+              '</button>') : '') +
+          '</div>' +
+        '</div>' +
+
+        '</div>'; // Fim do card
+      });
+
+      container.innerHTML = cardsHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Interações e Controles da Análise Inteligente
+    function onAnaliseSearchInput(val) {
+      analiseSearchQuery = val || '';
+      const btn = document.getElementById('btnLimparBuscaAnalise');
+      if (btn) {
+        if (analiseSearchQuery.length > 0) btn.classList.remove('hidden');
+        else btn.classList.add('hidden');
+      }
+      renderPainelAnaliseInteligente();
+    }
+
+    function limparBuscaAnalise() {
+      analiseSearchQuery = '';
+      const inp = document.getElementById('analiseSearchInput');
+      if (inp) inp.value = '';
+      const btn = document.getElementById('btnLimparBuscaAnalise');
+      if (btn) btn.classList.add('hidden');
+      renderPainelAnaliseInteligente();
+    }
+
+    function onAnaliseFilterChange() {
+      const gSel = document.getElementById('analiseFilterGravidade');
+      const aSel = document.getElementById('analiseFilterAcao');
+      const sSel = document.getElementById('analiseSort');
+
+      if (gSel) analiseFilterGravidade = gSel.value;
+      if (aSel) analiseFilterAcao = aSel.value;
+      if (sSel) analiseSortField = sSel.value;
+
+      renderPainelAnaliseInteligente();
+    }
+
+    function limparFiltrosAnalise() {
+      analiseSearchQuery = '';
+      analiseFilterGravidade = 'TODOS';
+      analiseFilterAcao = 'TODAS';
+      analiseSortField = 'DDE_ASC';
+
+      if (document.getElementById('analiseSearchInput')) document.getElementById('analiseSearchInput').value = '';
+      if (document.getElementById('btnLimparBuscaAnalise')) document.getElementById('btnLimparBuscaAnalise').classList.add('hidden');
+      if (document.getElementById('analiseFilterGravidade')) document.getElementById('analiseFilterGravidade').value = 'TODOS';
+      if (document.getElementById('analiseFilterAcao')) document.getElementById('analiseFilterAcao').value = 'TODAS';
+      if (document.getElementById('analiseSort')) document.getElementById('analiseSort').value = 'DDE_ASC';
+
+      renderPainelAnaliseInteligente();
+    }
+
+    function setAnaliseQuickChip(cat) {
+      analiseFilterGravidade = cat;
+      const gSel = document.getElementById('analiseFilterGravidade');
+      if (gSel) gSel.value = cat;
+      renderPainelAnaliseInteligente();
+    }
+
+    function filtrarAnalisePorKPI(cat) {
+      setAnaliseQuickChip(cat);
+      // Rolar suavemente até a barra de filtros
+      const c = document.getElementById('analiseCardsContainer');
+      if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function toggleCardAnalise(id) {
+      if (analiseExpandAll) {
+        if (analiseCollapsedSet.has(id)) analiseCollapsedSet.delete(id);
+        else analiseCollapsedSet.add(id);
+      } else {
+        if (analiseCollapsedSet.has(-id)) analiseCollapsedSet.delete(-id);
+        else analiseCollapsedSet.add(-id);
+      }
+      renderPainelAnaliseInteligente();
+    }
+
+    function toggleExpandirTodosAnalise() {
+      analiseExpandAll = !analiseExpandAll;
+      analiseCollapsedSet.clear();
+      const label = document.getElementById('labelToggleExpandir');
+      if (label) label.innerText = analiseExpandAll ? 'Recolher Todos' : 'Expandir Todos';
+      renderPainelAnaliseInteligente();
+    }
+
+    function localizarMaterialNaTabela(nomeMP) {
+      switchAppTab('pedidos');
+      const sInput = document.getElementById('searchInput');
+      if (sInput) {
+        sInput.value = nomeMP;
+        onSearchChange();
+      }
+    }
+
+    function copiarDossieMaterial(id) {
+      if (!porState) initPORState();
+      const item = porState.listaMP.find(m => (m.id || 0) === id) || porState.listaMP[id];
+      if (!item) return;
+
+      const activeOrders = getActiveOrdersForMP(item.materiaPrima);
+      const metrics = calculatePORLeadTimeMetrics(item);
+      const diag = getAnaliseDiagnostico(item, activeOrders, metrics);
+
+      const texto = [
+        '📌 RESUMO EXECUTIVO DE PLANEJAMENTO DE MATERIAIS - PG QUÍMICA',
+        'Material: ' + item.materiaPrima,
+        'Classificação: ' + diag.categoriaLabel,
+        'Saldo Atual: ' + item.saldo.toLocaleString('pt-BR') + ' KG (DDE: ' + (diag.ddeDays === 999 ? 'Sob Demanda' : (diag.ddeDays + ' dias')) + ')',
+        'Consumo Médio: ' + (diag.cmd > 0 ? (diag.cmd.toFixed(1) + ' KG/dia') : 'Sob Demanda'),
+        'P.O.R: ' + Math.round(item.por).toLocaleString('pt-BR') + ' KG | Sugestão Compra: ' + Math.round(item.eoqPor || item.por).toLocaleString('pt-BR') + ' KG',
+        'Lead Time: ' + metrics.leadTime + ' dias | Se pedido hoje chega em: ' + metrics.chegadaStr,
+        'Esgotamento previsto do saldo: ' + diag.dataEsgotamentoStr,
+        'Carteira de Pedidos: ' + (activeOrders.length > 0 ? (activeOrders.length + ' pedido(s) ativo(s) totalizando ' + diag.totalQtdPedidos.toLocaleString('pt-BR') + ' KG') : 'Nenhuma OC em trânsito'),
+        '',
+        'DIAGNÓSTICO DO GERENTE DE PLANEJAMENTO:',
+        diag.parecer,
+        '',
+        'PAUTA PARA A REUNIÃO (TALKING POINTS):',
+        '• Suprimentos/Compras: ' + diag.talkingCompras,
+        '• Produção/PCP: ' + diag.talkingPCP,
+        '• Deliberação para Ata: ' + diag.talkingAta,
+        '• Ação Recomendada: ' + diag.acaoTexto,
+        'Data do Relatório: ' + new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR')
+      ].join('\n');
+
+      navigator.clipboard.writeText(texto).then(() => {
+        showToast('Resumo de "' + item.materiaPrima.slice(0, 24) + '..." copiado para o clipboard!', 'check');
+      }).catch(() => fallbackCopyText(texto));
+    }
+
+    function abrirModalPautaReuniao() {
+      if (!porState) initPORState();
+      const modal = document.getElementById('modalPautaReuniao');
+      const textarea = document.getElementById('textoPautaConsolidada');
+      const countBadge = document.getElementById('pautaModalCountBadge');
+      if (!modal || !textarea) return;
+
+      const items = porState.listaMP || [];
+      const query = analiseSearchQuery.trim().toLowerCase();
+
+      // Filtrar conforme a visualização atual
+      let filtered = items.filter(it => {
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const metrics = calculatePORLeadTimeMetrics(it);
+        const diag = getAnaliseDiagnostico(it, activeOrders, metrics);
+
+        if (query) {
+          const terms = query.split(/\s+/);
+          const fullText = (it.materiaPrima + ' ' + diag.categoriaLabel + ' ' + diag.acaoTexto).toLowerCase();
+          if (!terms.every(t => fullText.includes(t))) return false;
+        }
+
+        if (analiseFilterGravidade === 'CRITICOS_TODOS') {
+          if (diag.category !== 'CRITICO_RUPTURA' && diag.category !== 'COMPRA_URGENTE' && diag.category !== 'PEDIDO_ATRASADO') return false;
+        } else if (analiseFilterGravidade === 'COM_TRATATIVA') {
+          if (!diag.tratativaComprador) return false;
+        } else if (analiseFilterGravidade !== 'TODOS') {
+          if (diag.category !== analiseFilterGravidade) return false;
+        }
+
+        if (analiseFilterAcao !== 'TODAS') {
+          if (diag.acaoTipo !== analiseFilterAcao) return false;
+        }
+
+        return true;
+      });
+
+      // Se não houver filtro específico aplicado, focar por padrão nos materiais que exigem atenção
+      if (analiseFilterGravidade === 'TODOS' && !query) {
+        filtered = items.filter(it => {
+          const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+          const metrics = calculatePORLeadTimeMetrics(it);
+          const diag = getAnaliseDiagnostico(it, activeOrders, metrics);
+          return (diag.category === 'CRITICO_RUPTURA' || diag.category === 'COMPRA_URGENTE' || diag.category === 'PEDIDO_ATRASADO');
+        });
+      }
+
+      // Ordenar por DDE crescente
+      filtered.sort((a, b) => {
+        const metricsA = calculatePORLeadTimeMetrics(a);
+        const metricsB = calculatePORLeadTimeMetrics(b);
+        const diagA = getAnaliseDiagnostico(a, getActiveOrdersForMP(a.materiaPrima), metricsA);
+        const diagB = getAnaliseDiagnostico(b, getActiveOrdersForMP(b.materiaPrima), metricsB);
+        return diagA.ddeDays - diagB.ddeDays;
+      });
+
+      if (countBadge) countBadge.innerText = filtered.length + ' materiais compilados';
+
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const hora = new Date().toLocaleTimeString('pt-BR');
+
+      let linhas = [
+        '========================================================================',
+        'PAUTA EXECUTIVA DE PLANEJAMENTO DE MATERIAIS & S&OP - PG QUÍMICA',
+        'Data: ' + hoje + ' às ' + hora + ' | Responsável: Gerente de Planejamento de Materiais',
+        'Total de itens em pauta: ' + filtered.length,
+        '========================================================================',
+        ''
+      ];
+
+      filtered.forEach((it, idx) => {
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const metrics = calculatePORLeadTimeMetrics(it);
+        const diag = getAnaliseDiagnostico(it, activeOrders, metrics);
+
+        linhas.push((idx + 1) + '. ' + it.materiaPrima);
+        linhas.push('   STATUS: ' + diag.categoriaLabel.toUpperCase() + ' | COBERTURA: ' + (diag.ddeDays === 999 ? 'Sob Demanda' : (diag.ddeDays + ' dias (Esgota em ' + diag.dataEsgotamentoStr + ')')));
+        linhas.push('   ESTOQUE: ' + it.saldo.toLocaleString('pt-BR') + ' KG | CONSUMO: ' + (diag.cmd > 0 ? (diag.cmd.toFixed(1) + ' KG/dia') : 'Sob Demanda') + ' | P.O.R: ' + Math.round(it.por).toLocaleString('pt-BR') + ' KG | SUG. COMPRA: ' + Math.round(it.eoqPor || it.por).toLocaleString('pt-BR') + ' KG');
+        linhas.push('   LEAD TIME: ' + metrics.leadTime + 'd (Se pedido hoje chega: ' + metrics.chegadaStr + ')');
+        
+        if (activeOrders.length > 0) {
+          linhas.push('   CARTEIRA ATIVA: ' + activeOrders.length + ' pedido(s) (' + diag.totalQtdPedidos.toLocaleString('pt-BR') + ' KG) - Prev: ' + diag.primeiraChegadaStr);
+          if (diag.tratativaComprador) {
+            linhas.push('   RETORNO COMPRADOR: "' + diag.tratativaComprador.motivoAtraso + '"');
+          }
+        } else {
+          linhas.push('   CARTEIRA: NENHUMA ORDEM DE COMPRA EMITIDA');
+        }
+
+        linhas.push('   PARECER EXECUTIVO: ' + diag.parecer);
+        linhas.push('   DISCUSSÃO COMPRAS: ' + diag.talkingCompras);
+        linhas.push('   AÇÃO PROPOSTA PARA ATA: ' + diag.talkingAta);
+        linhas.push('   --------------------------------------------------------------------');
+        linhas.push('');
+      });
+
+      linhas.push('Fim do relatório de pauta executiva.');
+
+      textarea.value = linhas.join('\n');
+      modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function fecharModalPautaReuniao() {
+      const modal = document.getElementById('modalPautaReuniao');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function copiarTextoPautaConsolidada() {
+      const textarea = document.getElementById('textoPautaConsolidada');
+      if (!textarea || !textarea.value) return;
+
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        showToast('Pauta completa copiada com sucesso para a área de transferência!', 'check');
+      }).catch(() => fallbackCopyText(textarea.value));
+    }
+
+    function exportarAnaliseCSV() {
+      if (!porState) initPORState();
+      const items = porState.listaMP || [];
+      if (items.length === 0) {
+        showToast('Nenhum dado para exportar', 'alert-circle');
+        return;
+      }
+
+      const headers = [
+        'Materia_Prima',
+        'Diagnostico',
+        'Acao_Recomendada',
+        'Saldo_KG',
+        'Consumo_Diario_KG',
+        'DDE_Dias',
+        'Esgotamento_Estimado',
+        'Ponto_Reordem_KG',
+        'Estoque_Seguranca_KG',
+        'Sugestao_Compra_KG',
+        'Lead_Time_Dias',
+        'Chegada_Se_Pedido_Hoje',
+        'Pedidos_Ativos_Qtd',
+        'Volume_Em_Transito_KG',
+        'Parecer_Gerente_Materiais',
+        'Alinhamento_Compras',
+        'Alinhamento_Producao',
+        'Deliberacao_Ata'
+      ];
+
+      const csvRows = [headers.join(';')];
+
+      items.forEach(it => {
+        const activeOrders = getActiveOrdersForMP(it.materiaPrima);
+        const metrics = calculatePORLeadTimeMetrics(it);
+        const diag = getAnaliseDiagnostico(it, activeOrders, metrics);
+
+        const row = [
+          '"' + String(it.materiaPrima || '').replace(/"/g, '""') + '"',
+          '"' + String(diag.categoriaLabel || '').replace(/"/g, '""') + '"',
+          '"' + String(diag.acaoTexto || '').replace(/"/g, '""') + '"',
+          it.saldo || 0,
+          diag.cmd ? diag.cmd.toFixed(2) : 0,
+          diag.ddeDays === 999 ? 'Sob Demanda' : diag.ddeDays,
+          '"' + String(diag.dataEsgotamentoStr || '').replace(/"/g, '""') + '"',
+          it.por || 0,
+          it.safetyStock || 0,
+          it.eoqPor || it.por || 0,
+          metrics.leadTime || 0,
+          '"' + String(metrics.chegadaStr || '').replace(/"/g, '""') + '"',
+          activeOrders.length,
+          diag.totalQtdPedidos || 0,
+          '"' + String(diag.parecer || '').replace(/"/g, '""') + '"',
+          '"' + String(diag.talkingCompras || '').replace(/"/g, '""') + '"',
+          '"' + String(diag.talkingPCP || '').replace(/"/g, '""') + '"',
+          '"' + String(diag.talkingAta || '').replace(/"/g, '""') + '"'
+        ];
+
+        csvRows.push(row.join(';'));
+      });
+
+      const blob = new Blob(['\uFEFF' + csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Analise_Inteligente_Materiais_PGQuimica_' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Dossiê executivo exportado com sucesso em CSV!', 'file-spreadsheet');
+    }
+
     // Inicialização
     initPORState();
     renderPORListaMP();
     renderTable();
   </script>
-<div id="product-hover-tooltip" style="display:none; position:fixed; z-index:999999;"></div>
+<!-- Modal: Pauta Consolidada para Reunião de Gestão de Materiais -->
+  <div id="modalPautaReuniao" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="rounded-xl border border-zinc-200 bg-white shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Cabeçalho do Modal -->
+      <div class="px-5 py-3.5 border-b border-zinc-200 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <i data-lucide="clipboard-check" class="h-4.5 w-4.5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Pauta Executiva Consolidada para Reunião (S&amp;OP / Suprimentos)</h3>
+            <p class="text-[11px] text-zinc-300">Formatado para copiar e colar diretamente no Microsoft Teams, WhatsApp ou Ata de Reunião</p>
+          </div>
+        </div>
+        <button type="button" onclick="fecharModalPautaReuniao()" class="text-zinc-400 hover:text-white p-1 rounded-md transition-colors cursor-pointer">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo do Modal -->
+      <div class="p-4 overflow-y-auto flex-1 flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs text-zinc-600 bg-zinc-50 p-2.5 rounded-lg border border-zinc-200">
+          <span class="font-medium">O relatório abaixo reúne o resumo executivo dos materiais selecionados com diagnósticos e deliberações.</span>
+          <span class="text-[11px] text-indigo-700 font-bold" id="pautaModalCountBadge">0 itens na pauta</span>
+        </div>
+
+        <textarea id="textoPautaConsolidada" 
+                  readonly 
+                  rows="16" 
+                  class="w-full font-mono text-xs text-zinc-800 bg-zinc-50/80 p-3.5 rounded-lg border border-zinc-300 focus:bg-white outline-none leading-relaxed resize-none"></textarea>
+      </div>
+
+      <!-- Rodapé do Modal com Botões -->
+      <div class="px-5 py-3 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
+        <span class="text-xs text-zinc-500">Dica: Selecione filtros na tela antes de abrir para personalizar a pauta da sua reunião.</span>
+        <div class="flex items-center gap-2">
+          <button type="button" 
+                  onclick="fecharModalPautaReuniao()" 
+                  class="px-4 py-2 rounded-lg border border-zinc-300 bg-white hover:bg-zinc-100 text-xs font-semibold text-zinc-700 transition-all cursor-pointer">
+            Fechar
+          </button>
+          <button type="button" 
+                  onclick="copiarTextoPautaConsolidada()" 
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white shadow-sm transition-all cursor-pointer">
+            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+            <span>Copiar Pauta Completa</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="product-hover-tooltip" style="display:none; position:fixed; z-index:999999;"></div>
 </body>
 </html>
