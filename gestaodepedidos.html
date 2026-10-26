@@ -1036,6 +1036,7 @@
               <option value="MANUAL">✋ Revisão Manual (Manual)</option>
               <option value="OK">✅ Estoque Confortável (OK)</option>
               <option value="ZERADOS">🔴 Saldo Zerado / Negativo</option>
+              <option value="ACIMA_POR">🛡️ Acima do P.O.R (Saldo &gt; P.O.R)</option>
               <option value="DDE_CRITICO">⚡ DDE Crítico (&le; 15 dias)</option>
               <option value="IMPORTADOS">🚢 Importados (Lead Time &ge; 60d)</option>
               <option value="NACIONAIS">🚛 Nacionais (Lead Time &lt; 60d)</option>
@@ -1096,7 +1097,8 @@
           <button type="button" onclick="setPORFilter('SEM_PEDIDO')" id="por-flt-SEM_PEDIDO" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 shadow-2xs transition-all cursor-pointer">⚠️ Sem Pedido Colocado</button>
           <button type="button" onclick="setPORFilter('COM_PEDIDO')" id="por-flt-COM_PEDIDO" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-50 shadow-2xs transition-all cursor-pointer">✅ Já em Andamento</button>
           <button type="button" onclick="setPORFilter('MANUAL')" id="por-flt-MANUAL" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-white text-amber-800 hover:bg-amber-50 shadow-2xs transition-all cursor-pointer">✋ Revisão Manual (16)</button>
-          <button type="button" onclick="setPORFilter('ZERADOS')" id="por-flt-ZERADOS" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-all cursor-pointer">📦 Zerados</button>
+          <button type="button" onclick="setPORFilter('ZERADOS')" id="por-flt-ZERADOS" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-all cursor-pointer">📦 Zerados (<span id="porBadgeZerados">0</span>)</button>
+          <button type="button" onclick="setPORFilter('ACIMA_POR')" id="por-flt-ACIMA_POR" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-emerald-300 bg-emerald-50/70 text-emerald-800 hover:bg-emerald-100 shadow-2xs transition-all cursor-pointer" title="Filtrar matérias-primas com Saldo Atual maior que o Ponto de Reordem">🛡️ Acima do P.O.R (<span id="porBadgeAcimaPOR">0</span>)</button>
           <button type="button" onclick="setPORFilter('DDE_CRITICO')" id="por-flt-DDE_CRITICO" class="por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-orange-300 bg-white text-orange-800 hover:bg-orange-50 shadow-2xs transition-all cursor-pointer">⚡ DDE &le; 15d</button>
         </div>
 
@@ -6773,12 +6775,19 @@
       let comPedidoCount = 0;
       let semPedidoCount = 0;
       let valorSugeridoTotal = 0;
+      let zeradosCount = 0;
+      let acimaPorCount = 0;
 
       items.forEach(it => {
         const isOrder = String(it.flag).toLowerCase() === 'order';
         const isManual = String(it.flag).toLowerCase() === 'manual';
+        const sld = parseFloat(it.saldo) || 0;
+        const porVal = parseFloat(it.por) || 0;
+
         if (isOrder) orderCount++;
         if (isManual) manualCount++;
+        if (sld <= 0) zeradosCount++;
+        if (sld > porVal) acimaPorCount++;
 
         const activeOrders = getActiveOrdersForMP(it.materiaPrima);
         if (isOrder) {
@@ -6795,6 +6804,8 @@
       if (document.getElementById('porKpiManual')) document.getElementById('porKpiManual').innerText = manualCount;
       if (document.getElementById('porKpiComPedido')) document.getElementById('porKpiComPedido').innerText = comPedidoCount;
       if (document.getElementById('porKpiSemPedido')) document.getElementById('porKpiSemPedido').innerText = semPedidoCount;
+      if (document.getElementById('porBadgeZerados')) document.getElementById('porBadgeZerados').innerText = zeradosCount;
+      if (document.getElementById('porBadgeAcimaPOR')) document.getElementById('porBadgeAcimaPOR').innerText = acimaPorCount;
       if (document.getElementById('porKpiValorSugerido')) {
         document.getElementById('porKpiValorSugerido').innerText = 'R$ ' + Math.round(valorSugeridoTotal).toLocaleString('pt-BR');
       }
@@ -6805,12 +6816,15 @@
         const activeOrders = getActiveOrdersForMP(it.materiaPrima);
         const lt = parseFloat(it.leadTime) || 0;
         const dde = typeof it.dde === 'number' ? it.dde : 9999;
+        const sld = parseFloat(it.saldo) || 0;
+        const porVal = parseFloat(it.por) || 0;
 
         if (porActiveFilter === 'ORDER' && !isOrder) return false;
         if (porActiveFilter === 'MANUAL' && !isManual) return false;
         if (porActiveFilter === 'SEM_PEDIDO' && (!isOrder || activeOrders.length > 0)) return false;
         if (porActiveFilter === 'COM_PEDIDO' && (!isOrder || activeOrders.length === 0)) return false;
-        if (porActiveFilter === 'ZERADOS' && it.saldo > 0) return false;
+        if (porActiveFilter === 'ZERADOS' && sld > 0) return false;
+        if (porActiveFilter === 'ACIMA_POR' && !(sld > porVal)) return false;
         if (porActiveFilter === 'OK' && (isOrder || isManual)) return false;
         if (porActiveFilter === 'DDE_CRITICO' && dde > 15) return false;
         if (porActiveFilter === 'IMPORTADOS' && lt < 60) return false;
@@ -6862,6 +6876,9 @@
         const metrics = calculatePORLeadTimeMetrics(it);
         const isOrder = String(it.flag).toLowerCase() === 'order';
         const isManual = String(it.flag).toLowerCase() === 'manual';
+        const sld = parseFloat(it.saldo) || 0;
+        const porVal = parseFloat(it.por) || 0;
+        const isAcima = sld > porVal;
 
         let flagBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-600">OK</span>';
         let rowClass = 'hover:bg-zinc-50/80 transition-colors';
@@ -6872,6 +6889,8 @@
         } else if (isManual) {
           rowClass = 'bg-amber-50/30 hover:bg-amber-50/60 transition-colors';
           flagBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">MANUAL</span>';
+        } else if (isAcima) {
+          flagBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>OK &bull; Acima</span>';
         }
 
         let pedidosStatusHtml = '';
@@ -7162,7 +7181,7 @@
     }
 
     function updatePORPillButtons() {
-      const types = ['ALL', 'ORDER', 'SEM_PEDIDO', 'COM_PEDIDO', 'MANUAL', 'ZERADOS', 'DDE_CRITICO', 'IMPORTADOS', 'NACIONAIS'];
+      const types = ['ALL', 'ORDER', 'SEM_PEDIDO', 'COM_PEDIDO', 'MANUAL', 'ZERADOS', 'ACIMA_POR', 'DDE_CRITICO', 'IMPORTADOS', 'NACIONAIS'];
       types.forEach(t => {
         const btn = document.getElementById('por-flt-' + t);
         if (!btn) return;
@@ -7170,9 +7189,16 @@
         if (isActive) {
           if (t === 'ORDER') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-black rounded-lg bg-rose-600 text-white shadow-2xs transition-all cursor-pointer';
           else if (t === 'SEM_PEDIDO') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-black rounded-lg bg-red-700 text-white shadow-2xs transition-all cursor-pointer';
+          else if (t === 'MANUAL') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-600 text-white shadow-2xs transition-all cursor-pointer';
+          else if (t === 'ZERADOS') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-zinc-800 text-white shadow-2xs transition-all cursor-pointer';
+          else if (t === 'ACIMA_POR') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer ring-2 ring-emerald-600/30';
           else btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer';
         } else {
-          btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-all cursor-pointer';
+          if (t === 'ORDER') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 shadow-2xs transition-all cursor-pointer';
+          else if (t === 'SEM_PEDIDO') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 shadow-2xs transition-all cursor-pointer';
+          else if (t === 'MANUAL') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-white text-amber-800 hover:bg-amber-50 shadow-2xs transition-all cursor-pointer';
+          else if (t === 'ACIMA_POR') btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-emerald-300 bg-emerald-50/70 text-emerald-800 hover:bg-emerald-100 shadow-2xs transition-all cursor-pointer';
+          else btn.className = 'por-flt-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-all cursor-pointer';
         }
       });
 
