@@ -1,0 +1,920 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R 12 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 8371 >>
+stream
+q 0.11 0.37 0.82 rg 0 545 842 50 re f Q
+q 1 1 1 rg BT /F2 15 Tf 35 572 Td (RESUMO EXECUTIVO: RISCOS DE RUPTURA & PEDIDOS DE COMPRA) Tj ET Q
+q 0.9 0.95 1 rg BT /F1 9.5 Tf 35 555 Td (PCP & GESTAO DE MATERIAIS | AUDITORIA DE SUPRIMENTOS \(NIVEIS DE URGENCIA\)) Tj ET Q
+q 1 1 1 rg BT /F2 9 Tf 640 572 Td (Posicao Base: 19/10/2026) Tj ET Q
+q 0.85 0.9 1 rg BT /F1 8 Tf 640 556 Td (Extracao: 19/10/2026 18:00 | PCP Senior) Tj ET Q
+q 0.95 0.96 0.98 rg 0.85 0.88 0.92 RG 1 w 35 518 772 22 re B Q
+q 0.11 0.37 0.82 rg BT /F2 10 Tf 45 524 Td (PAINEL EXECUTIVO: CENARIO GERAL DA CARTEIRA & URGENCIA DE SUPRIMENTOS) Tj ET Q
+q 0.82 0.85 0.88 RG 1 w 35 30 m 807 30 l S Q
+q 0.45 0.5 0.55 rg BT /F1 7.5 Tf 35 18 Td (Documento de Apresentacao Gerencial - Dados Essenciais para Tomada de Decisao Imediata de Compras) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 8 Tf 740 18 Td (Pagina 1 de 4) Tj ET Q
+q 0.99 0.92 0.92 rg 0.86 0.15 0.15 RG 2 w 35 420 245 88 re B Q
+q 0.75 0.1 0.1 rg BT /F2 10 Tf 48 490 Td (NIVEL 1 - CRITICO \(SEM PEDIDO\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 32 Tf 48 454 Td (66 SKUs) Tj ET Q
+q 0.75 0.1 0.1 rg BT /F2 9 Tf 48 436 Td (ALERTA: 39 materiais ja com SALDO ZERO!) Tj ET Q
+q 0.5 0.15 0.15 rg BT /F1 8 Tf 48 426 Td (Acao: Emitir Pedidos de Compra HOJE) Tj ET Q
+q 1 0.96 0.88 rg 0.85 0.45 0.05 RG 2 w 298 420 245 88 re B Q
+q 0.75 0.35 0 rg BT /F2 10 Tf 310 490 Td (NIVEL 2 - ALTO RISCO \(LEAD TIME\)) Tj ET Q
+q 0.85 0.45 0.05 rg BT /F2 32 Tf 310 454 Td (13 SKUs) Tj ET Q
+q 0.75 0.35 0 rg BT /F2 9 Tf 310 436 Td (Possuem pedido, mas estoque acaba antes!) Tj ET Q
+q 0.5 0.25 0.05 rg BT /F1 8 Tf 310 426 Td (Acao: Cobrar Fornecedor / Antecipar Entrega) Tj ET Q
+q 0.94 0.98 0.95 rg 0.1 0.55 0.25 RG 2 w 562 420 245 88 re B Q
+q 0.1 0.5 0.2 rg BT /F2 10 Tf 574 490 Td (COBERTURA GERAL DA CARTEIRA) Tj ET Q
+q 0.1 0.55 0.25 rg BT /F2 32 Tf 574 454 Td (55.9 Dias) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 9 Tf 574 436 Td (Meta do PCP: 66.5 Dias \(Deficit -10.6d\)) Tj ET Q
+q 0.2 0.45 0.2 rg BT /F1 8 Tf 574 426 Td (Total auditado: 570 MPs + 32 Embalagens) Tj ET Q
+q 1 1 1 rg 0.8 0.85 0.9 RG 1 w 35 335 772 72 re B Q
+q 0.15 0.25 0.4 rg 35 387 772 20 re f Q
+q 1 1 1 rg BT /F2 9.5 Tf 45 393 Td (PLANO DE ACAO EXECUTIVO \(3 PRIORIDADES PARA REUNIAO DE PCP & COMPRAS\)) Tj ET Q
+q 0.15 0.2 0.3 rg BT /F2 8 Tf 45 370 Td (1. COMPRA IMEDIATA \(NIVEL 1\): ) Tj ET Q
+q 0.25 0.3 0.35 rg BT /F1 8 Tf 220 370 Td (Emitir hoje as Ordens de Compra sugeridas para os 42 materiais com saldo fisico zerado. Risco de parada de reatores.) Tj ET Q
+q 0.15 0.2 0.3 rg BT /F2 8 Tf 45 356 Td (2. EXPEDITE URGENTE \(NIVEL 2\):) Tj ET Q
+q 0.25 0.3 0.35 rg BT /F1 8 Tf 220 356 Td ( Negociar frete dedicado ou lote parcial para os 13 materiais com pedido cujo estoque esgota antes da entrega.) Tj ET Q
+q 0.15 0.2 0.3 rg BT /F2 8 Tf 45 342 Td (3. TRAVAMENTO DE OPs: Nao prog) Tj ET Q
+q 0.25 0.3 0.35 rg BT /F1 8 Tf 220 342 Td (ramar Ordens de Producao \(OP\) para produtos cujas embalagens ou MPs estejam no Nivel 1 sem data confirmada de chegada.) Tj ET Q
+q 1 1 1 rg 0.8 0.85 0.9 RG 1 w 35 60 772 260 re B Q
+q 0.85 0.15 0.15 rg 35 298 772 22 re f Q
+q 1 1 1 rg BT /F2 10 Tf 45 305 Td (TOP 8 MATERIAIS COM MAIOR RISCO DE PARALISAR A FABRICA \(ACOMPANHAMENTO PRIORITARIO\)) Tj ET Q
+q 0.93 0.94 0.96 rg 35 280 772 18 re f Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 42 285 Td (URGENCIA) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 95 285 Td (TIPO) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 130 285 Td (MATERIAL / INSUMO) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 410 285 Td (SALDO) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 480 285 Td (COBERTURA) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 555 285 Td (LEAD TIME) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 7.5 Tf 625 285 Td (PEDIDO ERP) Tj ET Q
+q 0.8 0.1 0.1 rg BT /F2 7.5 Tf 715 285 Td (SUGESTAO COMPRA) Tj ET Q
+q 1 1 1 rg 35 255 772 21 re f Q
+q 0.98 0.88 0.88 rg 42 259 46 13 re f Q
+q 0.8 0.1 0.1 rg BT /F2 6.5 Tf 45 263 Td (CRITICO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 263 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 263 Td (ACRILAMIDA 98% - SC 25KG \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 410 263 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 263 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 263 Td (90 dias) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 625 263 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 263 Td (7.281 UN/KG) Tj ET Q
+q 0.97 0.98 0.99 rg 35 232 772 21 re f Q
+q 0.98 0.88 0.88 rg 42 236 46 13 re f Q
+q 0.8 0.1 0.1 rg BT /F2 6.5 Tf 45 240 Td (CRITICO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 240 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 240 Td (AGUA DESMINERALIZADA - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 410 240 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 240 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 240 Td (30 dias) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 625 240 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 240 Td (32 UN/KG) Tj ET Q
+q 1 1 1 rg 35 209 772 21 re f Q
+q 0.98 0.88 0.88 rg 42 213 46 13 re f Q
+q 0.8 0.1 0.1 rg BT /F2 6.5 Tf 45 217 Td (CRITICO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 217 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 217 Td (ALCOOL POLIVINILICO ALTA VISCOSIDADE 2688 PVA...) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7.5 Tf 410 217 Td (3,25) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 217 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 217 Td (90 dias) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 625 217 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 217 Td (3.019 UN/KG) Tj ET Q
+q 0.97 0.98 0.99 rg 35 186 772 21 re f Q
+q 0.98 0.88 0.88 rg 42 190 46 13 re f Q
+q 0.8 0.1 0.1 rg BT /F2 6.5 Tf 45 194 Td (CRITICO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 194 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 194 Td (BRANCOCRYL TEX 407 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 410 194 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 194 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 194 Td (16 dias) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 625 194 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 194 Td (463 UN/KG) Tj ET Q
+q 1 1 1 rg 35 163 772 21 re f Q
+q 0.98 0.88 0.88 rg 42 167 46 13 re f Q
+q 0.8 0.1 0.1 rg BT /F2 6.5 Tf 45 171 Td (CRITICO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 171 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 171 Td (CATIONIC NE CFLOC 805 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7.5 Tf 410 171 Td (0,1) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 171 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 171 Td (30 dias) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 625 171 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 171 Td (1.100 UN/KG) Tj ET Q
+q 0.97 0.98 0.99 rg 35 140 772 21 re f Q
+q 0.98 0.88 0.88 rg 42 144 46 13 re f Q
+q 0.8 0.1 0.1 rg BT /F2 6.5 Tf 45 148 Td (CRITICO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 148 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 148 Td (COLLOIDAL SILICA - 30 M - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 410 148 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 148 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 148 Td (90 dias) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 625 148 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 148 Td (3.602 UN/KG) Tj ET Q
+q 1 1 1 rg 35 117 772 21 re f Q
+q 1 0.92 0.82 rg 42 121 46 13 re f Q
+q 0.8 0.4 0.05 rg BT /F2 6.5 Tf 45 125 Td (ALTO RISCO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 125 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 125 Td (ANIDRIDO MALEICO - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 410 125 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 125 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 125 Td (13 dias) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 625 125 Td (COM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 125 Td (717 UN/KG) Tj ET Q
+q 0.97 0.98 0.99 rg 35 94 772 21 re f Q
+q 1 0.92 0.82 rg 42 98 46 13 re f Q
+q 0.8 0.4 0.05 rg BT /F2 6.5 Tf 45 102 Td (ALTO RISCO) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F2 7 Tf 95 102 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7.5 Tf 130 102 Td (CORANTE VERDE - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7.5 Tf 410 102 Td (0,003) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 480 102 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7.5 Tf 555 102 Td (10 dias) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 625 102 Td (COM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 8 Tf 715 102 Td (68 UN/KG) Tj ET Q
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 17329 >>
+stream
+q 0.11 0.37 0.82 rg 0 545 842 50 re f Q
+q 1 1 1 rg BT /F2 15 Tf 35 572 Td (RESUMO EXECUTIVO: RISCOS DE RUPTURA & PEDIDOS DE COMPRA) Tj ET Q
+q 0.9 0.95 1 rg BT /F1 9.5 Tf 35 555 Td (PCP & GESTAO DE MATERIAIS | AUDITORIA DE SUPRIMENTOS \(NIVEIS DE URGENCIA\)) Tj ET Q
+q 1 1 1 rg BT /F2 9 Tf 640 572 Td (Posicao Base: 19/10/2026) Tj ET Q
+q 0.85 0.9 1 rg BT /F1 8 Tf 640 556 Td (Extracao: 19/10/2026 18:00 | PCP Senior) Tj ET Q
+q 0.95 0.96 0.98 rg 0.85 0.88 0.92 RG 1 w 35 518 772 22 re B Q
+q 0.11 0.37 0.82 rg BT /F2 10 Tf 45 524 Td (NIVEL 1: CRITICO - MATERIAS-PRIMAS E EMBALAGENS SEM PEDIDO \(PARTE 1 - MAIOR URGENCIA\)) Tj ET Q
+q 0.82 0.85 0.88 RG 1 w 35 30 m 807 30 l S Q
+q 0.45 0.5 0.55 rg BT /F1 7.5 Tf 35 18 Td (Documento de Apresentacao Gerencial - Dados Essenciais para Tomada de Decisao Imediata de Compras) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 8 Tf 740 18 Td (Pagina 2 de 4) Tj ET Q
+q 0.85 0.15 0.15 rg 35 492 772 20 re f Q
+q 1 1 1 rg BT /F2 7.5 Tf 40 498 Td (#) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 58 498 Td (TIPO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 95 498 Td (MATERIAL / INSUMO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 385 498 Td (SALDO FISICO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 455 498 Td (COBERTURA) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 525 498 Td (LEAD TIME) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 595 498 Td (STATUS PEDIDO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 680 498 Td (SUGESTAO COMPRA) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 755 498 Td (ACAO DIRETA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 470 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 474.5 Td (01) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 474.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 474.5 Td (ACRILAMIDA 98% - SC 25KG \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 474.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 474.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 474.5 Td (90 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 474.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 474.5 Td (7.281) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 474.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 453.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 458 Td (02) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 458 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 458 Td (AGUA DESMINERALIZADA - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 458 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 458 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 458 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 458 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 458 Td (32) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 458 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 437 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 441.5 Td (03) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 441.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 441.5 Td (ALCOOL POLIVINILICO ALTA VISCOSIDADE 2688 PVA 088...) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 441.5 Td (3,25) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 441.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 441.5 Td (90 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 441.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 441.5 Td (3.019) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 441.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 420.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 425 Td (04) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 425 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 425 Td (BRANCOCRYL TEX 407 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 425 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 425 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 425 Td (16 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 425 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 425 Td (463) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 425 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 404 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 408.5 Td (05) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 408.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 408.5 Td (CATIONIC NE CFLOC 805 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 408.5 Td (0,1) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 408.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 408.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 408.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 408.5 Td (1.100) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 408.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 387.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 392 Td (06) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 392 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 392 Td (COLLOIDAL SILICA - 30 M - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 392 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 392 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 392 Td (90 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 392 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 392 Td (3.602) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 392 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 371 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 375.5 Td (07) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 375.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 375.5 Td (COLLOIDAL SILICA HS-1430 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 375.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 375.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 375.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 375.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 375.5 Td (794) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 375.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 354.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 359 Td (08) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 359 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 359 Td (COMGEL 601 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 359 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 359 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 359 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 359 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 359 Td (1.607) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 359 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 338 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 342.5 Td (09) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 342.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 342.5 Td (EXXSOL D40 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 342.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 342.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 342.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 342.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 342.5 Td (358) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 342.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 321.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 326 Td (10) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 326 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 326 Td (HIDROXIDO DE POTASSIO SOLIDO \(ONU 1814 - RSC 80 C...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 326 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 326 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 326 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 326 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 326 Td (5.351) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 326 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 305 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 309.5 Td (11) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 309.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 309.5 Td (HIDROXIDO DE SODIO SOLUCAO 32% - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 309.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 309.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 309.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 309.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 309.5 Td (16.357) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 309.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 288.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 293 Td (12) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 293 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 293 Td (NATROSOL 250 MBR PA - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 293 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 293 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 293 Td (89 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 293 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 293 Td (18) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 293 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 272 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 276.5 Td (13) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 276.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 276.5 Td (POLICLORETO DE ALUMINIO PAC18 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 276.5 Td (9,2) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 276.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 276.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 276.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 276.5 Td (6.248) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 276.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 255.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 260 Td (14) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 260 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 260 Td (POLIETERE L 61 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 260 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 260 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 260 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 260 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 260 Td (234) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 260 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 239 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 243.5 Td (15) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 243.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 243.5 Td (PVA 2488 120 MESH 120 PO - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 243.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 243.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 243.5 Td (14 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 243.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 243.5 Td (235) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 243.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 222.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 227 Td (16) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 227 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 227 Td (PVA 2688 120 MESH 120 PO - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 227 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 227 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 227 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 227 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 227 Td (44) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 227 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 206 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 210.5 Td (17) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 210.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 210.5 Td (UNIQ ISO 520 - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 210.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 210.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 210.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 210.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 210.5 Td (15) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 210.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 189.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 194 Td (18) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 194 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 194 Td (BOMBONA 20 L RECICLADA) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 194 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 194 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 194 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 194 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 194 Td (33) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 194 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 173 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 177.5 Td (19) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 177.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 177.5 Td (BOMBONA 50 L RECICLADA) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 177.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 177.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 177.5 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 177.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 177.5 Td (55) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 177.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 156.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 161 Td (20) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 161 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 161 Td (BOMBONA 200 L TAMPA FIXA RECICLADA) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 161 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 161 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 161 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 161 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 161 Td (35) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 161 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 140 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 144.5 Td (21) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 144.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 144.5 Td (BOMBONA 200 L TAMPA FIXA HOMOLOGADA) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 144.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 144.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 144.5 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 144.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 144.5 Td (65) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 144.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 123.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 128 Td (22) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 128 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 128 Td (CONTAINER PLASTICO IBC COM BASE DE MADEIRA 1000 L) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 128 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 128 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 128 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 128 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 128 Td (49) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 128 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 107 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 111.5 Td (23) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 111.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 111.5 Td (CONTAINER PLASTICO IBC BASE DE FERRO 1000L) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 111.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 111.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 111.5 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 111.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 111.5 Td (210) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 111.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 90.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 95 Td (24) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 95 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 95 Td (CONTAINER PLASTICO IBC BOLHA NOVA COM BASE DE FER...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 95 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 95 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 95 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 95 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 95 Td (39) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 95 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 74 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 78.5 Td (25) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 78.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 78.5 Td (ETIQUETA SIMBOLOGIA RISCO CORROSIVO 8 ROLO COM 10...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 78.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 78.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 78.5 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 78.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 78.5 Td (61) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 78.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 57.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 62 Td (26) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 62 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 62 Td (ETIQUETA SIMBOLOGIA RISCO INFLAMAVEL 3 ROLO COM 1...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 62 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 62 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 62 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 62 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 62 Td (52) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 62 Td (COMPRAR JA) Tj ET Q
+
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+9 0 obj
+<< /Length 17478 >>
+stream
+q 0.11 0.37 0.82 rg 0 545 842 50 re f Q
+q 1 1 1 rg BT /F2 15 Tf 35 572 Td (RESUMO EXECUTIVO: RISCOS DE RUPTURA & PEDIDOS DE COMPRA) Tj ET Q
+q 0.9 0.95 1 rg BT /F1 9.5 Tf 35 555 Td (PCP & GESTAO DE MATERIAIS | AUDITORIA DE SUPRIMENTOS \(NIVEIS DE URGENCIA\)) Tj ET Q
+q 1 1 1 rg BT /F2 9 Tf 640 572 Td (Posicao Base: 19/10/2026) Tj ET Q
+q 0.85 0.9 1 rg BT /F1 8 Tf 640 556 Td (Extracao: 19/10/2026 18:00 | PCP Senior) Tj ET Q
+q 0.95 0.96 0.98 rg 0.85 0.88 0.92 RG 1 w 35 518 772 22 re B Q
+q 0.11 0.37 0.82 rg BT /F2 10 Tf 45 524 Td (NIVEL 1 \(CONT.\): MATERIAS-PRIMAS E EMBALAGENS SEM PEDIDO \(PARTE 2\)) Tj ET Q
+q 0.82 0.85 0.88 RG 1 w 35 30 m 807 30 l S Q
+q 0.45 0.5 0.55 rg BT /F1 7.5 Tf 35 18 Td (Documento de Apresentacao Gerencial - Dados Essenciais para Tomada de Decisao Imediata de Compras) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 8 Tf 740 18 Td (Pagina 3 de 4) Tj ET Q
+q 0.85 0.15 0.15 rg 35 492 772 20 re f Q
+q 1 1 1 rg BT /F2 7.5 Tf 40 498 Td (#) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 58 498 Td (TIPO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 95 498 Td (MATERIAL / INSUMO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 385 498 Td (SALDO FISICO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 455 498 Td (COBERTURA) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 525 498 Td (LEAD TIME) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 595 498 Td (STATUS PEDIDO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 680 498 Td (SUGESTAO COMPRA) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 755 498 Td (ACAO DIRETA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 470 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 474.5 Td (27) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 474.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 474.5 Td (FILME STRETCH 500MM X 25 MICRAS X 3) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 474.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 474.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 474.5 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 474.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 474.5 Td (112) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 474.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 453.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 458 Td (28) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 458 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 458 Td (LATA COM TAMPA DE PRESSAO 225ML) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 458 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 458 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 458 Td (25 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 458 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 458 Td (23) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 458 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 437 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 441.5 Td (29) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 441.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 441.5 Td (LATA RETANGULAR SEM LITOGRAFIA 5L) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 441.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 441.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 441.5 Td (25 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 441.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 441.5 Td (214) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 441.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 420.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 425 Td (30) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 425 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 425 Td (LATA CILINDRICA SEM LITOGRAFIA 900ML) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 425 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 425 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 425 Td (25 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 425 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 425 Td (186) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 425 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 404 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 408.5 Td (31) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 408.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 408.5 Td (PALLET PARA EXPORTACAO 1,15M X 1,15M) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 408.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 408.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 408.5 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 408.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 408.5 Td (165) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 408.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 387.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 392 Td (32) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 392 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 392 Td (PALLET 1,05M X 1,25M) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 392 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 392 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 392 Td (15 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 392 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 392 Td (1) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 392 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 371 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 375.5 Td (33) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 375.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 375.5 Td (EMBALAGEM DE PAPELAO PARA 04 LATAS RETANG. 5L - 3...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 375.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 375.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 375.5 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 375.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 375.5 Td (43) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 375.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 354.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 359 Td (34) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 359 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 359 Td (EMBALAGEM DE PAPELAO PARA 06 LATAS \(ALTA\) 900ML -...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 359 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 359 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 359 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 359 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 359 Td (25) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 359 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 338 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 342.5 Td (35) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 342.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 342.5 Td (EMBALAGEM DE PAPELAO PARA 08 LATAS 900ML - 230X23...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 342.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 342.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 342.5 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 342.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 342.5 Td (59) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 342.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 321.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 326 Td (36) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 326 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 326 Td (EMBALAGEM DE PAPELAO PARA 12 FRASCOS ALCALINOS RE...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 326 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 326 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 326 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 326 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 326 Td (230) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 326 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 305 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 309.5 Td (37) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 309.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 309.5 Td (SACO PLASTICO LEITOSO COM IMPRESSAO 56X80X0,30 - ...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 309.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 309.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 309.5 Td (45 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 309.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 309.5 Td (2.081) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 309.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 288.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 293 Td (38) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 293 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 293 Td (SACO PLASTICO COM IMPRESSAO 56X80X0,30 - LARANJA) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 293 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 293 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 293 Td (45 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 293 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 293 Td (313) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 293 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 272 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 276.5 Td (39) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 276.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 276.5 Td (SACO PLASTICO COM IMPRESSAO 56X80X0,20 - VERDE) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 276.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 276.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 276.5 Td (45 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 276.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 276.5 Td (494) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 276.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 255.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 260 Td (40) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 260 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 260 Td (SACO PLASTICO LEITOSO COM IMPRESSAO 56X80X0,20 - ...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 260 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 260 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 260 Td (45 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 260 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 260 Td (390) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 260 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 239 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 243.5 Td (41) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 243.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 243.5 Td (SACO PLASTICO COM IMPRESSAO 56X80X0,30 - AMARELO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 243.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 243.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 243.5 Td (45 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 243.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 243.5 Td (731) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 243.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 222.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 227 Td (42) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 227 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 227 Td (SACO MULTIFOLHADO FAIXA VERMELHA 55X80X0,25) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 227 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 227 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 227 Td (45 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 227 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 227 Td (1.584) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 227 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 206 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 210.5 Td (43) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 210.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 210.5 Td (POLYDISPERSE HEDP NA2 POWER - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 210.5 Td (49,9) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 210.5 Td (0.2 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 210.5 Td (90 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 210.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 210.5 Td (24.320) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 210.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 189.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 194 Td (44) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 194 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 194 Td (HIDROPAC 18 \(CLORETO DE POLIALUMINIO\) - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 194 Td (176) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 194 Td (1 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 194 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 194 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 194 Td (5.908) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 194 Td (EMITIR PO) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 173 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 177.5 Td (45) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 177.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 177.5 Td (UREIA TECNICA/INDUSTRIAL - SC 25 KG \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 177.5 Td (173,55) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 177.5 Td (1.3 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 177.5 Td (7 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 177.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 177.5 Td (3.910) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 177.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 156.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 161 Td (46) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 161 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 161 Td (ANIONIC NE AFLOC 728 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 161 Td (69,05) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 161 Td (1.5 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 161 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 161 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 161 Td (1.229) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 161 Td (EMITIR PO) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 140 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 144.5 Td (47) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 144.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 144.5 Td (TIANFLOC C 1220 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 144.5 Td (666,2) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 144.5 Td (2.3 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 144.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 144.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 144.5 Td (2.779) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 144.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 123.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 128 Td (48) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 128 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 128 Td (SPECTROGEL BP - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 128 Td (22,5) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 128 Td (4 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 128 Td (28 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 128 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 128 Td (189) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 128 Td (EMITIR PO) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 107 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 111.5 Td (49) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 111.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 111.5 Td (COLLOIDAL SILICA - 30 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 111.5 Td (4.449,2) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 111.5 Td (4.8 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 111.5 Td (30 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 111.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 111.5 Td (10.574) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 111.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 90.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 95 Td (50) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 95 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 95 Td (METASSILICATO DE SODIO PENTAHIDRATADO - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 95 Td (30) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 95 Td (5 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 95 Td (10 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 95 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 95 Td (838) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 95 Td (EMITIR PO) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 74 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 78.5 Td (51) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 78.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 78.5 Td (PASTA PROTETIVA TRANSPARENTE PPT 2100 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 78.5 Td (1.593,32) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 78.5 Td (5.2 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 78.5 Td (20 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 78.5 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 78.5 Td (5.385) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 78.5 Td (EMITIR PO) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 57.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 62 Td (52) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 62 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 62 Td (IMPERWAN FT-10 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 62 Td (37,1) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 62 Td (7.4 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 62 Td (13 d) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 595 62 Td (SEM PEDIDO) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7.5 Tf 680 62 Td (56) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 755 62 Td (EMITIR PO) Tj ET Q
+
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 9 0 R >>
+endobj
+11 0 obj
+<< /Length 10674 >>
+stream
+q 0.11 0.37 0.82 rg 0 545 842 50 re f Q
+q 1 1 1 rg BT /F2 15 Tf 35 572 Td (RESUMO EXECUTIVO: RISCOS DE RUPTURA & PEDIDOS DE COMPRA) Tj ET Q
+q 0.9 0.95 1 rg BT /F1 9.5 Tf 35 555 Td (PCP & GESTAO DE MATERIAIS | AUDITORIA DE SUPRIMENTOS \(NIVEIS DE URGENCIA\)) Tj ET Q
+q 1 1 1 rg BT /F2 9 Tf 640 572 Td (Posicao Base: 19/10/2026) Tj ET Q
+q 0.85 0.9 1 rg BT /F1 8 Tf 640 556 Td (Extracao: 19/10/2026 18:00 | PCP Senior) Tj ET Q
+q 0.95 0.96 0.98 rg 0.85 0.88 0.92 RG 1 w 35 518 772 22 re B Q
+q 0.11 0.37 0.82 rg BT /F2 10 Tf 45 524 Td (NIVEL 2: ALTO RISCO - ITENS COM PEDIDO, MAS ESTOQUE ESGOTARA ANTES DA ENTREGA \(EXPEDITE\)) Tj ET Q
+q 0.82 0.85 0.88 RG 1 w 35 30 m 807 30 l S Q
+q 0.45 0.5 0.55 rg BT /F1 7.5 Tf 35 18 Td (Documento de Apresentacao Gerencial - Dados Essenciais para Tomada de Decisao Imediata de Compras) Tj ET Q
+q 0.2 0.25 0.3 rg BT /F2 8 Tf 740 18 Td (Pagina 4 de 4) Tj ET Q
+q 0.85 0.45 0.05 rg 35 492 772 20 re f Q
+q 1 1 1 rg BT /F2 7.5 Tf 40 498 Td (#) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 58 498 Td (TIPO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 95 498 Td (MATERIAL / INSUMO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 385 498 Td (SALDO FISICO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 455 498 Td (COBERTURA) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 525 498 Td (LEAD TIME) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 595 498 Td (STATUS PEDIDO) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 680 498 Td (SUGESTAO COMPRA) Tj ET Q
+q 1 1 1 rg BT /F2 7.5 Tf 755 498 Td (ACAO DIRETA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 470 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 474.5 Td (01) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 474.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 474.5 Td (ANIDRIDO MALEICO - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 474.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 474.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 474.5 Td (13 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 474.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 474.5 Td (717) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 474.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 453.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 458 Td (02) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 458 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 458 Td (CORANTE VERDE - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 458 Td (0,003) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 458 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 458 Td (10 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 458 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 458 Td (68) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 458 Td (ANTECIPAR) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 437 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 441.5 Td (03) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 441.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 441.5 Td (FORMIATO DE CALCIO - GR \(MP\)) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 441.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 441.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 441.5 Td (30 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 441.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 441.5 Td (175) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 441.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 420.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 425 Td (04) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 425 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 425 Td (BOMBONA 50 L HOMOLOGADA) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 425 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 425 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 425 Td (20 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 425 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 425 Td (75) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 425 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 404 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 408.5 Td (05) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 408.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 408.5 Td (ETIQUETA BOPP PG ROLO COM 200 UN 100MM X 250MM 51M) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 408.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 408.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 408.5 Td (15 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 408.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 408.5 Td (4.252) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 408.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 387.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 392 Td (06) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 392 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 392 Td (ETIQUETA BOPP PG BRILHANTE IMPRESSAO 2 CORES RL C...) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 392 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 392 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 392 Td (15 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 392 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 392 Td (413) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 392 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 371 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 375.5 Td (07) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 375.5 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 375.5 Td (LATA COM TAMPA METALICA NATURAL SEM VERNIZ 900ML) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 375.5 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 375.5 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 375.5 Td (25 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 375.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 375.5 Td (506) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 375.5 Td (COMPRAR JA) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 354.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 359 Td (08) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 359 Td (EMB) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 359 Td (FRASCO RETANGULAR. PET BRANCO COM ALCA 1000ML) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 385 359 Td (0) Tj ET Q
+q 0.85 0.1 0.1 rg BT /F2 7 Tf 455 359 Td (0 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 359 Td (40 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 359 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 359 Td (5.576) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 359 Td (COMPRAR JA) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 338 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 342.5 Td (09) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 342.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 342.5 Td (BORAX DECAH ETM - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 342.5 Td (1.332,2) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 342.5 Td (10.4 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 342.5 Td (20 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 342.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 342.5 Td (3.007) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 342.5 Td (ANTECIPAR) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 321.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 326 Td (10) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 326 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 326 Td (TRIGONOX AW 70 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 326 Td (1,668) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 326 Td (13.4 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 326 Td (22 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 326 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 326 Td (33) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 326 Td (ANTECIPAR) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 305 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 309.5 Td (11) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 309.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 309.5 Td (EX CELL 1001-XAROPE DE GLUCOSE - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 309.5 Td (31.194,12) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 309.5 Td (18.4 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 309.5 Td (26 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 309.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 309.5 Td (18.469) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 309.5 Td (ANTECIPAR) Tj ET Q
+q 0.96 0.97 0.98 rg 0.9 0.92 0.94 RG 0.5 w 35 288.5 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 293 Td (12) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 293 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 293 Td (SILRES BS-46 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 293 Td (111,1) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 293 Td (20.4 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 293 Td (46 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 293 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 293 Td (314) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 293 Td (ANTECIPAR) Tj ET Q
+q 1 1 1 rg 0.9 0.92 0.94 RG 0.5 w 35 272 772 16.5 re B Q
+q 0.5 0.5 0.5 rg BT /F2 7 Tf 40 276.5 Td (13) Tj ET Q
+q 0.3 0.35 0.4 rg BT /F1 7 Tf 58 276.5 Td (MP) Tj ET Q
+q 0.15 0.2 0.25 rg BT /F2 7 Tf 95 276.5 Td (QUALICIM NA 40 - GR \(MP\)) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F2 7 Tf 385 276.5 Td (15.834,83) Tj ET Q
+q 0.75 0.4 0.1 rg BT /F2 7 Tf 455 276.5 Td (22.7 dias) Tj ET Q
+q 0.2 0.2 0.2 rg BT /F1 7 Tf 525 276.5 Td (30 d) Tj ET Q
+q 0.1 0.5 0.2 rg BT /F2 7 Tf 595 276.5 Td (COM PEDIDO) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7.5 Tf 680 276.5 Td (7.382) Tj ET Q
+q 0.8 0.4 0.05 rg BT /F2 7 Tf 755 276.5 Td (ANTECIPAR) Tj ET Q
+q 0.97 0.98 1 rg 0.8 0.85 0.95 RG 1 w 35 65 772 140 re B Q
+q 0.15 0.25 0.45 rg 35 185 772 20 re f Q
+q 1 1 1 rg BT /F2 9 Tf 45 191 Td (PROTOCOLO DE SINCRONISMO DIARIO: COMPRAS & PCP) Tj ET Q
+q 0.2 0.25 0.35 rg BT /F1 8 Tf 45 170 Td (- Reuniao Diaria de Alinhamento: Validar os itens do Nivel 1 e 2 diariamente com compradores as 08:30.) Tj ET Q
+q 0.2 0.25 0.35 rg BT /F1 8 Tf 45 156 Td (- Regra de Compra Imediata: Itens com Saldo Zero devem ter Pedido de Compra colocado em ate 4 horas uteis.) Tj ET Q
+q 0.2 0.25 0.35 rg BT /F1 8 Tf 45 142 Td (- Negociacao de Expedite: Para os 13 materiais do Nivel 2, compras deve cobrar entrega emergencial/fracionada.) Tj ET Q
+q 0.4 0.4 0.4 RG 1 w 60 95 m 260 95 l S Q
+q 0.3 0.3 0.3 rg BT /F2 8 Tf 90 82 Td (Analista de Materiais & PCP) Tj ET Q
+q 0.5 0.5 0.5 rg BT /F1 7 Tf 115 70 Td (Data: _____/_____/_________) Tj ET Q
+q 0.4 0.4 0.4 RG 1 w 320 95 m 520 95 l S Q
+q 0.3 0.3 0.3 rg BT /F2 8 Tf 355 82 Td (Gerencia de Compras / Suprimentos) Tj ET Q
+q 0.5 0.5 0.5 rg BT /F1 7 Tf 375 70 Td (Data: _____/_____/_________) Tj ET Q
+q 0.4 0.4 0.4 RG 1 w 580 95 m 780 95 l S Q
+q 0.3 0.3 0.3 rg BT /F2 8 Tf 620 82 Td (Diretoria Industrial / Operacoes) Tj ET Q
+q 0.5 0.5 0.5 rg BT /F1 7 Tf 635 70 Td (Data: _____/_____/_________) Tj ET Q
+
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 11 0 R >>
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000135 00000 n 
+0000000205 00000 n 
+0000000280 00000 n 
+0000008703 00000 n 
+0000008839 00000 n 
+0000026221 00000 n 
+0000026357 00000 n 
+0000043888 00000 n 
+0000044025 00000 n 
+0000054753 00000 n 
+trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+54891
+%%EOF
