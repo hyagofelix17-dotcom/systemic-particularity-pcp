@@ -93,9 +93,39 @@ header{
   display:flex;
   flex-direction:column;
   box-shadow:0 1px 2px 0 rgba(0,0,0,0.03);
+  transform-origin:top left;
 }
 @media(prefers-color-scheme:dark){
   header{background:rgba(24,24,27,0.96)}
+}
+.header-zoom-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--ac);
+  background:var(--pg-surface);
+  border:1px solid var(--pg-border);
+  padding:4px 10px;
+  border-radius:9999px;
+  cursor:pointer;
+  user-select:none;
+  transition:all 0.15s ease;
+  white-space:nowrap;
+  box-shadow:0 1px 2px rgba(0,0,0,0.03);
+}
+.header-zoom-badge:hover{
+  background:var(--bg);
+  border-color:var(--ac);
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(0,0,0,0.06);
+}
+.header-zoom-badge.disabled{
+  color:var(--mu);
+  background:var(--bg);
+  border-color:var(--bd);
+  opacity:0.85;
 }
 .header-top{
   display:flex;
@@ -318,7 +348,11 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 2px}
   align-items:stretch;
   justify-content:space-between;
   box-sizing:border-box;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
 }
+.tab-nav::-webkit-scrollbar{display:none}
 .tab-nav button{
   background:none;
   border:1px solid transparent;
@@ -2635,6 +2669,10 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
       </div>
     </div>
     <div class="header-actions" style="display:flex;gap:10px;align-items:center;">
+        <div id="header-zoom-badge" class="header-zoom-badge" onclick="toggleHeaderZoomLock()" title="Compensação Inteligente de Zoom: Mantém este cabeçalho sempre no tamanho de 100%, mesmo quando você reduz o zoom no Google Chrome (Ctrl -) para visualizar mais colunas e dados. Clique para alternar.">
+          <span id="header-zoom-icon">🔒</span>
+          <span id="header-zoom-text">Cabeçalho 100%</span>
+        </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mu);background:var(--bg);border:1px solid var(--bd);padding:4px 12px;border-radius:9999px;font-family:'JetBrains Mono',monospace;">
           <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);"></span>
           <span id="live-clock">--:--:--</span>
@@ -8540,6 +8578,7 @@ function switchTab(tab) {
   } else if (isLembrete) {
     if(typeof renderLembreteView === 'function') renderLembreteView();
   }
+  if (typeof updateHeaderZoom === 'function') updateHeaderZoom();
 }
 
 // Init
@@ -9024,6 +9063,118 @@ function renderCodificacaoView() {
   }
   setInterval(updateLiveClock, 1000);
   updateLiveClock();
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 🔒 TRAVA INTELIGENTE DO CABEÇALHO (MANTÉM TAMANHO DE 100% AO REDUZIR ZOOM NO GOOGLE CHROME)
+  // ════════════════════════════════════════════════════════════════════════════
+  const CHROME_ZOOM_LEVELS = [0.25, 0.33, 0.50, 0.67, 0.75, 0.80, 0.90, 1.00, 1.10, 1.25, 1.50, 1.75, 2.00];
+  let headerZoomLockEnabled = localStorage.getItem('pcp_header_zoom_lock') !== 'false';
+
+  function detectBrowserZoom() {
+    let detectedZoom = 1.0;
+    if (window.outerWidth && window.innerWidth && window.outerWidth > 0 && window.innerWidth > 0) {
+      const rawRatio = window.outerWidth / window.innerWidth;
+      let closest = CHROME_ZOOM_LEVELS[0];
+      let minDiff = Math.abs(rawRatio - closest);
+      for (let i = 1; i < CHROME_ZOOM_LEVELS.length; i++) {
+        const diff = Math.abs(rawRatio - CHROME_ZOOM_LEVELS[i]);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = CHROME_ZOOM_LEVELS[i];
+        }
+      }
+      detectedZoom = minDiff <= 0.06 ? closest : (Math.round(rawRatio * 100) / 100);
+    } else if (window.devicePixelRatio) {
+      const baseDpr = parseFloat(localStorage.getItem('pcp_base_dpr') || '1');
+      detectedZoom = Math.round((window.devicePixelRatio / baseDpr) * 100) / 100;
+    }
+    
+    if (Math.abs(detectedZoom - 1.0) <= 0.03) {
+      detectedZoom = 1.0;
+    }
+    return detectedZoom;
+  }
+
+  function updateHeaderZoom() {
+    const header = document.querySelector('header');
+    const badge = document.getElementById('header-zoom-badge');
+    const icon = document.getElementById('header-zoom-icon');
+    const text = document.getElementById('header-zoom-text');
+    if (!header) return;
+    
+    const zoom = detectBrowserZoom();
+    
+    if (!headerZoomLockEnabled) {
+      header.style.zoom = '';
+      if (badge) {
+        badge.classList.add('disabled');
+        if (icon) icon.textContent = '🔓';
+        if (text) text.textContent = 'Trava Cabeçalho: Off';
+        badge.title = 'Trava de zoom do cabeçalho desativada. O cabeçalho encolhe junto com o navegador. Clique para ativar e manter 100%.';
+      }
+      return;
+    }
+    
+    if (zoom < 0.98) {
+      const compFactor = 1 / zoom;
+      header.style.zoom = compFactor;
+      if (badge) {
+        badge.classList.remove('disabled');
+        if (icon) icon.textContent = '🔒';
+        const pctZoom = Math.round(zoom * 100);
+        if (text) text.textContent = `Cabeçalho 100% (${pctZoom}%)`;
+        badge.title = `Trava Ativa: Google Chrome em ${pctZoom}% de zoom. O cabeçalho foi ampliado em ${Math.round(compFactor * 100)}% para se manter exatamente no tamanho e legibilidade de 100%! Clique para alternar.`;
+      }
+    } else {
+      header.style.zoom = '';
+      if (badge) {
+        badge.classList.remove('disabled');
+        if (icon) icon.textContent = '🔒';
+        if (text) text.textContent = 'Cabeçalho 100%';
+        badge.title = 'Trava Ativa: Quando você reduzir o zoom no Google Chrome (Ctrl -), este cabeçalho permanecerá automaticamente fixo no tamanho de 100%! Clique para alternar.';
+      }
+    }
+  }
+
+  window.updateHeaderZoom = updateHeaderZoom;
+  window.detectBrowserZoom = detectBrowserZoom;
+
+  window.toggleHeaderZoomLock = function() {
+    headerZoomLockEnabled = !headerZoomLockEnabled;
+    localStorage.setItem('pcp_header_zoom_lock', headerZoomLockEnabled ? 'true' : 'false');
+    updateHeaderZoom();
+    if (typeof showToast === 'function') {
+      showToast(headerZoomLockEnabled 
+        ? '🔒 Trava ativada: Cabeçalho manterá o tamanho de 100% mesmo com zoom reduzido no Chrome!'
+        : '🔓 Trava desativada: Cabeçalho acompanhará o zoom do navegador.');
+    }
+  };
+
+  let headerZoomRaf = null;
+  function scheduleHeaderZoomUpdate() {
+    if (headerZoomRaf) cancelAnimationFrame(headerZoomRaf);
+    headerZoomRaf = requestAnimationFrame(updateHeaderZoom);
+  }
+
+  window.addEventListener('resize', scheduleHeaderZoomUpdate);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scheduleHeaderZoomUpdate);
+  }
+
+  function attachDprChangeListener() {
+    try {
+      const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      mq.addEventListener('change', () => {
+        scheduleHeaderZoomUpdate();
+        attachDprChangeListener();
+      }, { once: true });
+    } catch(e) {}
+  }
+  attachDprChangeListener();
+
+  updateHeaderZoom();
+  setTimeout(updateHeaderZoom, 50);
+  setTimeout(updateHeaderZoom, 250);
 
 
 // ========================================================
