@@ -24,7 +24,6 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#f8fafc;
@@ -3932,9 +3931,13 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
         </table>
       </div>
     </div>
-    <div style="padding:12px 20px;background:#f8fafc;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:11.5px;color:var(--mu);">As alterações entram em vigor imediatamente para o usuário.</span>
-      <button class="btn" onclick="fecharModalGerenciarUsuarios()">Fechar</button>
+    <div style="padding:12px 20px;background:#f8fafc;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn outline" style="font-size:11px;padding:4px 8px;" onclick="exportarUsuariosPcp()">💾 Exportar Backup (JSON)</button>
+        <button type="button" class="btn outline" style="font-size:11px;padding:4px 8px;" onclick="document.getElementById('importUsersInput').click()">📥 Importar Backup</button>
+        <input type="file" id="importUsersInput" accept=".json" style="display:none;" onchange="importarUsuariosPcp(this)">
+      </div>
+      <button type="button" class="btn" onclick="fecharModalGerenciarUsuarios()">Fechar</button>
     </div>
   </div>
 </div>
@@ -9768,33 +9771,73 @@ function renderCodificacaoView() {
   setTimeout(updateHeaderZoom, 250);
 
   // ════════════════════════════════════════════════════════════════════════════
-  // 🔐 SISTEMA DE AUTENTICAÇÃO E LOGIN CORPORATIVO (SUPABASE)
+  // 🔐 SISTEMA DE AUTENTICAÇÃO E LOGIN EXCLUSIVO • PCP (INDIVIDUAL DO SISTEMA)
   // ════════════════════════════════════════════════════════════════════════════
-  const SUPABASE_AUTH_CONFIG = {
-    url: 'https://npuitglpyrneqqygoaqd.supabase.co',
-    key: 'sb_publishable_Swu-KcgSzQIZ4DnsBiPt1Q_mPIFjsG6'
-  };
+  const PCP_AUTH_USERS_KEY = 'pcp_auth_users_db_v2';
+  const PCP_AUTH_SESSION_KEY = 'pcp_auth_session_v2';
 
-  var authSupabaseClient = null;
-  function getAuthSupabase() {
-    if (!authSupabaseClient && window.supabase) {
-      try {
-        authSupabaseClient = window.supabase.createClient(SUPABASE_AUTH_CONFIG.url, SUPABASE_AUTH_CONFIG.key);
-      } catch(e) {
-        console.warn('Erro ao inicializar Supabase Auth Client:', e);
-      }
+  // Usuários padrão iniciais do sistema PCP
+  const DEFAULT_PCP_USERS = [
+    {
+      id: 'pcp-user-hyago',
+      nome: 'Hyago Felix de Barros de Oliveira',
+      email: 'hyago.oliveira@pgquimica.com.br',
+      perfil: 'Administrador',
+      senha: 'admin',
+      status: 'ativo',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'pcp-user-pcp',
+      nome: 'Planejamento e Controle de Produção',
+      email: 'pcp@pgquimica.com.br',
+      perfil: 'PCP',
+      senha: 'pcp123',
+      status: 'ativo',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'pcp-user-almox',
+      nome: 'Almoxarifado PG Química',
+      email: 'almoxarifado@pgquimica.com.br',
+      perfil: 'Almoxarifado',
+      senha: 'almox123',
+      status: 'ativo',
+      created_at: new Date().toISOString()
     }
-    return authSupabaseClient;
-  }
-  getAuthSupabase();
+  ];
 
-  const PADRAO_ADMIN_USER = {
-    id: 'b7a6eeb6-d672-488f-8a86-6c0475dc5d90',
-    nome: 'Hyago Oliveira',
-    email: 'hyago.oliveira@pgquimica.com.br',
-    perfil: 'Administrador',
-    status: 'ativo'
-  };
+  // Helper para carregar o banco de dados de usuários exclusivo do PCP
+  function getPcpUsers() {
+    try {
+      const raw = localStorage.getItem(PCP_AUTH_USERS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Garante que o administrador Hyago exista sempre
+          const hasHyago = parsed.some(u => u.email === 'hyago.oliveira@pgquimica.com.br');
+          if (!hasHyago) {
+            parsed.unshift(DEFAULT_PCP_USERS[0]);
+            savePcpUsers(parsed);
+          }
+          return parsed;
+        }
+      }
+    } catch(e) {
+      console.warn('Erro ao carregar banco de usuários do PCP:', e);
+    }
+    savePcpUsers(DEFAULT_PCP_USERS);
+    return DEFAULT_PCP_USERS.slice();
+  }
+
+  // Helper para salvar o banco de dados de usuários exclusivo do PCP
+  function savePcpUsers(users) {
+    try {
+      localStorage.setItem(PCP_AUTH_USERS_KEY, JSON.stringify(users));
+    } catch(e) {
+      console.warn('Erro ao salvar banco de usuários do PCP:', e);
+    }
+  }
 
   let currentUser = null;
 
@@ -9852,7 +9895,7 @@ function renderCodificacaoView() {
     if (modal) modal.classList.add('open');
     try {
       const emailInput = document.getElementById('loginEmail');
-      const ultimoEmail = localStorage.getItem('pg_ultimo_email') || (currentUser ? currentUser.email : '');
+      const ultimoEmail = localStorage.getItem('pg_pcp_ultimo_email') || (currentUser ? currentUser.email : '');
       if (emailInput && !emailInput.value) emailInput.value = ultimoEmail;
     } catch(e) {}
   };
@@ -9928,28 +9971,23 @@ function renderCodificacaoView() {
     }
   };
 
-  async function verificarCadastrosPendentesBadge() {
-    const client = getAuthSupabase();
-    if (!client || !currentUser || currentUser.perfil !== 'Administrador') return;
-    try {
-      const { count, error } = await client
-        .from('usuarios_sistema')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pendente');
+  function verificarCadastrosPendentesBadge() {
+    if (!currentUser || currentUser.perfil !== 'Administrador') return;
+    const users = getPcpUsers();
+    const pendentes = users.filter(u => u.status === 'pendente').length;
 
-      const badge = document.getElementById('badgeUsuariosPendentes');
-      const badgeMenu = document.getElementById('badgeMenuPendentes');
-      if (!error && count && count > 0) {
-        if (badge) { badge.textContent = count; badge.style.display = 'inline-block'; }
-        if (badgeMenu) { badgeMenu.textContent = count; badgeMenu.style.display = 'inline-block'; }
-      } else {
-        if (badge) badge.style.display = 'none';
-        if (badgeMenu) badgeMenu.style.display = 'none';
-      }
-    } catch(e) {}
+    const badge = document.getElementById('badgeUsuariosPendentes');
+    const badgeMenu = document.getElementById('badgeMenuPendentes');
+    if (pendentes > 0) {
+      if (badge) { badge.textContent = pendentes; badge.style.display = 'inline-block'; }
+      if (badgeMenu) { badgeMenu.textContent = pendentes; badgeMenu.style.display = 'inline-block'; }
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (badgeMenu) badgeMenu.style.display = 'none';
+    }
   }
 
-  window.executarLogin = async function() {
+  window.executarLogin = function() {
     const emailInput = document.getElementById('loginEmail');
     const senhaInput = document.getElementById('loginSenha');
     const feedback = document.getElementById('loginFeedbackMsg');
@@ -9965,74 +10003,72 @@ function renderCodificacaoView() {
     }
     feedback.style.display = 'none';
 
-    const client = getAuthSupabase();
+    const users = getPcpUsers();
+    let userData = users.find(u => u.email.toLowerCase() === email);
 
-    try {
-      let userData = null;
-      if (client) {
-        const { data, error } = await client
-          .from('usuarios_sistema')
-          .select('*')
-          .ilike('email', email)
-          .single();
-        if (!error && data) userData = data;
-      }
-
-      // Fallback de contingência para o Administrador Hyago
-      if (!userData && (email === 'hyago.oliveira@pgquimica.com.br' || email === 'admin') && senha === 'admin') {
-        userData = PADRAO_ADMIN_USER;
-      }
-
+    // Fallback de contingência para o Administrador Hyago
+    const isHyago = email === 'hyago.oliveira@pgquimica.com.br' || email === 'admin';
+    if (isHyago && (!userData || userData.senha === 'admin' || senha === 'admin')) {
       if (!userData) {
-        feedback.textContent = 'Usuário não localizado no sistema.';
-        feedback.style.display = 'block';
-        return;
+        userData = {
+          id: 'pcp-user-hyago',
+          nome: 'Hyago Felix de Barros de Oliveira',
+          email: 'hyago.oliveira@pgquimica.com.br',
+          perfil: 'Administrador',
+          senha: senha,
+          status: 'ativo',
+          created_at: new Date().toISOString()
+        };
+        users.unshift(userData);
+        savePcpUsers(users);
       }
+    }
 
-      if (userData.senha && userData.senha !== senha) {
-        feedback.textContent = 'Senha incorreta. Verifique suas credenciais.';
-        feedback.style.display = 'block';
-        return;
-      }
-
-      if (userData.status === 'pendente') {
-        feedback.textContent = '⏳ Sua solicitação de acesso está aguardando aprovação pelo Administrador.';
-        feedback.style.display = 'block';
-        return;
-      }
-
-      if (userData.status === 'bloqueado') {
-        feedback.textContent = '⛔ Seu acesso está bloqueado pelo Administrador.';
-        feedback.style.display = 'block';
-        return;
-      }
-
-      currentUser = userData;
-      const manter = document.getElementById('loginManterConectado')?.checked ?? true;
-      try {
-        if (manter) {
-          localStorage.setItem('pg_auth_session_v2', JSON.stringify(userData));
-          localStorage.setItem('pg_manter_conectado', 'true');
-          localStorage.setItem('pg_ultimo_email', userData.email || '');
-        } else {
-          sessionStorage.setItem('pg_auth_session_v2', JSON.stringify(userData));
-          localStorage.removeItem('pg_auth_session_v2');
-        }
-      } catch(e) {}
-
-      window.fecharModalAuth();
-      window.atualizarHeaderUsuario();
-      if (typeof showToast === 'function') {
-        showToast('Login efetuado com sucesso! Bem-vindo(a), ' + (userData.nome || ''));
-      }
-    } catch(e) {
-      console.warn('Erro ao fazer login:', e);
-      feedback.textContent = 'Erro ao autenticar usuário. Tente novamente.';
+    if (!userData) {
+      feedback.textContent = 'Usuário não localizado no sistema do PCP. Solicite seu acesso na aba acima.';
       feedback.style.display = 'block';
+      return;
+    }
+
+    if (userData.senha && userData.senha !== senha && !(isHyago && senha === 'admin')) {
+      feedback.textContent = 'Senha incorreta. Verifique suas credenciais ou utilize "Redefinir Senha".';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    if (userData.status === 'pendente') {
+      feedback.textContent = '⏳ Sua solicitação de acesso está aguardando aprovação pelo Administrador do PCP.';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    if (userData.status === 'bloqueado') {
+      feedback.textContent = '⛔ Seu acesso ao sistema do PCP está bloqueado pelo Administrador.';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    currentUser = userData;
+    const manter = document.getElementById('loginManterConectado')?.checked ?? true;
+    try {
+      if (manter) {
+        localStorage.setItem(PCP_AUTH_SESSION_KEY, JSON.stringify(userData));
+        localStorage.setItem('pg_pcp_manter_conectado', 'true');
+        localStorage.setItem('pg_pcp_ultimo_email', userData.email || '');
+      } else {
+        sessionStorage.setItem(PCP_AUTH_SESSION_KEY, JSON.stringify(userData));
+        localStorage.removeItem(PCP_AUTH_SESSION_KEY);
+      }
+    } catch(e) {}
+
+    window.fecharModalAuth();
+    window.atualizarHeaderUsuario();
+    if (typeof showToast === 'function') {
+      showToast('Login efetuado com sucesso! Bem-vindo(a), ' + (userData.nome || ''));
     }
   };
 
-  window.executarCadastro = async function() {
+  window.executarCadastro = function() {
     const nomeInput = document.getElementById('cadNome');
     const emailInput = document.getElementById('cadEmail');
     const perfilInput = document.getElementById('cadPerfil');
@@ -10049,44 +10085,93 @@ function renderCodificacaoView() {
       return;
     }
 
-    const client = getAuthSupabase();
-    if (!client) {
-      alert('Conectando ao banco de dados... Tente novamente em instantes.');
+    if (senha.length < 4) {
+      alert('A senha deve ter pelo menos 4 caracteres.');
       return;
     }
 
-    try {
-      const { error } = await client.from('usuarios_sistema').insert([{
-        nome,
-        email,
-        perfil,
-        senha,
-        status: 'pendente',
-        created_at: new Date().toISOString()
-      }]);
+    const users = getPcpUsers();
+    const existingIndex = users.findIndex(u => u.email.toLowerCase() === email);
 
-      if (error) {
-        if (error.code === '23505' || String(error.message).includes('duplicate')) {
-          alert('Este e-mail já possui uma solicitação ou cadastro no sistema.');
-        } else {
-          alert('Erro ao enviar solicitação: ' + error.message);
-        }
-        return;
+    // Se for o Hyago se cadastrando, atualiza a senha dele e ativa como Administrador diretamente!
+    const isHyago = email === 'hyago.oliveira@pgquimica.com.br' || email.includes('hyago');
+    if (isHyago) {
+      if (existingIndex >= 0) {
+        users[existingIndex].nome = nome;
+        users[existingIndex].senha = senha;
+        users[existingIndex].perfil = 'Administrador';
+        users[existingIndex].status = 'ativo';
+      } else {
+        users.unshift({
+          id: 'pcp-user-' + Date.now(),
+          nome: nome,
+          email: email,
+          perfil: 'Administrador',
+          senha: senha,
+          status: 'ativo',
+          created_at: new Date().toISOString()
+        });
       }
+      savePcpUsers(users);
 
       if (feedback) {
-        feedback.textContent = '✓ Solicitação enviada com sucesso! Aguarde a aprovação do Administrador do PCP.';
+        feedback.innerHTML = '✓ <strong>Conta de Administrador configurada com sucesso!</strong> Redirecionando para login...';
         feedback.style.display = 'block';
       }
+
       nomeInput.value = '';
       emailInput.value = '';
       senhaInput.value = '';
-    } catch(e) {
-      alert('Erro ao conectar ao servidor de cadastro.');
+
+      setTimeout(() => {
+        const loginEmail = document.getElementById('loginEmail');
+        const loginSenha = document.getElementById('loginSenha');
+        if (loginEmail) loginEmail.value = email;
+        if (loginSenha) loginSenha.value = senha;
+        window.alternarAbaAuth('login');
+        if (typeof showToast === 'function') {
+          showToast('Conta configurada! Clique em Entrar.');
+        }
+      }, 1200);
+      return;
     }
+
+    // Para outros usuários, verifica duplicidade dentro do próprio PCP
+    if (existingIndex >= 0) {
+      const existing = users[existingIndex];
+      if (existing.status === 'ativo') {
+        alert('Este e-mail já possui cadastro ativo no PCP. Vá para a aba "Entrar" ou use "Redefinir Senha".');
+        window.alternarAbaAuth('login');
+      } else {
+        alert('Sua solicitação já foi enviada ao PCP e está aguardando aprovação pelo Administrador.');
+      }
+      return;
+    }
+
+    // Cadastra nova solicitação no PCP
+    users.push({
+      id: 'pcp-user-' + Date.now(),
+      nome,
+      email,
+      perfil,
+      senha,
+      status: 'pendente',
+      created_at: new Date().toISOString()
+    });
+    savePcpUsers(users);
+
+    if (feedback) {
+      feedback.innerHTML = '✓ <strong>Solicitação de acesso enviada com sucesso!</strong><br>O Administrador do PCP validará seu cadastro.';
+      feedback.style.display = 'block';
+    }
+    nomeInput.value = '';
+    emailInput.value = '';
+    senhaInput.value = '';
+
+    verificarCadastrosPendentesBadge();
   };
 
-  window.executarRedefinirSenha = async function() {
+  window.executarRedefinirSenha = function() {
     const emailInput = document.getElementById('resetEmail');
     const novaInput = document.getElementById('resetSenhaNova');
     const confInput = document.getElementById('resetSenhaConfirma');
@@ -10121,73 +10206,49 @@ function renderCodificacaoView() {
       return;
     }
 
-    const client = getAuthSupabase();
-    if (!client) {
+    const users = getPcpUsers();
+    let user = users.find(u => u.email.toLowerCase() === email);
+
+    // Se for Hyago e não existir na lista ainda, cria
+    if (!user && (email === 'hyago.oliveira@pgquimica.com.br' || email.includes('hyago'))) {
+      user = {
+        id: 'pcp-user-hyago',
+        nome: 'Hyago Felix de Barros de Oliveira',
+        email: email,
+        perfil: 'Administrador',
+        senha: novaSenha,
+        status: 'ativo',
+        created_at: new Date().toISOString()
+      };
+      users.unshift(user);
+    } else if (!user) {
       feedback.className = 'auth-feedback error';
-      feedback.textContent = 'Conectando ao banco de dados... Tente novamente em instantes.';
+      feedback.textContent = 'Nenhum usuário localizado com este e-mail no sistema do PCP.';
       feedback.style.display = 'block';
       return;
+    } else {
+      user.senha = novaSenha;
     }
 
-    try {
-      feedback.className = 'auth-feedback success';
-      feedback.textContent = 'Verificando cadastro corporativo...';
-      feedback.style.display = 'block';
+    savePcpUsers(users);
 
-      const { data, error } = await client
-        .from('usuarios_sistema')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
+    feedback.className = 'auth-feedback success';
+    feedback.textContent = '✓ Senha atualizada com sucesso no PCP! Redirecionando para o login...';
+    feedback.style.display = 'block';
 
-      if (error) {
-        feedback.className = 'auth-feedback error';
-        feedback.textContent = 'Erro ao consultar banco de dados: ' + error.message;
-        feedback.style.display = 'block';
-        return;
-      }
+    if (novaInput) novaInput.value = '';
+    if (confInput) confInput.value = '';
 
-      if (!data) {
-        feedback.className = 'auth-feedback error';
-        feedback.textContent = 'Nenhum usuário cadastrado encontrado com este e-mail.';
-        feedback.style.display = 'block';
-        return;
-      }
+    setTimeout(() => {
+      const loginEmail = document.getElementById('loginEmail');
+      const loginSenha = document.getElementById('loginSenha');
+      if (loginEmail) loginEmail.value = email;
+      if (loginSenha) loginSenha.value = '';
+      window.alternarAbaAuth('login');
+    }, 1500);
 
-      const { error: updErr } = await client
-        .from('usuarios_sistema')
-        .update({ senha: novaSenha })
-        .eq('email', email);
-
-      if (updErr) {
-        feedback.className = 'auth-feedback error';
-        feedback.textContent = 'Erro ao atualizar senha: ' + updErr.message;
-        feedback.style.display = 'block';
-        return;
-      }
-
-      feedback.className = 'auth-feedback success';
-      feedback.textContent = '✓ Senha redefinida com sucesso! Redirecionando para o login...';
-      feedback.style.display = 'block';
-
-      if (novaInput) novaInput.value = '';
-      if (confInput) confInput.value = '';
-
-      setTimeout(() => {
-        const loginEmail = document.getElementById('loginEmail');
-        const loginSenha = document.getElementById('loginSenha');
-        if (loginEmail) loginEmail.value = email;
-        if (loginSenha) loginSenha.value = '';
-        window.alternarAbaAuth('login');
-      }, 1500);
-
-      if (typeof showToast === 'function') {
-        showToast('Senha redefinida com sucesso!');
-      }
-    } catch(err) {
-      feedback.className = 'auth-feedback error';
-      feedback.textContent = 'Erro de comunicação ao redefinir senha.';
-      feedback.style.display = 'block';
+    if (typeof showToast === 'function') {
+      showToast('Senha redefinida com sucesso!');
     }
   };
 
@@ -10195,9 +10256,9 @@ function renderCodificacaoView() {
     if (confirm('Deseja realmente sair da conta?')) {
       currentUser = null;
       try {
-        localStorage.removeItem('pg_auth_session_v2');
-        localStorage.removeItem('pg_manter_conectado');
-        sessionStorage.removeItem('pg_auth_session_v2');
+        localStorage.removeItem(PCP_AUTH_SESSION_KEY);
+        localStorage.removeItem('pg_pcp_manter_conectado');
+        sessionStorage.removeItem(PCP_AUTH_SESSION_KEY);
       } catch(e) {}
       window.fecharUserMenu();
       window.atualizarHeaderUsuario();
@@ -10210,7 +10271,7 @@ function renderCodificacaoView() {
 
   window.checkAuthOnLoad = function() {
     try {
-      const saved = localStorage.getItem('pg_auth_session_v2') || sessionStorage.getItem('pg_auth_session_v2');
+      const saved = localStorage.getItem(PCP_AUTH_SESSION_KEY) || sessionStorage.getItem(PCP_AUTH_SESSION_KEY);
       if (saved) {
         currentUser = JSON.parse(saved);
       } else {
@@ -10224,7 +10285,7 @@ function renderCodificacaoView() {
     if (currentUser && (currentUser.email === 'hyago.oliveira@pgquimica.com.br' || (currentUser.nome && currentUser.nome.toLowerCase().includes('hyago')))) {
       currentUser.perfil = 'Administrador';
       try {
-        localStorage.setItem('pg_auth_session_v2', JSON.stringify(currentUser));
+        localStorage.setItem(PCP_AUTH_SESSION_KEY, JSON.stringify(currentUser));
       } catch(e) {}
     }
 
@@ -10234,11 +10295,11 @@ function renderCodificacaoView() {
     }
   };
 
-  // ── Painel de Usuários (Admin) ──
-  window.abrirModalGerenciarUsuarios = async function() {
+  // ── Painel de Usuários do PCP (Admin) ──
+  window.abrirModalGerenciarUsuarios = function() {
     const modal = document.getElementById('modalGerenciarUsuarios');
     if (modal) modal.classList.add('open');
-    await window.carregarTabelaAdminUsuarios();
+    window.carregarTabelaAdminUsuarios();
   };
 
   window.fecharModalGerenciarUsuarios = function() {
@@ -10246,86 +10307,128 @@ function renderCodificacaoView() {
     if (modal) modal.classList.remove('open');
   };
 
-  window.carregarTabelaAdminUsuarios = async function() {
+  window.carregarTabelaAdminUsuarios = function() {
     const tbody = document.getElementById('adminUsersTableBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mu);">Carregando usuários do sistema...</td></tr>';
 
-    const client = getAuthSupabase();
-    if (!client) {
-      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#dc2626;">Supabase não conectado.</td></tr>';
+    const users = getPcpUsers();
+    if (!users || users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mu);">Nenhum usuário cadastrado no PCP.</td></tr>';
       return;
     }
 
-    try {
-      const { data, error } = await client
-        .from('usuarios_sistema')
-        .select('*')
-        .order('created_at', { ascending: false });
+    tbody.innerHTML = users.map(u => {
+      const isPend = u.status === 'pendente';
+      const isBloq = u.status === 'bloqueado';
+      const isHyago = u.email === 'hyago.oliveira@pgquimica.com.br';
+      const statusBadge = isPend 
+        ? '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⏳ Pendente</span>'
+        : (isBloq 
+          ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⛔ Bloqueado</span>'
+          : '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">✓ Ativo</span>');
 
-      if (error || !data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mu);">Nenhum usuário cadastrado.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = data.map(u => {
-        const isPend = u.status === 'pendente';
-        const isBloq = u.status === 'bloqueado';
-        const statusBadge = isPend 
-          ? '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⏳ Pendente</span>'
-          : (isBloq 
-            ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⛔ Bloqueado</span>'
-            : '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">✓ Ativo</span>');
-
-        return `
-          <tr style="border-bottom:1px solid var(--bd);">
-            <td style="padding:10px 12px;">
-              <div style="font-weight:700;color:var(--tx);">${u.nome || 'Sem nome'}</div>
-              <div style="font-size:11px;color:var(--mu);">${u.email || ''}</div>
-            </td>
-            <td style="padding:10px 12px;">
-              <span style="font-weight:600;color:var(--tx);">${u.perfil || 'PCP'}</span>
-            </td>
-            <td style="padding:10px 12px;text-align:center;">${statusBadge}</td>
-            <td style="padding:10px 12px;text-align:right;">
-              <div style="display:inline-flex;gap:6px;">
-                ${isPend ? `
-                  <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">✓ Aprovar</button>
-                ` : ''}
-                ${!isBloq ? `
-                  <button class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario('${u.id}', 'bloqueado')">Bloquear</button>
-                ` : `
-                  <button class="btn" style="padding:3px 8px;font-size:11px;background:#059669;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">Desbloquear</button>
-                `}
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    } catch(e) {
-      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#dc2626;">Erro ao carregar lista de usuários.</td></tr>';
-    }
+      return `
+        <tr style="border-bottom:1px solid var(--bd);">
+          <td style="padding:10px 12px;">
+            <div style="font-weight:700;color:var(--tx);">${u.nome || 'Sem nome'} ${isHyago ? '🛡️' : ''}</div>
+            <div style="font-size:11px;color:var(--mu);">${u.email || ''}</div>
+          </td>
+          <td style="padding:10px 12px;">
+            <select onchange="alterarPerfilUsuario('${u.id}', this.value)" style="padding:3px 6px;font-size:11.5px;border:1px solid var(--bd);border-radius:4px;background:var(--bg);color:var(--tx);" ${isHyago ? 'disabled' : ''}>
+              <option value="Administrador" ${u.perfil === 'Administrador' ? 'selected' : ''}>Administrador</option>
+              <option value="PCP" ${u.perfil === 'PCP' ? 'selected' : ''}>PCP</option>
+              <option value="Almoxarifado" ${u.perfil === 'Almoxarifado' ? 'selected' : ''}>Almoxarifado</option>
+              <option value="Compras" ${u.perfil === 'Compras' ? 'selected' : ''}>Compras</option>
+              <option value="Produção" ${u.perfil === 'Produção' ? 'selected' : ''}>Produção</option>
+              <option value="Diretoria" ${u.perfil === 'Diretoria' ? 'selected' : ''}>Diretoria</option>
+              <option value="Visualizador" ${u.perfil === 'Visualizador' ? 'selected' : ''}>Visualizador</option>
+            </select>
+          </td>
+          <td style="padding:10px 12px;text-align:center;">${statusBadge}</td>
+          <td style="padding:10px 12px;text-align:right;">
+            <div style="display:inline-flex;gap:6px;align-items:center;">
+              ${isPend ? `
+                <button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#0b4d26;color:#fff;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">✓ Aprovar</button>
+              ` : ''}
+              ${!isBloq && !isHyago ? `
+                <button type="button" class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario('${u.id}', 'bloqueado')">Bloquear</button>
+              ` : ''}
+              ${isBloq ? `
+                <button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">Desbloquear</button>
+              ` : ''}
+              ${!isHyago ? `
+                <button type="button" class="btn outline" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;" onclick="excluirUsuarioPcp('${u.id}')" title="Excluir usuário">🗑️</button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   };
 
-  window.alterarStatusUsuario = async function(id, novoStatus) {
-    const client = getAuthSupabase();
-    if (!client) return;
-    try {
-      const { error } = await client
-        .from('usuarios_sistema')
-        .update({ status: novoStatus })
-        .eq('id', id);
+  window.alterarStatusUsuario = function(id, novoStatus) {
+    const users = getPcpUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    user.status = novoStatus;
+    savePcpUsers(users);
+    if (typeof showToast === 'function') showToast('Status atualizado: ' + novoStatus);
+    window.carregarTabelaAdminUsuarios();
+    verificarCadastrosPendentesBadge();
+  };
 
-      if (error) {
-        alert('Erro ao atualizar status: ' + error.message);
-      } else {
-        if (typeof showToast === 'function') showToast('Status do usuário atualizado com sucesso!');
-        await window.carregarTabelaAdminUsuarios();
-        verificarCadastrosPendentesBadge();
+  window.alterarPerfilUsuario = function(id, novoPerfil) {
+    const users = getPcpUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    user.perfil = novoPerfil;
+    savePcpUsers(users);
+    if (typeof showToast === 'function') showToast('Perfil alterado para: ' + novoPerfil);
+  };
+
+  window.excluirUsuarioPcp = function(id) {
+    if (!confirm('Deseja realmente remover este usuário do PCP?')) return;
+    let users = getPcpUsers();
+    users = users.filter(u => u.id !== id);
+    savePcpUsers(users);
+    if (typeof showToast === 'function') showToast('Usuário removido.');
+    window.carregarTabelaAdminUsuarios();
+    verificarCadastrosPendentesBadge();
+  };
+
+  // Exportar e Importar banco de usuários do PCP
+  window.exportarUsuariosPcp = function() {
+    const users = getPcpUsers();
+    const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'usuarios-pcp-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  window.importarUsuariosPcp = function(inputEl) {
+    const file = inputEl.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (Array.isArray(imported)) {
+          savePcpUsers(imported);
+          alert('Banco de usuários importado com sucesso! ' + imported.length + ' usuários.');
+          window.carregarTabelaAdminUsuarios();
+          verificarCadastrosPendentesBadge();
+        } else {
+          alert('Arquivo inválido.');
+        }
+      } catch(err) {
+        alert('Erro ao processar arquivo JSON.');
       }
-    } catch(e) {
-      alert('Erro de comunicação com o Supabase.');
-    }
+    };
+    reader.readAsText(file);
+    inputEl.value = '';
   };
 
   document.addEventListener('DOMContentLoaded', window.checkAuthOnLoad);
