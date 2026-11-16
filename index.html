@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-zinc-50/70 antialiased">
+<html lang="pt-BR" class="h-full bg-zinc-50/70 antialiased auth-locked">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -24,6 +24,7 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js">
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#f8fafc;
@@ -376,6 +377,197 @@ header{
 .auth-btn-close:hover {
   background: #f1f5f9;
   color: var(--tx);
+}
+
+
+/* ══ TRAVA DE SEGURANÇA: BLOQUEIO TOTAL DA PÁGINA SEM LOGIN ══ */
+html.auth-locked body {
+  overflow: hidden !important;
+}
+html.auth-locked header,
+html.auth-locked main,
+html.auth-locked .tab-nav,
+html.auth-locked #modalGerenciarUsuarios,
+html.auth-locked #balanco-overlay,
+html.auth-locked #modal-paste-stock,
+html.auth-locked #modal-edit-mp {
+  filter: blur(14px) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+html.auth-locked #modalAuth {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+html.auth-locked #modalAuth .auth-btn-close {
+  display: none !important;
+}
+
+/* ══ USUÁRIOS ONLINE FULLTIME (INDICADOR EM TEMPO REAL) ══ */
+.online-users-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+}
+.online-users-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--card);
+  border: 1px solid var(--bd);
+  font-size: 11.5px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+.online-users-pill:hover {
+  background: var(--bg);
+  border-color: var(--pg-border);
+}
+.online-ping-wrapper {
+  position: relative;
+  display: inline-flex;
+  width: 8px;
+  height: 8px;
+}
+.online-ping-wave {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #10b981;
+  opacity: 0.75;
+  animation: onlinePingAnim 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.online-ping-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #059669;
+}
+@keyframes onlinePingAnim {
+  75%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.online-users-label {
+  color: var(--mu);
+  font-size: 11px;
+  font-weight: 600;
+}
+.online-chips-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.online-chip-avatar {
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 9.5px;
+  border: 2px solid var(--card);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.online-chip-avatar:hover {
+  transform: scale(1.15);
+  z-index: 2;
+}
+.online-chip-more {
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: var(--bd);
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 9px;
+  border: 2px solid var(--card);
+  flex-shrink: 0;
+}
+.online-users-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 310px;
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -4px rgba(0,0,0,0.18);
+  padding: 12px;
+  z-index: 9999;
+  animation: authCardFadeIn 0.15s ease;
+}
+.online-users-container:hover .online-users-dropdown,
+.online-users-dropdown.open {
+  display: block;
+}
+.online-dropdown-header {
+  font-weight: 700;
+  color: var(--tx);
+  border-bottom: 1px solid var(--bd);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.online-badge-count {
+  font-size: 10px;
+  color: #047857;
+  background: #d1fae5;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+.online-dropdown-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.online-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.online-user-row:hover {
+  background: var(--bg);
+}
+.online-user-badge {
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* User Badge & Dropdown in Header */
@@ -3054,6 +3246,31 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
           <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);"></span>
           <span id="live-clock">--:--:--</span>
         </div>
+        
+        <!-- Indicador de Usuários Conectados Online em Tempo Real (Fulltime) -->
+        <div id="containerUsuariosOnline" class="online-users-container" style="display:none;" title="Usuários conectados no PCP em tempo real (passe o mouse para ver detalhes)">
+          <div class="online-users-pill">
+            <span class="online-ping-wrapper">
+              <span class="online-ping-wave"></span>
+              <span class="online-ping-dot"></span>
+            </span>
+            <span class="online-users-label">Online:</span>
+            <div class="online-chips-wrapper" id="chipsUsuariosOnline"></div>
+            <span id="txtCountOnline" style="font-size:11px;font-weight:700;color:var(--tx);margin-left:2px;">1 online</span>
+          </div>
+
+          <!-- Dropdown Flutuante com nomes e perfis -->
+          <div id="dropdownUsuariosOnline" class="online-users-dropdown">
+            <div class="online-dropdown-header">
+              <span style="font-weight:700;font-size:12px;color:var(--tx);">Usuários Conectados no PCP</span>
+              <span class="online-badge-count" id="badgeTotalOnline">1 conectado</span>
+            </div>
+            <div id="listaDetalhadaOnline" class="online-dropdown-list">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+        </div>
+
         <!-- Botão Entrar para usuários não autenticados -->
         <button id="btnEntrarHeader" type="button" onclick="abrirModalAuth()" class="btn-entrar-header" style="display:none;" title="Acessar o Sistema com Login Corporativo">
           <span>🔑 Entrar</span>
@@ -9776,6 +9993,37 @@ function renderCodificacaoView() {
   const PCP_AUTH_USERS_KEY = 'pcp_auth_users_db_v2';
   const PCP_AUTH_SESSION_KEY = 'pcp_auth_session_v2';
 
+  // Configuração exclusiva de presença em tempo real (Fulltime WebSocket)
+  const SUPABASE_PRESENCE_CONFIG = {
+    url: 'https://npuitglpyrneqqygoaqd.supabase.co',
+    key: 'sb_publishable_Swu-KcgSzQIZ4DnsBiPt1Q_mPIFjsG6'
+  };
+
+  let pcpRealtimeClient = null;
+  let pcpPresenceChannel = null;
+  let pcpUsuariosOnlineMap = {};
+
+  function getPcpRealtimeClient() {
+    if (!pcpRealtimeClient && window.supabase) {
+      try {
+        pcpRealtimeClient = window.supabase.createClient(SUPABASE_PRESENCE_CONFIG.url, SUPABASE_PRESENCE_CONFIG.key);
+      } catch(e) {
+        console.warn('Erro ao conectar cliente Realtime:', e);
+      }
+    }
+    return pcpRealtimeClient;
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // Usuários padrão iniciais do sistema PCP
   const DEFAULT_PCP_USERS = [
     {
@@ -9807,14 +10055,12 @@ function renderCodificacaoView() {
     }
   ];
 
-  // Helper para carregar o banco de dados de usuários exclusivo do PCP
   function getPcpUsers() {
     try {
       const raw = localStorage.getItem(PCP_AUTH_USERS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Garante que o administrador Hyago exista sempre
           const hasHyago = parsed.some(u => u.email === 'hyago.oliveira@pgquimica.com.br');
           if (!hasHyago) {
             parsed.unshift(DEFAULT_PCP_USERS[0]);
@@ -9830,7 +10076,6 @@ function renderCodificacaoView() {
     return DEFAULT_PCP_USERS.slice();
   }
 
-  // Helper para salvar o banco de dados de usuários exclusivo do PCP
   function savePcpUsers(users) {
     try {
       localStorage.setItem(PCP_AUTH_USERS_KEY, JSON.stringify(users));
@@ -9840,6 +10085,188 @@ function renderCodificacaoView() {
   }
 
   let currentUser = null;
+
+  // ── CONTROLE DE PRESENÇA FULLTIME ONLINE (WEBSOCKET + LOCAL SYNC) ──
+  function initPresencaOnline() {
+    if (!currentUser) return;
+
+    // Sincronização local entre abas do mesmo navegador
+    if (window.BroadcastChannel) {
+      try {
+        if (!window.pcpBroadcast) {
+          window.pcpBroadcast = new BroadcastChannel('pcp_presence_bus');
+          window.pcpBroadcast.onmessage = function(ev) {
+            if (ev.data && ev.data.type === 'sync' && ev.data.user) {
+              const u = ev.data.user;
+              pcpUsuariosOnlineMap[u.id || u.email] = u;
+              renderUsuariosOnlineUI();
+            } else if (ev.data && ev.data.type === 'leave' && ev.data.userId) {
+              delete pcpUsuariosOnlineMap[ev.data.userId];
+              renderUsuariosOnlineUI();
+            }
+          };
+        }
+        window.pcpBroadcast.postMessage({
+          type: 'sync',
+          user: {
+            id: currentUser.id || currentUser.email,
+            nome: currentUser.nome || 'Usuário',
+            perfil: currentUser.perfil || 'PCP',
+            email: currentUser.email || '',
+            onlineAt: new Date().toISOString()
+          }
+        });
+      } catch(e) {}
+    }
+
+    // Presença Fulltime em Nuvem via Realtime Channels (sem banco de dados)
+    const client = getPcpRealtimeClient();
+    if (client) {
+      try {
+        if (pcpPresenceChannel) {
+          try { pcpPresenceChannel.unsubscribe(); } catch(e) {}
+        }
+        pcpPresenceChannel = client.channel('presenca-sistema-pcp');
+
+        pcpPresenceChannel
+          .on('presence', { event: 'sync' }, () => {
+            const state = pcpPresenceChannel.presenceState();
+            pcpUsuariosOnlineMap = {};
+            Object.keys(state).forEach(key => {
+              const presences = state[key];
+              if (Array.isArray(presences)) {
+                presences.forEach(u => {
+                  if (u && (u.id || u.nome || u.email)) {
+                    pcpUsuariosOnlineMap[u.id || u.email || u.nome] = u;
+                  }
+                });
+              }
+            });
+            renderUsuariosOnlineUI();
+          })
+          .on('presence', { event: 'join' }, ({ newPresences }) => {
+            if (Array.isArray(newPresences)) {
+              newPresences.forEach(u => {
+                if (u && (u.id || u.nome || u.email)) {
+                  pcpUsuariosOnlineMap[u.id || u.email || u.nome] = u;
+                }
+              });
+              renderUsuariosOnlineUI();
+            }
+          })
+          .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+            if (Array.isArray(leftPresences)) {
+              leftPresences.forEach(u => {
+                if (u && (u.id || u.nome || u.email)) {
+                  delete pcpUsuariosOnlineMap[u.id || u.email || u.nome];
+                }
+              });
+              renderUsuariosOnlineUI();
+            }
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED' && currentUser) {
+              await pcpPresenceChannel.track({
+                id: currentUser.id || currentUser.email,
+                nome: currentUser.nome || 'Usuário',
+                perfil: currentUser.perfil || 'PCP',
+                email: currentUser.email || '',
+                onlineAt: new Date().toISOString()
+              });
+            }
+          });
+      } catch(err) {
+        console.warn('Erro ao conectar presença em tempo real:', err);
+      }
+    }
+
+    renderUsuariosOnlineUI();
+  }
+
+  function renderUsuariosOnlineUI() {
+    const container = document.getElementById('containerUsuariosOnline');
+    if (!container) return;
+    if (!currentUser) {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'inline-flex';
+
+    const txtCount = document.getElementById('txtCountOnline');
+    const badgeTotal = document.getElementById('badgeTotalOnline');
+    const chipsCont = document.getElementById('chipsUsuariosOnline');
+    const listaCont = document.getElementById('listaDetalhadaOnline');
+
+    const onlineList = Object.values(pcpUsuariosOnlineMap);
+    if (currentUser && !onlineList.some(u => (u.id && u.id === currentUser.id) || u.email === currentUser.email || u.nome === currentUser.nome)) {
+      onlineList.push({
+        id: currentUser.id || currentUser.email,
+        nome: currentUser.nome,
+        perfil: currentUser.perfil,
+        email: currentUser.email
+      });
+    }
+
+    const total = Math.max(1, onlineList.length);
+    if (txtCount) txtCount.textContent = total + ' online';
+    if (badgeTotal) badgeTotal.textContent = total + (total === 1 ? ' conectado' : ' conectados');
+
+    if (chipsCont) {
+      chipsCont.innerHTML = onlineList.slice(0, 5).map(u => {
+        const parts = (u.nome || 'U').trim().split(/\s+/);
+        const initials = parts.length > 1 
+          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+          : parts[0].slice(0, 2).toUpperCase();
+        const bgCol = u.perfil === 'Administrador' ? '#d97706' :
+                      u.perfil === 'PCP' ? '#059669' :
+                      u.perfil === 'Compras' ? '#0284c7' :
+                      u.perfil === 'Almoxarifado' ? '#7c3aed' :
+                      u.perfil === 'Produção' ? '#ea580c' : '#4b5563';
+        return '<div class="online-chip-avatar" style="background:' + bgCol + ';" title="' + escapeHtml(u.nome || 'Usuário') + ' (' + escapeHtml(u.perfil || 'PCP') + ')">' + escapeHtml(initials) + '</div>';
+      }).join('') + (total > 5 ? '<div class="online-chip-more">+' + (total - 5) + '</div>' : '');
+    }
+
+    if (listaCont) {
+      listaCont.innerHTML = onlineList.map(u => {
+        const isMe = currentUser && (u.id === currentUser.id || u.email === currentUser.email || u.nome === currentUser.nome);
+        const parts = (u.nome || 'U').trim().split(/\s+/);
+        const initials = parts.length > 1 
+          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+          : parts[0].slice(0, 2).toUpperCase();
+        const badgeBg = u.perfil === 'Administrador' ? '#fef3c7;color:#92400e;border:1px solid #fde68a' :
+                        u.perfil === 'PCP' ? '#d1fae5;color:#065f46;border:1px solid #a7f3d0' :
+                        u.perfil === 'Compras' ? '#e0f2fe;color:#075985;border:1px solid #bae6fd' :
+                        u.perfil === 'Almoxarifado' ? '#f3e8ff;color:#6b21a8;border:1px solid #e9d5ff' :
+                        u.perfil === 'Produção' ? '#ffedd5;color:#9a3412;border:1px solid #fed7aa' :
+                        '#f3f4f6;color:#374151;border:1px solid #e5e7eb';
+        const bgCol = u.perfil === 'Administrador' ? '#d97706' :
+                      u.perfil === 'PCP' ? '#059669' :
+                      u.perfil === 'Compras' ? '#0284c7' :
+                      u.perfil === 'Almoxarifado' ? '#7c3aed' :
+                      u.perfil === 'Produção' ? '#ea580c' : '#4b5563';
+        return '<div class="online-user-row">' +
+          '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">' +
+            '<div style="position:relative;flex-shrink:0;">' +
+              '<div class="online-chip-avatar" style="background:' + bgCol + ';width:26px;height:26px;font-size:10px;">' +
+                escapeHtml(initials) +
+              '</div>' +
+              '<span style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#10b981;border:1.5px solid #fff;"></span>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;text-align:left;min-width:0;flex:1;">' +
+              '<span style="font-weight:700;color:var(--tx);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;">' +
+                '<span style="overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(u.nome || 'Usuário') + '</span>' +
+                (isMe ? '<span style="font-size:9px;font-weight:600;color:#059669;flex-shrink:0;">(você)</span>' : '') +
+              '</span>' +
+              '<span style="font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + escapeHtml(u.email || '') + '">' + escapeHtml(u.email || '') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="online-user-badge" style="background:' + badgeBg + ';">' +
+            escapeHtml(u.perfil || 'Usuário') +
+          '</span>' +
+        '</div>';
+      }).join('');
+    }
+  }
 
   window.alternarAbaAuth = function(aba) {
     const formLogin = document.getElementById('formAuthLogin');
@@ -9901,9 +10328,24 @@ function renderCodificacaoView() {
   };
 
   window.fecharModalAuth = function() {
+    if (!currentUser) {
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Acesso restrito. Faça login para acessar o sistema do PCP.');
+      }
+      return;
+    }
+    document.documentElement.classList.remove('auth-locked');
     const modal = document.getElementById('modalAuth');
     if (modal) modal.classList.remove('open');
   };
+
+  // Trava de tecla Escape para impedir fechar modal sem login
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !currentUser) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  });
 
   window.toggleUserMenu = function(e) {
     if (e) e.stopPropagation();
@@ -10006,7 +10448,7 @@ function renderCodificacaoView() {
     const users = getPcpUsers();
     let userData = users.find(u => u.email.toLowerCase() === email);
 
-    // Fallback de contingência para o Administrador Hyago
+    // Fallback especial de contingência para o Administrador Hyago
     const isHyago = email === 'hyago.oliveira@pgquimica.com.br' || email === 'admin';
     if (isHyago && (!userData || userData.senha === 'admin' || senha === 'admin')) {
       if (!userData) {
@@ -10061,8 +10503,14 @@ function renderCodificacaoView() {
       }
     } catch(e) {}
 
-    window.fecharModalAuth();
+    // Desbloqueia a página
+    document.documentElement.classList.remove('auth-locked');
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.classList.remove('open');
+
     window.atualizarHeaderUsuario();
+    initPresencaOnline();
+
     if (typeof showToast === 'function') {
       showToast('Login efetuado com sucesso! Bem-vindo(a), ' + (userData.nome || ''));
     }
@@ -10136,7 +10584,6 @@ function renderCodificacaoView() {
       return;
     }
 
-    // Para outros usuários, verifica duplicidade dentro do próprio PCP
     if (existingIndex >= 0) {
       const existing = users[existingIndex];
       if (existing.status === 'ativo') {
@@ -10148,7 +10595,6 @@ function renderCodificacaoView() {
       return;
     }
 
-    // Cadastra nova solicitação no PCP
     users.push({
       id: 'pcp-user-' + Date.now(),
       nome,
@@ -10209,7 +10655,6 @@ function renderCodificacaoView() {
     const users = getPcpUsers();
     let user = users.find(u => u.email.toLowerCase() === email);
 
-    // Se for Hyago e não existir na lista ainda, cria
     if (!user && (email === 'hyago.oliveira@pgquimica.com.br' || email.includes('hyago'))) {
       user = {
         id: 'pcp-user-hyago',
@@ -10254,15 +10699,29 @@ function renderCodificacaoView() {
 
   window.fazerLogout = function() {
     if (confirm('Deseja realmente sair da conta?')) {
+      if (pcpPresenceChannel) {
+        try { pcpPresenceChannel.untrack(); pcpPresenceChannel.unsubscribe(); } catch(e) {}
+      }
+      if (window.pcpBroadcast && currentUser) {
+        try {
+          window.pcpBroadcast.postMessage({ type: 'leave', userId: currentUser.id || currentUser.email });
+        } catch(e) {}
+      }
+
       currentUser = null;
       try {
         localStorage.removeItem(PCP_AUTH_SESSION_KEY);
         localStorage.removeItem('pg_pcp_manter_conectado');
         sessionStorage.removeItem(PCP_AUTH_SESSION_KEY);
       } catch(e) {}
+
+      // Trava total da página novamente
+      document.documentElement.classList.add('auth-locked');
       window.fecharUserMenu();
       window.atualizarHeaderUsuario();
       window.abrirModalAuth();
+      renderUsuariosOnlineUI();
+
       if (typeof showToast === 'function') {
         showToast('Você saiu da sua conta.');
       }
@@ -10281,7 +10740,6 @@ function renderCodificacaoView() {
       currentUser = null;
     }
 
-    // Garante privilégios de Administrador caso seja Hyago
     if (currentUser && (currentUser.email === 'hyago.oliveira@pgquimica.com.br' || (currentUser.nome && currentUser.nome.toLowerCase().includes('hyago')))) {
       currentUser.perfil = 'Administrador';
       try {
@@ -10290,8 +10748,16 @@ function renderCodificacaoView() {
     }
 
     window.atualizarHeaderUsuario();
-    if (!currentUser) {
+
+    // TRAVA DE ACESSO: Se não estiver logado ou bloqueado, bloqueia totalmente a página
+    if (!currentUser || currentUser.status !== 'ativo') {
+      document.documentElement.classList.add('auth-locked');
       window.abrirModalAuth();
+    } else {
+      document.documentElement.classList.remove('auth-locked');
+      const modal = document.getElementById('modalAuth');
+      if (modal) modal.classList.remove('open');
+      initPresencaOnline();
     }
   };
 
@@ -10327,42 +10793,32 @@ function renderCodificacaoView() {
           ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⛔ Bloqueado</span>'
           : '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">✓ Ativo</span>');
 
-      return `
-        <tr style="border-bottom:1px solid var(--bd);">
-          <td style="padding:10px 12px;">
-            <div style="font-weight:700;color:var(--tx);">${u.nome || 'Sem nome'} ${isHyago ? '🛡️' : ''}</div>
-            <div style="font-size:11px;color:var(--mu);">${u.email || ''}</div>
-          </td>
-          <td style="padding:10px 12px;">
-            <select onchange="alterarPerfilUsuario('${u.id}', this.value)" style="padding:3px 6px;font-size:11.5px;border:1px solid var(--bd);border-radius:4px;background:var(--bg);color:var(--tx);" ${isHyago ? 'disabled' : ''}>
-              <option value="Administrador" ${u.perfil === 'Administrador' ? 'selected' : ''}>Administrador</option>
-              <option value="PCP" ${u.perfil === 'PCP' ? 'selected' : ''}>PCP</option>
-              <option value="Almoxarifado" ${u.perfil === 'Almoxarifado' ? 'selected' : ''}>Almoxarifado</option>
-              <option value="Compras" ${u.perfil === 'Compras' ? 'selected' : ''}>Compras</option>
-              <option value="Produção" ${u.perfil === 'Produção' ? 'selected' : ''}>Produção</option>
-              <option value="Diretoria" ${u.perfil === 'Diretoria' ? 'selected' : ''}>Diretoria</option>
-              <option value="Visualizador" ${u.perfil === 'Visualizador' ? 'selected' : ''}>Visualizador</option>
-            </select>
-          </td>
-          <td style="padding:10px 12px;text-align:center;">${statusBadge}</td>
-          <td style="padding:10px 12px;text-align:right;">
-            <div style="display:inline-flex;gap:6px;align-items:center;">
-              ${isPend ? `
-                <button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#0b4d26;color:#fff;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">✓ Aprovar</button>
-              ` : ''}
-              ${!isBloq && !isHyago ? `
-                <button type="button" class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario('${u.id}', 'bloqueado')">Bloquear</button>
-              ` : ''}
-              ${isBloq ? `
-                <button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">Desbloquear</button>
-              ` : ''}
-              ${!isHyago ? `
-                <button type="button" class="btn outline" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;" onclick="excluirUsuarioPcp('${u.id}')" title="Excluir usuário">🗑️</button>
-              ` : ''}
-            </div>
-          </td>
-        </tr>
-      `;
+      return '<tr style="border-bottom:1px solid var(--bd);">' +
+        '<td style="padding:10px 12px;">' +
+          '<div style="font-weight:700;color:var(--tx);">' + escapeHtml(u.nome || 'Sem nome') + (isHyago ? ' 🛡️' : '') + '</div>' +
+          '<div style="font-size:11px;color:var(--mu);">' + escapeHtml(u.email || '') + '</div>' +
+        '</td>' +
+        '<td style="padding:10px 12px;">' +
+          '<select onchange="alterarPerfilUsuario(\'' + u.id + '\', this.value)" style="padding:3px 6px;font-size:11.5px;border:1px solid var(--bd);border-radius:4px;background:var(--bg);color:var(--tx);"' + (isHyago ? ' disabled' : '') + '>' +
+            '<option value="Administrador"' + (u.perfil === 'Administrador' ? ' selected' : '') + '>Administrador</option>' +
+            '<option value="PCP"' + (u.perfil === 'PCP' ? ' selected' : '') + '>PCP</option>' +
+            '<option value="Almoxarifado"' + (u.perfil === 'Almoxarifado' ? ' selected' : '') + '>Almoxarifado</option>' +
+            '<option value="Compras"' + (u.perfil === 'Compras' ? ' selected' : '') + '>Compras</option>' +
+            '<option value="Produção"' + (u.perfil === 'Produção' ? ' selected' : '') + '>Produção</option>' +
+            '<option value="Diretoria"' + (u.perfil === 'Diretoria' ? ' selected' : '') + '>Diretoria</option>' +
+            '<option value="Visualizador"' + (u.perfil === 'Visualizador' ? ' selected' : '') + '>Visualizador</option>' +
+          '</select>' +
+        '</td>' +
+        '<td style="padding:10px 12px;text-align:center;">' + statusBadge + '</td>' +
+        '<td style="padding:10px 12px;text-align:right;">' +
+          '<div style="display:inline-flex;gap:6px;align-items:center;">' +
+            (isPend ? '<button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#0b4d26;color:#fff;" onclick="alterarStatusUsuario(\'' + u.id + '\', \'ativo\')">✓ Aprovar</button>' : '') +
+            (!isBloq && !isHyago ? '<button type="button" class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario(\'' + u.id + '\', \'bloqueado\')">Bloquear</button>' : '') +
+            (isBloq ? '<button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;" onclick="alterarStatusUsuario(\'' + u.id + '\', \'ativo\')">Desbloquear</button>' : '') +
+            (!isHyago ? '<button type="button" class="btn outline" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;" onclick="excluirUsuarioPcp(\'' + u.id + '\')" title="Excluir usuário">🗑️</button>' : '') +
+          '</div>' +
+        '</td>' +
+      '</tr>';
     }).join('');
   };
 
@@ -10396,7 +10852,6 @@ function renderCodificacaoView() {
     verificarCadastrosPendentesBadge();
   };
 
-  // Exportar e Importar banco de usuários do PCP
   window.exportarUsuariosPcp = function() {
     const users = getPcpUsers();
     const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
@@ -10433,6 +10888,11 @@ function renderCodificacaoView() {
 
   document.addEventListener('DOMContentLoaded', window.checkAuthOnLoad);
   window.addEventListener('load', window.checkAuthOnLoad);
+  window.addEventListener('beforeunload', function() {
+    if (pcpPresenceChannel && currentUser) {
+      try { pcpPresenceChannel.untrack(); } catch(e) {}
+    }
+  });
 
 
 // ========================================================
