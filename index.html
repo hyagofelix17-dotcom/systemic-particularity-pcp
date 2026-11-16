@@ -255,8 +255,35 @@ header{
   transition: all 0.15s ease;
   box-sizing: border-box;
 }
+.auth-input.has-toggle {
+  padding-right: 36px;
+}
 .auth-input.no-icon {
   padding-left: 12px;
+}
+.auth-toggle-pwd {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 14px;
+  color: var(--mu);
+  line-height: 1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+  z-index: 2;
+}
+.auth-toggle-pwd:hover {
+  background: #f1f5f9;
+  color: var(--tx);
 }
 .auth-input:focus {
   border-color: var(--ac);
@@ -3757,6 +3784,7 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
       <div class="auth-tabs">
         <button type="button" id="tabBtnLogin" class="auth-tab-btn active" onclick="alternarAbaAuth('login')">Entrar</button>
         <button type="button" id="tabBtnCadastro" class="auth-tab-btn" onclick="alternarAbaAuth('cadastro')">Solicitar Acesso</button>
+        <button type="button" id="tabBtnReset" class="auth-tab-btn" onclick="alternarAbaAuth('reset')">Redefinir Senha</button>
       </div>
     </div>
 
@@ -3773,13 +3801,19 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
         <label>Senha</label>
         <div class="auth-input-wrapper">
           <span class="auth-input-icon">🔒</span>
-          <input type="password" id="loginSenha" class="auth-input" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter') executarLogin()">
+          <input type="password" id="loginSenha" class="auth-input has-toggle" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter') executarLogin()">
+          <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('loginSenha', this)" title="Visualizar ou ocultar senha">👁️</button>
         </div>
       </div>
-      <label class="auth-checkbox-row">
-        <input type="checkbox" id="loginManterConectado" checked>
-        <span>Manter-me conectado neste computador</span>
-      </label>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:6px;">
+        <label class="auth-checkbox-row" style="margin-bottom:0;">
+          <input type="checkbox" id="loginManterConectado" checked>
+          <span>Manter conectado</span>
+        </label>
+        <button type="button" onclick="alternarAbaAuth('reset')" style="background:none;border:none;color:var(--ac);font-size:11.5px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">
+          Redefinir Senha
+        </button>
+      </div>
       <div id="loginFeedbackMsg" class="auth-feedback error"></div>
       <button type="button" class="auth-btn-submit" onclick="executarLogin()">
         <span>Acessar o Sistema</span>
@@ -3813,7 +3847,11 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
       </div>
       <div class="auth-form-group">
         <label>Criar Senha</label>
-        <input type="password" id="cadSenha" class="auth-input no-icon" placeholder="Defina uma senha de acesso">
+        <div class="auth-input-wrapper">
+          <span class="auth-input-icon">🔒</span>
+          <input type="password" id="cadSenha" class="auth-input has-toggle" placeholder="Defina uma senha de acesso">
+          <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('cadSenha', this)" title="Visualizar ou ocultar senha">👁️</button>
+        </div>
       </div>
       <div id="cadFeedbackMsg" class="auth-feedback success"></div>
       <button type="button" class="auth-btn-submit" onclick="executarCadastro()">
@@ -3822,6 +3860,43 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
       </button>
       <div style="margin-top:12px;text-align:center;font-size:11px;color:var(--mu);line-height:1.4">
         Após o envio, o administrador do PCP validará seu cadastro e liberará o acesso.
+      </div>
+    </div>
+
+    <!-- Form: Redefinir Senha -->
+    <div id="formAuthReset" class="auth-body" style="display:none;">
+      <div class="auth-form-group">
+        <label>E-mail Corporativo</label>
+        <div class="auth-input-wrapper">
+          <span class="auth-input-icon">✉️</span>
+          <input type="email" id="resetEmail" class="auth-input" placeholder="seu.nome@pgquimica.com.br" autocomplete="email">
+        </div>
+      </div>
+      <div class="auth-form-group">
+        <label>Nova Senha</label>
+        <div class="auth-input-wrapper">
+          <span class="auth-input-icon">🔒</span>
+          <input type="password" id="resetSenhaNova" class="auth-input has-toggle" placeholder="Digite a nova senha">
+          <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('resetSenhaNova', this)" title="Visualizar ou ocultar senha">👁️</button>
+        </div>
+      </div>
+      <div class="auth-form-group">
+        <label>Confirmar Nova Senha</label>
+        <div class="auth-input-wrapper">
+          <span class="auth-input-icon">🔒</span>
+          <input type="password" id="resetSenhaConfirma" class="auth-input has-toggle" placeholder="Repita a nova senha" onkeydown="if(event.key==='Enter') executarRedefinirSenha()">
+          <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('resetSenhaConfirma', this)" title="Visualizar ou ocultar senha">👁️</button>
+        </div>
+      </div>
+      <div id="resetFeedbackMsg" class="auth-feedback"></div>
+      <button type="button" class="auth-btn-submit" onclick="executarRedefinirSenha()">
+        <span>Atualizar Senha</span>
+        <span>🔑</span>
+      </button>
+      <div style="margin-top:14px;text-align:center;">
+        <button type="button" onclick="alternarAbaAuth('login')" style="background:none;border:none;color:var(--mu);font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:underline;">
+          ← Voltar para o Login
+        </button>
       </div>
     </div>
   </div>
@@ -9726,23 +9801,49 @@ function renderCodificacaoView() {
   window.alternarAbaAuth = function(aba) {
     const formLogin = document.getElementById('formAuthLogin');
     const formCad = document.getElementById('formAuthCadastro');
+    const formReset = document.getElementById('formAuthReset');
     const tabLogin = document.getElementById('tabBtnLogin');
     const tabCad = document.getElementById('tabBtnCadastro');
+    const tabReset = document.getElementById('tabBtnReset');
     const fbLogin = document.getElementById('loginFeedbackMsg');
     const fbCad = document.getElementById('cadFeedbackMsg');
+    const fbReset = document.getElementById('resetFeedbackMsg');
     if (fbLogin) fbLogin.style.display = 'none';
     if (fbCad) fbCad.style.display = 'none';
+    if (fbReset) fbReset.style.display = 'none';
 
-    if (aba === 'login') {
-      if (formLogin) formLogin.style.display = 'block';
-      if (formCad) formCad.style.display = 'none';
-      if (tabLogin) tabLogin.classList.add('active');
-      if (tabCad) tabCad.classList.remove('active');
+    if (formLogin) formLogin.style.display = (aba === 'login') ? 'block' : 'none';
+    if (formCad) formCad.style.display = (aba === 'cadastro') ? 'block' : 'none';
+    if (formReset) formReset.style.display = (aba === 'reset') ? 'block' : 'none';
+
+    if (tabLogin) tabLogin.classList.toggle('active', aba === 'login');
+    if (tabCad) tabCad.classList.toggle('active', aba === 'cadastro');
+    if (tabReset) tabReset.classList.toggle('active', aba === 'reset');
+
+    if (aba === 'reset') {
+      const emailLogin = document.getElementById('loginEmail')?.value?.trim();
+      const resetEmailInp = document.getElementById('resetEmail');
+      if (emailLogin && resetEmailInp && !resetEmailInp.value) {
+        resetEmailInp.value = emailLogin;
+      }
+    }
+  };
+
+  window.togglePasswordVisibility = function(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      if (btn) {
+        btn.textContent = '🙈';
+        btn.title = 'Ocultar senha';
+      }
     } else {
-      if (formLogin) formLogin.style.display = 'none';
-      if (formCad) formCad.style.display = 'block';
-      if (tabLogin) tabLogin.classList.remove('active');
-      if (tabCad) tabCad.classList.add('active');
+      inp.type = 'password';
+      if (btn) {
+        btn.textContent = '👁️';
+        btn.title = 'Visualizar senha';
+      }
     }
   };
 
@@ -9982,6 +10083,111 @@ function renderCodificacaoView() {
       senhaInput.value = '';
     } catch(e) {
       alert('Erro ao conectar ao servidor de cadastro.');
+    }
+  };
+
+  window.executarRedefinirSenha = async function() {
+    const emailInput = document.getElementById('resetEmail');
+    const novaInput = document.getElementById('resetSenhaNova');
+    const confInput = document.getElementById('resetSenhaConfirma');
+    const feedback = document.getElementById('resetFeedbackMsg');
+
+    const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+    const novaSenha = novaInput ? novaInput.value.trim() : '';
+    const confSenha = confInput ? confInput.value.trim() : '';
+
+    if (!feedback) return;
+    feedback.className = 'auth-feedback';
+    feedback.style.display = 'none';
+
+    if (!email || !novaSenha || !confSenha) {
+      feedback.className = 'auth-feedback error';
+      feedback.textContent = 'Por favor, preencha todos os campos.';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    if (novaSenha.length < 4) {
+      feedback.className = 'auth-feedback error';
+      feedback.textContent = 'A nova senha deve ter pelo menos 4 caracteres.';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    if (novaSenha !== confSenha) {
+      feedback.className = 'auth-feedback error';
+      feedback.textContent = 'A confirmação de senha não coincide com a nova senha.';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    const client = getAuthSupabase();
+    if (!client) {
+      feedback.className = 'auth-feedback error';
+      feedback.textContent = 'Conectando ao banco de dados... Tente novamente em instantes.';
+      feedback.style.display = 'block';
+      return;
+    }
+
+    try {
+      feedback.className = 'auth-feedback success';
+      feedback.textContent = 'Verificando cadastro corporativo...';
+      feedback.style.display = 'block';
+
+      const { data, error } = await client
+        .from('usuarios_sistema')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error) {
+        feedback.className = 'auth-feedback error';
+        feedback.textContent = 'Erro ao consultar banco de dados: ' + error.message;
+        feedback.style.display = 'block';
+        return;
+      }
+
+      if (!data) {
+        feedback.className = 'auth-feedback error';
+        feedback.textContent = 'Nenhum usuário cadastrado encontrado com este e-mail.';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      const { error: updErr } = await client
+        .from('usuarios_sistema')
+        .update({ senha: novaSenha })
+        .eq('email', email);
+
+      if (updErr) {
+        feedback.className = 'auth-feedback error';
+        feedback.textContent = 'Erro ao atualizar senha: ' + updErr.message;
+        feedback.style.display = 'block';
+        return;
+      }
+
+      feedback.className = 'auth-feedback success';
+      feedback.textContent = '✓ Senha redefinida com sucesso! Redirecionando para o login...';
+      feedback.style.display = 'block';
+
+      if (novaInput) novaInput.value = '';
+      if (confInput) confInput.value = '';
+
+      setTimeout(() => {
+        const loginEmail = document.getElementById('loginEmail');
+        const loginSenha = document.getElementById('loginSenha');
+        if (loginEmail) loginEmail.value = email;
+        if (loginSenha) loginSenha.value = '';
+        window.alternarAbaAuth('login');
+      }, 1500);
+
+      if (typeof showToast === 'function') {
+        showToast('Senha redefinida com sucesso!');
+      }
+    } catch(err) {
+      feedback.className = 'auth-feedback error';
+      feedback.textContent = 'Erro de comunicação ao redefinir senha.';
+      feedback.style.display = 'block';
     }
   };
 
