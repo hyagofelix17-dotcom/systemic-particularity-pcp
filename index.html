@@ -3318,9 +3318,6 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
             </button>
           </div>
         </div>
-        <button class="btn outline" onclick="exportHTML()" title="Baixar o arquivo HTML atualizado">
-          <span>📥 Salvar no PC</span>
-        </button>
         <button class="btn" id="btn-novo-item" onclick="openModal()" style="display:none;">
           <span>+ Novo Item</span>
         </button>
@@ -3348,7 +3345,7 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
   <div id="view-consulta">
   <p class="hint">
     <strong>Dica:</strong> as edições e exclusões que você fizer aqui serão salvas automaticamente no seu navegador. <br>
-    Para atualizar o arquivo original no seu computador (e poder compartilhar), clique em <strong>"Salvar no PC"</strong>.
+    Todas as alterações ficam salvas com segurança no seu sistema.
   </p>
   <div id="out"><div class="card" style="--c:var(--c1)">
     <div class="card-actions">
@@ -4053,6 +4050,7 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
       <div class="auth-form-group">
         <label>Departamento / Perfil</label>
         <select id="cadPerfil" class="auth-select">
+          <option value="Administrador">Administrador (Controle Total / Gestão)</option>
           <option value="PCP">PCP / Planejamento</option>
           <option value="Almoxarifado">Almoxarifado / Estoque</option>
           <option value="Compras">Compras / Suprimentos</option>
@@ -9993,7 +9991,7 @@ function renderCodificacaoView() {
   const PCP_AUTH_USERS_KEY = 'pcp_auth_users_db_v2';
   const PCP_AUTH_SESSION_KEY = 'pcp_auth_session_v2';
 
-  // Configuração exclusiva de presença em tempo real (Fulltime WebSocket)
+  // Configuração de presença em tempo real (Fulltime WebSocket)
   const SUPABASE_PRESENCE_CONFIG = {
     url: 'https://npuitglpyrneqqygoaqd.supabase.co',
     key: 'sb_publishable_Swu-KcgSzQIZ4DnsBiPt1Q_mPIFjsG6'
@@ -10022,6 +10020,18 @@ function renderCodificacaoView() {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  // Helper para exibir o nome reduzido (Ex: "Hyago Felix de Barros de Oliveira" -> "Hyago Felix")
+  function formatarNomeCurto(nome) {
+    if (!nome) return '';
+    const parts = String(nome).trim().split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) return parts[0] || '';
+    const preps = ['de', 'da', 'do', 'dos', 'das', 'e'];
+    if (preps.includes(parts[1].toLowerCase()) && parts.length > 2) {
+      return parts[0] + ' ' + parts[1] + ' ' + parts[2];
+    }
+    return parts[0] + ' ' + parts[1];
   }
 
   // Usuários padrão iniciais do sistema PCP
@@ -10222,7 +10232,7 @@ function renderCodificacaoView() {
                       u.perfil === 'Compras' ? '#0284c7' :
                       u.perfil === 'Almoxarifado' ? '#7c3aed' :
                       u.perfil === 'Produção' ? '#ea580c' : '#4b5563';
-        return '<div class="online-chip-avatar" style="background:' + bgCol + ';" title="' + escapeHtml(u.nome || 'Usuário') + ' (' + escapeHtml(u.perfil || 'PCP') + ')">' + escapeHtml(initials) + '</div>';
+        return '<div class="online-chip-avatar" style="background:' + bgCol + ';" title="' + escapeHtml(formatarNomeCurto(u.nome || 'Usuário')) + ' (' + escapeHtml(u.perfil || 'PCP') + ')">' + escapeHtml(initials) + '</div>';
       }).join('') + (total > 5 ? '<div class="online-chip-more">+' + (total - 5) + '</div>' : '');
     }
 
@@ -10254,7 +10264,7 @@ function renderCodificacaoView() {
             '</div>' +
             '<div style="display:flex;flex-direction:column;text-align:left;min-width:0;flex:1;">' +
               '<span style="font-weight:700;color:var(--tx);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;">' +
-                '<span style="overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(u.nome || 'Usuário') + '</span>' +
+                '<span style="overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(formatarNomeCurto(u.nome || 'Usuário')) + '</span>' +
                 (isMe ? '<span style="font-size:9px;font-weight:600;color:#059669;flex-shrink:0;">(você)</span>' : '') +
               '</span>' +
               '<span style="font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + escapeHtml(u.email || '') + '">' + escapeHtml(u.email || '') + '</span>' +
@@ -10395,12 +10405,17 @@ function renderCodificacaoView() {
       .join('')
       .toUpperCase() || 'U';
 
+    const nomeFormatado = formatarNomeCurto(currentUser.nome);
+
     if (avatar) avatar.textContent = initials;
-    if (name) name.textContent = currentUser.nome || 'Usuário';
+    if (name) name.textContent = nomeFormatado;
     if (role) role.textContent = currentUser.perfil || 'PCP';
 
     if (menuAvatar) menuAvatar.textContent = initials;
-    if (menuNome) menuNome.textContent = currentUser.nome || 'Usuário';
+    if (menuNome) {
+      menuNome.textContent = nomeFormatado;
+      menuNome.title = currentUser.nome || 'Usuário';
+    }
     if (menuEmail) menuEmail.textContent = currentUser.email || '';
     if (menuPerfil) menuPerfil.textContent = currentUser.perfil || 'PCP';
 
@@ -10512,7 +10527,7 @@ function renderCodificacaoView() {
     initPresencaOnline();
 
     if (typeof showToast === 'function') {
-      showToast('Login efetuado com sucesso! Bem-vindo(a), ' + (userData.nome || ''));
+      showToast('Login efetuado com sucesso! Bem-vindo(a), ' + formatarNomeCurto(userData.nome));
     }
   };
 
@@ -10607,7 +10622,7 @@ function renderCodificacaoView() {
     savePcpUsers(users);
 
     if (feedback) {
-      feedback.innerHTML = '✓ <strong>Solicitação de acesso enviada com sucesso!</strong><br>O Administrador do PCP validará seu cadastro.';
+      feedback.innerHTML = '✓ <strong>Solicitação de acesso (' + perfil + ') enviada com sucesso!</strong><br>O Administrador do PCP validará seu cadastro.';
       feedback.style.display = 'block';
     }
     nomeInput.value = '';
@@ -10740,6 +10755,17 @@ function renderCodificacaoView() {
       currentUser = null;
     }
 
+    // Sincroniza dinamicamente permissões de Administrador atualizadas no banco
+    if (currentUser) {
+      const users = getPcpUsers();
+      const fresh = users.find(u => (u.id && u.id === currentUser.id) || (u.email && u.email.toLowerCase() === currentUser.email?.toLowerCase()));
+      if (fresh) {
+        currentUser.perfil = fresh.perfil;
+        currentUser.status = fresh.status;
+        currentUser.nome = fresh.nome;
+      }
+    }
+
     if (currentUser && (currentUser.email === 'hyago.oliveira@pgquimica.com.br' || (currentUser.nome && currentUser.nome.toLowerCase().includes('hyago')))) {
       currentUser.perfil = 'Administrador';
       try {
@@ -10787,6 +10813,7 @@ function renderCodificacaoView() {
       const isPend = u.status === 'pendente';
       const isBloq = u.status === 'bloqueado';
       const isHyago = u.email === 'hyago.oliveira@pgquimica.com.br';
+      const isAdmin = u.perfil === 'Administrador';
       const statusBadge = isPend 
         ? '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⏳ Pendente</span>'
         : (isBloq 
@@ -10795,12 +10822,12 @@ function renderCodificacaoView() {
 
       return '<tr style="border-bottom:1px solid var(--bd);">' +
         '<td style="padding:10px 12px;">' +
-          '<div style="font-weight:700;color:var(--tx);">' + escapeHtml(u.nome || 'Sem nome') + (isHyago ? ' 🛡️' : '') + '</div>' +
+          '<div style="font-weight:700;color:var(--tx);">' + escapeHtml(formatarNomeCurto(u.nome || 'Sem nome')) + (isAdmin ? ' 🛡️' : '') + '</div>' +
           '<div style="font-size:11px;color:var(--mu);">' + escapeHtml(u.email || '') + '</div>' +
         '</td>' +
         '<td style="padding:10px 12px;">' +
           '<select onchange="alterarPerfilUsuario(\'' + u.id + '\', this.value)" style="padding:3px 6px;font-size:11.5px;border:1px solid var(--bd);border-radius:4px;background:var(--bg);color:var(--tx);"' + (isHyago ? ' disabled' : '') + '>' +
-            '<option value="Administrador"' + (u.perfil === 'Administrador' ? ' selected' : '') + '>Administrador</option>' +
+            '<option value="Administrador"' + (u.perfil === 'Administrador' ? ' selected' : '') + '>🛡️ Administrador</option>' +
             '<option value="PCP"' + (u.perfil === 'PCP' ? ' selected' : '') + '>PCP</option>' +
             '<option value="Almoxarifado"' + (u.perfil === 'Almoxarifado' ? ' selected' : '') + '>Almoxarifado</option>' +
             '<option value="Compras"' + (u.perfil === 'Compras' ? ' selected' : '') + '>Compras</option>' +
@@ -10813,6 +10840,7 @@ function renderCodificacaoView() {
         '<td style="padding:10px 12px;text-align:right;">' +
           '<div style="display:inline-flex;gap:6px;align-items:center;">' +
             (isPend ? '<button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#0b4d26;color:#fff;" onclick="alterarStatusUsuario(\'' + u.id + '\', \'ativo\')">✓ Aprovar</button>' : '') +
+            (!isAdmin ? '<button type="button" class="btn outline" style="padding:3px 8px;font-size:11px;color:#d97706;border-color:#fcd34d;background:#fffbeb;" onclick="promoverUsuarioAdmin(\'' + u.id + '\')" title="Conceder acesso total de Administrador">🛡️ Tornar Admin</button>' : '') +
             (!isBloq && !isHyago ? '<button type="button" class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario(\'' + u.id + '\', \'bloqueado\')">Bloquear</button>' : '') +
             (isBloq ? '<button type="button" class="btn" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;" onclick="alterarStatusUsuario(\'' + u.id + '\', \'ativo\')">Desbloquear</button>' : '') +
             (!isHyago ? '<button type="button" class="btn outline" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;" onclick="excluirUsuarioPcp(\'' + u.id + '\')" title="Excluir usuário">🗑️</button>' : '') +
@@ -10820,6 +10848,24 @@ function renderCodificacaoView() {
         '</td>' +
       '</tr>';
     }).join('');
+  };
+
+  // Promove qualquer usuário a Administrador com 1 clique
+  window.promoverUsuarioAdmin = function(id) {
+    const users = getPcpUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    const nomeExibicao = formatarNomeCurto(user.nome) || user.email;
+    if (confirm('Deseja conceder acesso total de ADMINISTRADOR para ' + nomeExibicao + '? Esta pessoa poderá aprovar usuários e gerenciar o PCP.')) {
+      user.perfil = 'Administrador';
+      user.status = 'ativo';
+      savePcpUsers(users);
+      if (typeof showToast === 'function') {
+        showToast('✓ ' + nomeExibicao + ' agora tem acesso de Administrador!');
+      }
+      window.carregarTabelaAdminUsuarios();
+      verificarCadastrosPendentesBadge();
+    }
   };
 
   window.alterarStatusUsuario = function(id, novoStatus) {
@@ -10839,7 +10885,11 @@ function renderCodificacaoView() {
     if (!user) return;
     user.perfil = novoPerfil;
     savePcpUsers(users);
-    if (typeof showToast === 'function') showToast('Perfil alterado para: ' + novoPerfil);
+    if (typeof showToast === 'function') {
+      showToast('Perfil de ' + formatarNomeCurto(user.nome) + ' alterado para: ' + novoPerfil);
+    }
+    window.carregarTabelaAdminUsuarios();
+    verificarCadastrosPendentesBadge();
   };
 
   window.excluirUsuarioPcp = function(id) {
