@@ -24,6 +24,7 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js">
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#f8fafc;
@@ -126,6 +127,356 @@ header{
   background:var(--bg);
   border-color:var(--bd);
   opacity:0.85;
+}
+
+/* ========================================================
+   SISTEMA DE AUTENTICAÇÃO E LOGIN CORPORATIVO
+   ======================================================== */
+.modal-auth-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.modal-auth-overlay.open {
+  display: flex !important;
+}
+.modal-auth-card {
+  background: #ffffff;
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 440px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  animation: authCardFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+@keyframes authCardFadeIn {
+  from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.auth-header {
+  padding: 24px 24px 16px;
+  background: linear-gradient(to bottom, rgba(16, 185, 129, 0.08), #ffffff);
+  border-bottom: 1px solid var(--bd);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.auth-header img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+.auth-header h2 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--tx);
+  letter-spacing: -0.01em;
+}
+.auth-header p {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--mu);
+}
+.auth-tabs {
+  display: flex;
+  width: 100%;
+  margin-top: 16px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  gap: 4px;
+}
+.auth-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--mu);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.auth-tab-btn.active {
+  background: #ffffff;
+  color: var(--tx);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.auth-body {
+  padding: 20px 24px;
+}
+.auth-form-group {
+  margin-bottom: 14px;
+  text-align: left;
+}
+.auth-form-group label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tx);
+  margin-bottom: 5px;
+}
+.auth-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.auth-input-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--mu);
+  font-size: 14px;
+  pointer-events: none;
+}
+.auth-input {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  font-size: 12.5px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--tx);
+  outline: none;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.auth-input.no-icon {
+  padding-left: 12px;
+}
+.auth-input:focus {
+  border-color: var(--ac);
+  box-shadow: 0 0 0 3px rgba(11, 77, 38, 0.12);
+}
+.auth-select {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--tx);
+  outline: none;
+  box-sizing: border-box;
+}
+.auth-select:focus {
+  border-color: var(--ac);
+  box-shadow: 0 0 0 3px rgba(11, 77, 38, 0.12);
+}
+.auth-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--mu);
+  cursor: pointer;
+  user-select: none;
+}
+.auth-checkbox-row input[type="checkbox"] {
+  accent-color: var(--ac);
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+.auth-feedback {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  display: none;
+}
+.auth-feedback.error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.auth-feedback.success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.auth-btn-submit {
+  width: 100%;
+  padding: 11px;
+  background: var(--ac);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(11, 77, 38, 0.2);
+}
+.auth-btn-submit:hover {
+  background: var(--ac-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(11, 77, 38, 0.25);
+}
+.auth-btn-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--mu);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.15s;
+}
+.auth-btn-close:hover {
+  background: #f1f5f9;
+  color: var(--tx);
+}
+
+/* User Badge & Dropdown in Header */
+.user-header-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.user-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 4px;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.user-header-badge:hover {
+  background: #ffffff;
+  border-color: var(--ac);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+.user-avatar-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ac);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+.user-name-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--tx);
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-role-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mu);
+}
+.user-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 250px;
+  background: #ffffff;
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  padding: 8px;
+  z-index: 100;
+  animation: authCardFadeIn 0.15s ease;
+}
+.user-dropdown-menu.open {
+  display: block !important;
+}
+.user-dropdown-header {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--bd);
+  margin-bottom: 6px;
+}
+.user-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.user-dropdown-item:hover {
+  background: #f1f5f9;
+  color: var(--ac);
+}
+.user-dropdown-item.danger {
+  color: #dc2626;
+}
+.user-dropdown-item.danger:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.btn-entrar-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ac);
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: 0 1px 3px rgba(11, 77, 38, 0.2);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-entrar-header:hover {
+  background: var(--ac-hover);
+  transform: translateY(-1px);
 }
 .header-top{
   display:flex;
@@ -2677,6 +3028,53 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
           <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);"></span>
           <span id="live-clock">--:--:--</span>
         </div>
+        <!-- Botão Entrar para usuários não autenticados -->
+        <button id="btnEntrarHeader" type="button" onclick="abrirModalAuth()" class="btn-entrar-header" style="display:none;" title="Acessar o Sistema com Login Corporativo">
+          <span>🔑 Entrar</span>
+        </button>
+
+        <!-- Perfil do Usuário Conectado -->
+        <div class="user-header-container" id="containerUserMenu" style="display:none;">
+          <div id="userHeaderBadge" onclick="toggleUserMenu(event)" class="user-header-badge" title="Clique para ver detalhes do usuário e sair">
+            <div class="user-avatar-circle" id="userAvatarText">--</div>
+            <div class="user-info-text">
+              <span class="user-name-label" id="userNameText">Usuário</span>
+              <span class="user-role-label" id="userRoleText">PCP</span>
+            </div>
+            <span style="font-size:9px;color:var(--mu);margin-left:2px;">▼</span>
+            <!-- Botão de Escudo para Administrador -->
+            <button id="btnAdminUsers" type="button" onclick="event.stopPropagation(); abrirModalGerenciarUsuarios()" style="display:none;background:none;border:none;cursor:pointer;padding:2px 4px;font-size:14px;position:relative;" title="Painel de Controle e Aprovação de Usuários (Admin)">
+              🛡️
+              <span id="badgeUsuariosPendentes" style="display:none;position:absolute;top:-4px;right:-4px;background:#f59e0b;color:#fff;font-size:9px;font-weight:800;border-radius:99px;padding:1px 4px;line-height:1;">0</span>
+            </button>
+          </div>
+
+          <!-- Dropdown Menu -->
+          <div id="dropdownMenuUsuario" class="user-dropdown-menu">
+            <div class="user-dropdown-header">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <div class="user-avatar-circle" id="userMenuAvatar" style="width:32px;height:32px;font-size:12px;">--</div>
+                <div style="overflow:hidden;flex:1;">
+                  <div style="font-weight:700;font-size:12.5px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="userMenuNome">Usuário</div>
+                  <div style="font-size:11px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="userMenuEmail">email@pgquimica.com.br</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                <span id="userMenuPerfil" style="font-size:10px;font-weight:700;background:var(--pg-surface);color:var(--ac);border:1px solid var(--pg-border);padding:2px 8px;border-radius:99px;">PCP</span>
+                <span style="font-size:10.5px;color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;"></span> Conectado
+                </span>
+              </div>
+            </div>
+            <button type="button" id="btnMenuAdminUsers" onclick="fecharUserMenu(); abrirModalGerenciarUsuarios();" class="user-dropdown-item" style="display:none;">
+              <span>🛡️ Painel de Usuários (Admin)</span>
+              <span id="badgeMenuPendentes" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;font-size:9px;font-weight:800;border-radius:99px;padding:1px 5px;">0</span>
+            </button>
+            <button type="button" onclick="fecharUserMenu(); fazerLogout();" class="user-dropdown-item danger">
+              <span>🚪 Sair da Conta</span>
+            </button>
+          </div>
+        </div>
         <button class="btn outline" onclick="exportHTML()" title="Baixar o arquivo HTML atualizado">
           <span>📥 Salvar no PC</span>
         </button>
@@ -3347,6 +3745,124 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
   <div id="view-lembrete" style="display:none"></div>
 
 </main>
+
+<!-- ══ MODAL DE AUTENTICAÇÃO E LOGIN CORPORATIVO ══ -->
+<div id="modalAuth" class="modal-auth-overlay">
+  <div class="modal-auth-card">
+    <button type="button" class="auth-btn-close" onclick="fecharModalAuth()" title="Fechar">✕</button>
+    <div class="auth-header">
+      <img src="assets/logo-pgquimica.png" alt="PG Química" onerror="this.onerror=null; this.src='https://pgquimica.com.br/wp-content/uploads/2024/03/Logo-PG-Quimica-Colorida-1.png';">
+      <h2>Systemic Particularity &bull; PCP</h2>
+      <p>Acesso corporativo seguro &bull; PG Química</p>
+      <div class="auth-tabs">
+        <button type="button" id="tabBtnLogin" class="auth-tab-btn active" onclick="alternarAbaAuth('login')">Entrar</button>
+        <button type="button" id="tabBtnCadastro" class="auth-tab-btn" onclick="alternarAbaAuth('cadastro')">Solicitar Acesso</button>
+      </div>
+    </div>
+
+    <!-- Form: Login -->
+    <div id="formAuthLogin" class="auth-body">
+      <div class="auth-form-group">
+        <label>E-mail Corporativo</label>
+        <div class="auth-input-wrapper">
+          <span class="auth-input-icon">✉️</span>
+          <input type="email" id="loginEmail" class="auth-input" placeholder="seu.nome@pgquimica.com.br" autocomplete="email">
+        </div>
+      </div>
+      <div class="auth-form-group">
+        <label>Senha</label>
+        <div class="auth-input-wrapper">
+          <span class="auth-input-icon">🔒</span>
+          <input type="password" id="loginSenha" class="auth-input" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter') executarLogin()">
+        </div>
+      </div>
+      <label class="auth-checkbox-row">
+        <input type="checkbox" id="loginManterConectado" checked>
+        <span>Manter-me conectado neste computador</span>
+      </label>
+      <div id="loginFeedbackMsg" class="auth-feedback error"></div>
+      <button type="button" class="auth-btn-submit" onclick="executarLogin()">
+        <span>Acessar o Sistema</span>
+        <span>→</span>
+      </button>
+      <div style="margin-top:14px;text-align:center;font-size:11.5px;color:var(--mu)">
+        Entre com suas credenciais ou solicite acesso na aba acima.
+      </div>
+    </div>
+
+    <!-- Form: Cadastro / Solicitar Acesso -->
+    <div id="formAuthCadastro" class="auth-body" style="display:none;">
+      <div class="auth-form-group">
+        <label>Nome Completo</label>
+        <input type="text" id="cadNome" class="auth-input no-icon" placeholder="Seu nome completo">
+      </div>
+      <div class="auth-form-group">
+        <label>E-mail Corporativo</label>
+        <input type="email" id="cadEmail" class="auth-input no-icon" placeholder="seu.nome@pgquimica.com.br">
+      </div>
+      <div class="auth-form-group">
+        <label>Departamento / Perfil</label>
+        <select id="cadPerfil" class="auth-select">
+          <option value="PCP">PCP / Planejamento</option>
+          <option value="Almoxarifado">Almoxarifado / Estoque</option>
+          <option value="Compras">Compras / Suprimentos</option>
+          <option value="Produção">Produção</option>
+          <option value="Diretoria">Diretoria / Gestão</option>
+          <option value="Visualizador">Visualizador (Somente Leitura)</option>
+        </select>
+      </div>
+      <div class="auth-form-group">
+        <label>Criar Senha</label>
+        <input type="password" id="cadSenha" class="auth-input no-icon" placeholder="Defina uma senha de acesso">
+      </div>
+      <div id="cadFeedbackMsg" class="auth-feedback success"></div>
+      <button type="button" class="auth-btn-submit" onclick="executarCadastro()">
+        <span>Enviar Solicitação de Acesso</span>
+        <span>✓</span>
+      </button>
+      <div style="margin-top:12px;text-align:center;font-size:11px;color:var(--mu);line-height:1.4">
+        Após o envio, o administrador do PCP validará seu cadastro e liberará o acesso.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: PAINEL DO ADMINISTRADOR (GESTÃO DE USUÁRIOS) ══ -->
+<div id="modalGerenciarUsuarios" class="modal-auth-overlay">
+  <div class="modal-auth-card" style="max-width:760px;width:95vw;max-height:88vh;display:flex;flex-direction:column;">
+    <div style="padding:16px 20px;background:#18181b;color:#fff;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #27272a;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">🛡️</span>
+        <div>
+          <h3 style="margin:0;font-size:14.5px;font-weight:700;color:#fff;">Painel do Administrador &bull; Controle de Usuários</h3>
+          <p style="margin:2px 0 0;font-size:11px;color:#a1a1aa;">Valide solicitações e controle os acessos dos funcionários</p>
+        </div>
+      </div>
+      <button type="button" onclick="fecharModalGerenciarUsuarios()" style="background:none;border:none;color:#a1a1aa;font-size:18px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1;">
+      <div style="border:1px solid var(--bd);border-radius:8px;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:1px solid var(--bd);color:var(--mu);text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;">
+              <th style="padding:8px 12px;">Usuário / E-mail</th>
+              <th style="padding:8px 12px;">Departamento</th>
+              <th style="padding:8px 12px;text-align:center;">Status</th>
+              <th style="padding:8px 12px;text-align:right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersTableBody">
+            <tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mu);">Carregando usuários...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:12px 20px;background:#f8fafc;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11.5px;color:var(--mu);">As alterações entram em vigor imediatamente para o usuário.</span>
+      <button class="btn" onclick="fecharModalGerenciarUsuarios()">Fechar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ MODAL / OVERLAY: PROCESSAMENTO BALANÇO DE MASSA ══ -->
 <div id="balanco-overlay" class="balanco-overlay" style="display:none">
@@ -9175,6 +9691,439 @@ function renderCodificacaoView() {
   updateHeaderZoom();
   setTimeout(updateHeaderZoom, 50);
   setTimeout(updateHeaderZoom, 250);
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 🔐 SISTEMA DE AUTENTICAÇÃO E LOGIN CORPORATIVO (SUPABASE)
+  // ════════════════════════════════════════════════════════════════════════════
+  const SUPABASE_AUTH_CONFIG = {
+    url: 'https://npuitglpyrneqqygoaqd.supabase.co',
+    key: 'sb_publishable_Swu-KcgSzQIZ4DnsBiPt1Q_mPIFjsG6'
+  };
+
+  var authSupabaseClient = null;
+  function getAuthSupabase() {
+    if (!authSupabaseClient && window.supabase) {
+      try {
+        authSupabaseClient = window.supabase.createClient(SUPABASE_AUTH_CONFIG.url, SUPABASE_AUTH_CONFIG.key);
+      } catch(e) {
+        console.warn('Erro ao inicializar Supabase Auth Client:', e);
+      }
+    }
+    return authSupabaseClient;
+  }
+  getAuthSupabase();
+
+  const PADRAO_ADMIN_USER = {
+    id: 'b7a6eeb6-d672-488f-8a86-6c0475dc5d90',
+    nome: 'Hyago Oliveira',
+    email: 'hyago.oliveira@pgquimica.com.br',
+    perfil: 'Administrador',
+    status: 'ativo'
+  };
+
+  let currentUser = null;
+
+  window.alternarAbaAuth = function(aba) {
+    const formLogin = document.getElementById('formAuthLogin');
+    const formCad = document.getElementById('formAuthCadastro');
+    const tabLogin = document.getElementById('tabBtnLogin');
+    const tabCad = document.getElementById('tabBtnCadastro');
+    const fbLogin = document.getElementById('loginFeedbackMsg');
+    const fbCad = document.getElementById('cadFeedbackMsg');
+    if (fbLogin) fbLogin.style.display = 'none';
+    if (fbCad) fbCad.style.display = 'none';
+
+    if (aba === 'login') {
+      if (formLogin) formLogin.style.display = 'block';
+      if (formCad) formCad.style.display = 'none';
+      if (tabLogin) tabLogin.classList.add('active');
+      if (tabCad) tabCad.classList.remove('active');
+    } else {
+      if (formLogin) formLogin.style.display = 'none';
+      if (formCad) formCad.style.display = 'block';
+      if (tabLogin) tabLogin.classList.remove('active');
+      if (tabCad) tabCad.classList.add('active');
+    }
+  };
+
+  window.abrirModalAuth = function() {
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.classList.add('open');
+    try {
+      const emailInput = document.getElementById('loginEmail');
+      const ultimoEmail = localStorage.getItem('pg_ultimo_email') || (currentUser ? currentUser.email : '');
+      if (emailInput && !emailInput.value) emailInput.value = ultimoEmail;
+    } catch(e) {}
+  };
+
+  window.fecharModalAuth = function() {
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.classList.remove('open');
+  };
+
+  window.toggleUserMenu = function(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('dropdownMenuUsuario');
+    if (menu) menu.classList.toggle('open');
+  };
+
+  window.fecharUserMenu = function() {
+    const menu = document.getElementById('dropdownMenuUsuario');
+    if (menu) menu.classList.remove('open');
+  };
+
+  document.addEventListener('click', function(e) {
+    const container = document.getElementById('containerUserMenu');
+    if (container && !container.contains(e.target)) {
+      window.fecharUserMenu();
+    }
+  });
+
+  window.atualizarHeaderUsuario = function() {
+    const btnEntrar = document.getElementById('btnEntrarHeader');
+    const containerUser = document.getElementById('containerUserMenu');
+    const avatar = document.getElementById('userAvatarText');
+    const name = document.getElementById('userNameText');
+    const role = document.getElementById('userRoleText');
+    const menuAvatar = document.getElementById('userMenuAvatar');
+    const menuNome = document.getElementById('userMenuNome');
+    const menuEmail = document.getElementById('userMenuEmail');
+    const menuPerfil = document.getElementById('userMenuPerfil');
+    const btnAdmin = document.getElementById('btnAdminUsers');
+    const btnMenuAdmin = document.getElementById('btnMenuAdminUsers');
+
+    if (!currentUser) {
+      if (btnEntrar) btnEntrar.style.display = 'inline-flex';
+      if (containerUser) containerUser.style.display = 'none';
+      return;
+    }
+
+    if (btnEntrar) btnEntrar.style.display = 'none';
+    if (containerUser) containerUser.style.display = 'inline-flex';
+
+    const initials = (currentUser.nome || 'U')
+      .split(' ')
+      .filter(Boolean)
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'U';
+
+    if (avatar) avatar.textContent = initials;
+    if (name) name.textContent = currentUser.nome || 'Usuário';
+    if (role) role.textContent = currentUser.perfil || 'PCP';
+
+    if (menuAvatar) menuAvatar.textContent = initials;
+    if (menuNome) menuNome.textContent = currentUser.nome || 'Usuário';
+    if (menuEmail) menuEmail.textContent = currentUser.email || '';
+    if (menuPerfil) menuPerfil.textContent = currentUser.perfil || 'PCP';
+
+    const isAdmin = currentUser.perfil === 'Administrador';
+    if (btnAdmin) btnAdmin.style.display = isAdmin ? 'inline-block' : 'none';
+    if (btnMenuAdmin) btnMenuAdmin.style.display = isAdmin ? 'flex' : 'none';
+
+    if (isAdmin) {
+      verificarCadastrosPendentesBadge();
+    }
+  };
+
+  async function verificarCadastrosPendentesBadge() {
+    const client = getAuthSupabase();
+    if (!client || !currentUser || currentUser.perfil !== 'Administrador') return;
+    try {
+      const { count, error } = await client
+        .from('usuarios_sistema')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pendente');
+
+      const badge = document.getElementById('badgeUsuariosPendentes');
+      const badgeMenu = document.getElementById('badgeMenuPendentes');
+      if (!error && count && count > 0) {
+        if (badge) { badge.textContent = count; badge.style.display = 'inline-block'; }
+        if (badgeMenu) { badgeMenu.textContent = count; badgeMenu.style.display = 'inline-block'; }
+      } else {
+        if (badge) badge.style.display = 'none';
+        if (badgeMenu) badgeMenu.style.display = 'none';
+      }
+    } catch(e) {}
+  }
+
+  window.executarLogin = async function() {
+    const emailInput = document.getElementById('loginEmail');
+    const senhaInput = document.getElementById('loginSenha');
+    const feedback = document.getElementById('loginFeedbackMsg');
+    if (!emailInput || !senhaInput || !feedback) return;
+
+    const email = emailInput.value.trim().toLowerCase();
+    const senha = senhaInput.value.trim();
+
+    if (!email || !senha) {
+      feedback.textContent = 'Preencha o e-mail e a senha.';
+      feedback.style.display = 'block';
+      return;
+    }
+    feedback.style.display = 'none';
+
+    const client = getAuthSupabase();
+
+    try {
+      let userData = null;
+      if (client) {
+        const { data, error } = await client
+          .from('usuarios_sistema')
+          .select('*')
+          .ilike('email', email)
+          .single();
+        if (!error && data) userData = data;
+      }
+
+      // Fallback de contingência para o Administrador Hyago
+      if (!userData && (email === 'hyago.oliveira@pgquimica.com.br' || email === 'admin') && senha === 'admin') {
+        userData = PADRAO_ADMIN_USER;
+      }
+
+      if (!userData) {
+        feedback.textContent = 'Usuário não localizado no sistema.';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      if (userData.senha && userData.senha !== senha) {
+        feedback.textContent = 'Senha incorreta. Verifique suas credenciais.';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      if (userData.status === 'pendente') {
+        feedback.textContent = '⏳ Sua solicitação de acesso está aguardando aprovação pelo Administrador.';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      if (userData.status === 'bloqueado') {
+        feedback.textContent = '⛔ Seu acesso está bloqueado pelo Administrador.';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      currentUser = userData;
+      const manter = document.getElementById('loginManterConectado')?.checked ?? true;
+      try {
+        if (manter) {
+          localStorage.setItem('pg_auth_session_v2', JSON.stringify(userData));
+          localStorage.setItem('pg_manter_conectado', 'true');
+          localStorage.setItem('pg_ultimo_email', userData.email || '');
+        } else {
+          sessionStorage.setItem('pg_auth_session_v2', JSON.stringify(userData));
+          localStorage.removeItem('pg_auth_session_v2');
+        }
+      } catch(e) {}
+
+      window.fecharModalAuth();
+      window.atualizarHeaderUsuario();
+      if (typeof showToast === 'function') {
+        showToast('Login efetuado com sucesso! Bem-vindo(a), ' + (userData.nome || ''));
+      }
+    } catch(e) {
+      console.warn('Erro ao fazer login:', e);
+      feedback.textContent = 'Erro ao autenticar usuário. Tente novamente.';
+      feedback.style.display = 'block';
+    }
+  };
+
+  window.executarCadastro = async function() {
+    const nomeInput = document.getElementById('cadNome');
+    const emailInput = document.getElementById('cadEmail');
+    const perfilInput = document.getElementById('cadPerfil');
+    const senhaInput = document.getElementById('cadSenha');
+    const feedback = document.getElementById('cadFeedbackMsg');
+
+    const nome = nomeInput.value.trim();
+    const email = emailInput.value.trim().toLowerCase();
+    const perfil = perfilInput.value;
+    const senha = senhaInput.value.trim();
+
+    if (!nome || !email || !senha) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    const client = getAuthSupabase();
+    if (!client) {
+      alert('Conectando ao banco de dados... Tente novamente em instantes.');
+      return;
+    }
+
+    try {
+      const { error } = await client.from('usuarios_sistema').insert([{
+        nome,
+        email,
+        perfil,
+        senha,
+        status: 'pendente',
+        created_at: new Date().toISOString()
+      }]);
+
+      if (error) {
+        if (error.code === '23505' || String(error.message).includes('duplicate')) {
+          alert('Este e-mail já possui uma solicitação ou cadastro no sistema.');
+        } else {
+          alert('Erro ao enviar solicitação: ' + error.message);
+        }
+        return;
+      }
+
+      if (feedback) {
+        feedback.textContent = '✓ Solicitação enviada com sucesso! Aguarde a aprovação do Administrador do PCP.';
+        feedback.style.display = 'block';
+      }
+      nomeInput.value = '';
+      emailInput.value = '';
+      senhaInput.value = '';
+    } catch(e) {
+      alert('Erro ao conectar ao servidor de cadastro.');
+    }
+  };
+
+  window.fazerLogout = function() {
+    if (confirm('Deseja realmente sair da conta?')) {
+      currentUser = null;
+      try {
+        localStorage.removeItem('pg_auth_session_v2');
+        localStorage.removeItem('pg_manter_conectado');
+        sessionStorage.removeItem('pg_auth_session_v2');
+      } catch(e) {}
+      window.fecharUserMenu();
+      window.atualizarHeaderUsuario();
+      window.abrirModalAuth();
+      if (typeof showToast === 'function') {
+        showToast('Você saiu da sua conta.');
+      }
+    }
+  };
+
+  window.checkAuthOnLoad = function() {
+    try {
+      const saved = localStorage.getItem('pg_auth_session_v2') || sessionStorage.getItem('pg_auth_session_v2');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+      } else {
+        currentUser = null;
+      }
+    } catch(e) {
+      currentUser = null;
+    }
+
+    // Garante privilégios de Administrador caso seja Hyago
+    if (currentUser && (currentUser.email === 'hyago.oliveira@pgquimica.com.br' || (currentUser.nome && currentUser.nome.toLowerCase().includes('hyago')))) {
+      currentUser.perfil = 'Administrador';
+      try {
+        localStorage.setItem('pg_auth_session_v2', JSON.stringify(currentUser));
+      } catch(e) {}
+    }
+
+    window.atualizarHeaderUsuario();
+    if (!currentUser) {
+      window.abrirModalAuth();
+    }
+  };
+
+  // ── Painel de Usuários (Admin) ──
+  window.abrirModalGerenciarUsuarios = async function() {
+    const modal = document.getElementById('modalGerenciarUsuarios');
+    if (modal) modal.classList.add('open');
+    await window.carregarTabelaAdminUsuarios();
+  };
+
+  window.fecharModalGerenciarUsuarios = function() {
+    const modal = document.getElementById('modalGerenciarUsuarios');
+    if (modal) modal.classList.remove('open');
+  };
+
+  window.carregarTabelaAdminUsuarios = async function() {
+    const tbody = document.getElementById('adminUsersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mu);">Carregando usuários do sistema...</td></tr>';
+
+    const client = getAuthSupabase();
+    if (!client) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#dc2626;">Supabase não conectado.</td></tr>';
+      return;
+    }
+
+    try {
+      const { data, error } = await client
+        .from('usuarios_sistema')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mu);">Nenhum usuário cadastrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(u => {
+        const isPend = u.status === 'pendente';
+        const isBloq = u.status === 'bloqueado';
+        const statusBadge = isPend 
+          ? '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⏳ Pendente</span>'
+          : (isBloq 
+            ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">⛔ Bloqueado</span>'
+            : '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;">✓ Ativo</span>');
+
+        return `
+          <tr style="border-bottom:1px solid var(--bd);">
+            <td style="padding:10px 12px;">
+              <div style="font-weight:700;color:var(--tx);">${u.nome || 'Sem nome'}</div>
+              <div style="font-size:11px;color:var(--mu);">${u.email || ''}</div>
+            </td>
+            <td style="padding:10px 12px;">
+              <span style="font-weight:600;color:var(--tx);">${u.perfil || 'PCP'}</span>
+            </td>
+            <td style="padding:10px 12px;text-align:center;">${statusBadge}</td>
+            <td style="padding:10px 12px;text-align:right;">
+              <div style="display:inline-flex;gap:6px;">
+                ${isPend ? `
+                  <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">✓ Aprovar</button>
+                ` : ''}
+                ${!isBloq ? `
+                  <button class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="alterarStatusUsuario('${u.id}', 'bloqueado')">Bloquear</button>
+                ` : `
+                  <button class="btn" style="padding:3px 8px;font-size:11px;background:#059669;" onclick="alterarStatusUsuario('${u.id}', 'ativo')">Desbloquear</button>
+                `}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#dc2626;">Erro ao carregar lista de usuários.</td></tr>';
+    }
+  };
+
+  window.alterarStatusUsuario = async function(id, novoStatus) {
+    const client = getAuthSupabase();
+    if (!client) return;
+    try {
+      const { error } = await client
+        .from('usuarios_sistema')
+        .update({ status: novoStatus })
+        .eq('id', id);
+
+      if (error) {
+        alert('Erro ao atualizar status: ' + error.message);
+      } else {
+        if (typeof showToast === 'function') showToast('Status do usuário atualizado com sucesso!');
+        await window.carregarTabelaAdminUsuarios();
+        verificarCadastrosPendentesBadge();
+      }
+    } catch(e) {
+      alert('Erro de comunicação com o Supabase.');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', window.checkAuthOnLoad);
+  window.addEventListener('load', window.checkAuthOnLoad);
 
 
 // ========================================================
