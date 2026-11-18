@@ -1023,7 +1023,7 @@ main.wide-layout{max-width:100%;width:100%;padding-left:16px;padding-right:16px;
 .stock-top-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 18px;margin-bottom:14px}
 .stock-header-meta{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
 .stock-file-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--c3);background:rgba(15,118,110,0.08);padding:5px 12px;border-radius:8px;border:1px solid rgba(15,118,110,0.2)}
-.stock-time-badge{font-size:12px;color:var(--mu)}
+.stock-time-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--tx);background:var(--card);padding:5px 12px;border-radius:8px;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(0,0,0,0.03)}
 .stock-stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .stock-stat-box{flex:1;min-width:130px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 12px}
 .stock-stat-val{font-size:19px;font-weight:700;color:var(--tx);line-height:1.2}
@@ -5255,6 +5255,59 @@ try {
   STOCK_DATA = null;
 }
 
+// ══════════════════════════════════════════════
+// 🔄 AUTO-IMPORT: Busca dados do servidor local auto-import-estoque.js
+// Verifica a cada 30 minutos se há um relatório mais recente processado
+// ══════════════════════════════════════════════
+(function initAutoImportEstoque() {
+  const AUTO_IMPORT_URL = 'http://localhost:3847/stock-data';
+  const AUTO_IMPORT_INTERVAL = 30 * 60 * 1000; // 30 minutos
+  let _autoImportLastFile = null;
+
+  async function autoFetchStockData() {
+    try {
+      const resp = await fetch(AUTO_IMPORT_URL, { signal: AbortSignal.timeout(5000) });
+      if (!resp.ok) return;
+      const json = await resp.json();
+      if (json.status !== 'ok' || !json.data) return;
+
+      const newFile = json.file || '';
+      if (newFile === _autoImportLastFile) return;
+
+      _autoImportLastFile = newFile;
+      const stockData = json.data;
+
+      STOCK_DATA = stockData;
+      localStorage.setItem('pcp_stock_report', JSON.stringify(STOCK_DATA));
+
+      if (typeof stockFilterState !== 'undefined') {
+        stockFilterState.page = 1;
+        stockFilterState.q = '';
+        stockFilterState.loc = '';
+        stockFilterState.status = 'all';
+        stockFilterState.colFilters = {};
+        stockFilterState.colMultiFilters = {};
+      }
+
+      if (typeof renderStockView === 'function') renderStockView();
+      if (typeof renderDashboardView === 'function') renderDashboardView();
+      if (typeof syncMpSistemaWithStock === 'function') syncMpSistemaWithStock(false);
+
+      const totalItens = (stockData.rows && stockData.rows.length) ? stockData.rows.length.toLocaleString('pt-BR') : '0';
+      if (typeof showToast === 'function') {
+        showToast('<div style="display:flex;flex-direction:column;gap:8px;min-width:320px;text-align:left"><div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#38bdf8;letter-spacing:0.3px"><span style="font-size:16px">🔄</span><span>SALDO ATUALIZADO AUTOMATICAMENTE</span></div><div style="background:rgba(15,23,42,0.65);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px"><span style="color:#cbd5e1;font-weight:500">📦 ' + totalItens + ' itens | 📂 ' + newFile + '</span></div></div>', 6000);
+      }
+
+      console.log('[Auto-Import] \u2705 Relat\u00F3rio atualizado: ' + newFile + ' (' + totalItens + ' itens)');
+    } catch (err) {
+      // Silencioso - servidor local pode nao estar rodando
+    }
+  }
+
+  setTimeout(autoFetchStockData, 5000);
+  setInterval(autoFetchStockData, AUTO_IMPORT_INTERVAL);
+})();
+
 let stockFilterState = {
   q: '',
   loc: '',
@@ -7267,12 +7320,14 @@ function syncMpSistemaWithStock(notifyUser) {
   let stockDescCol = 'Descricao';
   let stockQtyCol = 'Saldo Atual';
   let stockCodeCol = 'Produto';
+  let stockLocCol = 'Armazem';
 
   if (typeof STOCK_DATA !== 'undefined' && STOCK_DATA && Array.isArray(STOCK_DATA.rows) && STOCK_DATA.rows.length > 0) {
     stockRows = STOCK_DATA.rows;
     stockDescCol = STOCK_DATA.descCol || 'Descricao';
     stockQtyCol = STOCK_DATA.qtyCol || 'Saldo Atual';
     stockCodeCol = STOCK_DATA.codeCol || 'Produto';
+    stockLocCol = STOCK_DATA.locCol || 'Armazem';
   } else {
     try {
       const savedStock = localStorage.getItem('pcp_stock_report');
@@ -7283,6 +7338,7 @@ function syncMpSistemaWithStock(notifyUser) {
           stockDescCol = parsed.descCol || 'Descricao';
           stockQtyCol = parsed.qtyCol || 'Saldo Atual';
           stockCodeCol = parsed.codeCol || 'Produto';
+          stockLocCol = parsed.locCol || 'Armazem';
         }
       }
     } catch(e){}
@@ -7302,74 +7358,158 @@ function syncMpSistemaWithStock(notifyUser) {
     let s = String(rawDesc || '').toUpperCase();
     s = s.replace(/\(ONU\s+[^)]+\)/gi, ' ');
     s = s.replace(/-\s*(BB|SC|TB|GR|CX|LT|GL|TN|KG|BD|FR|LA|L|IBC|TAMBOR|BOMBONA|SACO|GRANEL|EXP)[^\-]*$/gi, ' ');
-    s = s.replace(/\s*\((MP|R|ME|PA|PI|SEMI|EXP|IND)\)$/gi, ' ');
-    s = s.replace(/-\s*(MP|R|ME|PA|PI)$/gi, ' ');
+    s = s.replace(/\s*\((MP|R|ME|PA|PI|SEMI|EXP|IND|MPB|MPU|MPO|MPFA)\)$/gi, ' ');
+    s = s.replace(/-\s*(MP|R|ME|PA|PI|MPB|MPU|MPO|MPFA)$/gi, ' ');
     return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\(\)\[\]\/\-_,;:\.]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   const sysCol = MP_DATA.systemCol || 'Quantidade';
   const codeCol = MP_DATA.codeCol || 'Código';
   const descExtCol = MP_DATA.descExtCol || 'Descr. Externa';
+  const descIntCol = MP_DATA.descIntCol || 'Descr. Interna';
 
-  // Indexação ESTRITA por código do estoque para evitar duplicações entre MPs com a mesma descrição
+  // 1. Indexação abrangente do estoque: por Código e por Descrição (agregando múltiplos armazéns/lotes)
   const stockSaldoByRawCode = new Map();
   const stockSaldoByCleanCode = new Map();
-  const stockItemsWithoutCode = [];
+  const stockSaldoByNoZeroCode = new Map();
+  const stockSaldoByCleanDesc = new Map();
+  const stockUniqueItems = new Map(); // chave -> { rawCode, cleanCode, rawDesc, cleanDesc, saldo, isMp }
 
   stockRows.forEach(r => {
     const rawCode = String(r[stockCodeCol] || '').trim();
     const saldo = (typeof parseStockNumber === 'function') ? parseStockNumber(r[stockQtyCol]) : parseFloat(r[stockQtyCol]) || 0;
-    const rawDesc = r[stockDescCol] || '';
+    const rawDesc = String(r[stockDescCol] || '').trim();
+    const loc = String(r[stockLocCol] || '').trim();
+    const valSaldo = isNaN(saldo) ? 0 : saldo;
 
+    // Indexação por código
     if (rawCode) {
       const up = rawCode.toUpperCase();
       const clean = normCode(rawCode);
-      stockSaldoByRawCode.set(up, (stockSaldoByRawCode.get(up) || 0) + (isNaN(saldo) ? 0 : saldo));
+      const noZero = clean.replace(/^0+/, '');
+
+      stockSaldoByRawCode.set(up, (stockSaldoByRawCode.get(up) || 0) + valSaldo);
       if (clean) {
-        stockSaldoByCleanCode.set(clean, (stockSaldoByCleanCode.get(clean) || 0) + (isNaN(saldo) ? 0 : saldo));
+        stockSaldoByCleanCode.set(clean, (stockSaldoByCleanCode.get(clean) || 0) + valSaldo);
       }
-    } else {
-      stockItemsWithoutCode.push({
-        rawDesc,
-        clean: cleanStockDesc(rawDesc),
-        saldo: isNaN(saldo) ? 0 : saldo
-      });
+      if (noZero) {
+        stockSaldoByNoZeroCode.set(noZero, (stockSaldoByNoZeroCode.get(noZero) || 0) + valSaldo);
+      }
+
+      // Registro para identificação de matérias-primas
+      const key = clean || up;
+      if (!stockUniqueItems.has(key)) {
+        const isMpPrefix = /^0?1\./.test(rawCode) || clean.startsWith('01') || clean.startsWith('1');
+        const isMpDesc = /\(MP[A-Z]*\)|\bMP\b/i.test(rawDesc);
+        const isMpLoc = loc === '01';
+        stockUniqueItems.set(key, {
+          rawCode,
+          cleanCode: clean,
+          rawDesc,
+          cleanDesc: cleanStockDesc(rawDesc),
+          saldo: valSaldo,
+          isMp: isMpPrefix || isMpDesc || isMpLoc
+        });
+      } else {
+        stockUniqueItems.get(key).saldo += valSaldo;
+      }
+    }
+
+    // Indexação por descrição (SEMPRE realizada para permitir correspondência quando o código divergir ou não constar)
+    if (rawDesc) {
+      const cleanD = cleanStockDesc(rawDesc);
+      if (cleanD && cleanD.length >= 2) {
+        if (!stockSaldoByCleanDesc.has(cleanD)) {
+          stockSaldoByCleanDesc.set(cleanD, { saldo: valSaldo, code: rawCode, rawDesc });
+        } else {
+          const entry = stockSaldoByCleanDesc.get(cleanD);
+          entry.saldo += valSaldo;
+        }
+      }
     }
   });
 
-  let matchedCount = 0;
+  let matchedByCodeCount = 0;
+  let matchedByDescCount = 0;
   let positiveStockCount = 0;
+
+  // Rastrear quais códigos e descrições do estoque já constam na Lista de MP
+  const existingMpCleanCodes = new Set();
+  const existingMpCleanDescs = new Set();
 
   MP_DATA.rows.forEach(r => {
     const code = String(r[codeCol] || '').trim();
     const upCode = code.toUpperCase();
     const cleanCode = normCode(code);
-    let matchedSaldo = null;
+    const noZeroCode = cleanCode.replace(/^0+/, '');
+    const descExt = String(r[descExtCol] || '').trim();
+    const cleanExt = cleanStockDesc(descExt);
 
-    // 1. Regra primária: Se a MP tem código, busca SOMENTE o saldo do código exato/correspondente no estoque
+    if (cleanCode) existingMpCleanCodes.add(cleanCode);
+    if (noZeroCode) existingMpCleanCodes.add(noZeroCode);
+    if (cleanExt) existingMpCleanDescs.add(cleanExt);
+
+    let matchedSaldo = null;
+    let matchType = null;
+
+    // 1. Regra Primária: Busca por Código (Exato, Limpo ou Sem Zeros)
     if (code) {
       if (stockSaldoByRawCode.has(upCode)) {
         matchedSaldo = stockSaldoByRawCode.get(upCode);
+        matchType = 'code';
       } else if (cleanCode && stockSaldoByCleanCode.has(cleanCode)) {
         matchedSaldo = stockSaldoByCleanCode.get(cleanCode);
+        matchType = 'code';
+      } else if (noZeroCode && stockSaldoByNoZeroCode.has(noZeroCode)) {
+        matchedSaldo = stockSaldoByNoZeroCode.get(noZeroCode);
+        matchType = 'code';
       }
     }
 
-    // 2. Se o código não constava no estoque mas existem itens de estoque sem nenhum código preenchido, tenta cruzar por descrição
-    if (matchedSaldo === null && stockItemsWithoutCode.length > 0) {
-      const descExt = String(r[descExtCol] || '').trim();
-      const cleanExt = cleanStockDesc(descExt);
-      if (cleanExt && cleanExt.length >= 2) {
-        const descMatches = stockItemsWithoutCode.filter(s => s.clean === cleanExt || s.clean.startsWith(cleanExt));
-        if (descMatches.length > 0) {
-          matchedSaldo = descMatches.reduce((sum, s) => sum + s.saldo, 0);
+    // 2. Regra Secundária: Fallback por Descrição (se não encontrou por código ou se a MP está sem código)
+    if (matchedSaldo === null && cleanExt && cleanExt.length >= 2) {
+      if (stockSaldoByCleanDesc.has(cleanExt)) {
+        const found = stockSaldoByCleanDesc.get(cleanExt);
+        matchedSaldo = found.saldo;
+        matchType = 'desc';
+        // Se a MP estava sem código preenchido, preenche com o código do estoque
+        if (!code && found.code) {
+          r[codeCol] = found.code;
+        }
+      } else {
+        // Busca por aproximação/inclusão de descrição (mínimo 4 caracteres para evitar falso positivo)
+        if (cleanExt.length >= 4) {
+          for (const [stDesc, stData] of stockSaldoByCleanDesc.entries()) {
+            if (stDesc === cleanExt || stDesc.startsWith(cleanExt) || cleanExt.startsWith(stDesc) ||
+               (cleanExt.length >= 8 && stDesc.includes(cleanExt)) ||
+               (stDesc.length >= 8 && cleanExt.includes(stDesc))) {
+              matchedSaldo = stData.saldo;
+              matchType = 'desc';
+              if (!code && stData.code) r[codeCol] = stData.code;
+              break;
+            }
+          }
         }
       }
     }
 
-    // Aplica o saldo estritamente onde houver saldo do código no estoque
+    // 3. Regra Terciária: Tentar pela Descrição Interna se for texto descritivo (não apenas "MP 123" ou "NA")
+    if (matchedSaldo === null && r[descIntCol]) {
+      const descInt = String(r[descIntCol] || '').trim();
+      if (!/^MP\s*\d+/i.test(descInt) && descInt.toUpperCase() !== 'NA' && descInt.length >= 4) {
+        const cleanInt = cleanStockDesc(descInt);
+        if (stockSaldoByCleanDesc.has(cleanInt)) {
+          matchedSaldo = stockSaldoByCleanDesc.get(cleanInt).saldo;
+          matchType = 'desc';
+        }
+      }
+    }
+
+    // Aplica o saldo encontrado
     if (matchedSaldo !== null) {
-      matchedCount++;
+      if (matchType === 'code') matchedByCodeCount++;
+      else if (matchType === 'desc') matchedByDescCount++;
+
       const rounded = Math.round(matchedSaldo * 100) / 100;
       if (rounded > 0) {
         positiveStockCount++;
@@ -7378,10 +7518,49 @@ function syncMpSistemaWithStock(notifyUser) {
         r[sysCol] = '0,00';
       }
     } else {
-      // Não duplica saldo de outro código com a mesma descrição: fica sem saldo
       r[sysCol] = '';
     }
   });
+
+  // 4. Ingestão Inteligente de Matérias-Primas do Estoque que NÃO constam na Lista de MP
+  // Garante que matérias-primas com saldo no estoque apareçam na Lista de MP mesmo que não tenham sido cadastradas previamente
+  let addedFromStockCount = 0;
+  stockUniqueItems.forEach((stItem) => {
+    if (!stItem.isMp) return;
+    const cleanC = stItem.cleanCode;
+    const noZeroC = cleanC ? cleanC.replace(/^0+/, '') : '';
+    const cleanD = stItem.cleanDesc;
+
+    const existsByCode = (cleanC && existingMpCleanCodes.has(cleanC)) || (noZeroC && existingMpCleanCodes.has(noZeroC));
+    const existsByDesc = cleanD && existingMpCleanDescs.has(cleanD);
+
+    if (!existsByCode && !existsByDesc) {
+      const rounded = Math.round(stItem.saldo * 100) / 100;
+      const saldoStr = rounded > 0
+        ? rounded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '0,00';
+
+      MP_DATA.rows.push({
+        [codeCol]: stItem.rawCode,
+        [descExtCol]: stItem.rawDesc,
+        [descIntCol]: 'NA',
+        [sysCol]: saldoStr
+      });
+      if (cleanC) existingMpCleanCodes.add(cleanC);
+      if (cleanD) existingMpCleanDescs.add(cleanD);
+      addedFromStockCount++;
+      if (rounded > 0) positiveStockCount++;
+    }
+  });
+
+  // Re-ordenar por Código natural se novos itens foram adicionados
+  if (addedFromStockCount > 0) {
+    MP_DATA.rows.sort((a, b) => {
+      const cA = String(a[codeCol] || '');
+      const cB = String(b[codeCol] || '');
+      return cA.localeCompare(cB, 'pt-BR', { numeric: true });
+    });
+  }
 
   try {
     localStorage.setItem('pcp_mp_report', JSON.stringify(MP_DATA));
@@ -7393,7 +7572,39 @@ function syncMpSistemaWithStock(notifyUser) {
   }
 
   if (notifyUser) {
-    showToast('De-Para concluído! ' + matchedCount + ' itens vinculados (' + positiveStockCount + ' com saldo positivo).');
+    const totalVinculados = matchedByCodeCount + matchedByDescCount;
+    let detailMsg = `<strong>De-Para concluído com sucesso!</strong><br>` +
+      `🔗 <strong>${totalVinculados}</strong> itens vinculados (${positiveStockCount} com saldo positivo)<br>` +
+      `🏷️ Por Código: <strong>${matchedByCodeCount}</strong> | 📝 Por Descrição: <strong>${matchedByDescCount}</strong>`;
+    if (addedFromStockCount > 0) {
+      detailMsg += `<br>✨ <strong>${addedFromStockCount}</strong> novas matérias-primas do estoque incorporadas à lista!`;
+    }
+    showToast(detailMsg, 5000);
+  }
+}
+
+function addStockItemToMp(code, descExt, saldo) {
+  if (!MP_DATA || !Array.isArray(MP_DATA.rows)) return;
+  const codeCol = MP_DATA.codeCol || 'Código';
+  const descExtCol = MP_DATA.descExtCol || 'Descr. Externa';
+  const descIntCol = MP_DATA.descIntCol || 'Descr. Interna';
+  const sysCol = MP_DATA.systemCol || 'Quantidade';
+
+  const exists = MP_DATA.rows.some(r => (code && r[codeCol] === code) || (descExt && r[descExtCol] === descExt));
+  if (!exists) {
+    MP_DATA.rows.push({
+      [codeCol]: code || '',
+      [descExtCol]: descExt || '',
+      [descIntCol]: 'NA',
+      [sysCol]: saldo || ''
+    });
+    try {
+      localStorage.setItem('pcp_mp_report', JSON.stringify(MP_DATA));
+    } catch(e){}
+    renderMpView();
+    showToast(`Matéria-prima "${descExt}" cadastrada na Lista de MP com sucesso!`);
+  } else {
+    showToast('Este item já consta na Lista de Matéria-Prima.', 'info');
   }
 }
 
@@ -7509,6 +7720,59 @@ function renderMpView(focusedCol, cursorPosition) {
     }
     return true;
   });
+
+  // Se o usuário realizou uma pesquisa textual (ex: buscando por descrição ou código de MP),
+  // e existirem itens com saldo na "Consulta de Saldo de Estoque" que ainda não constam na Lista de MP,
+  // exibe esses produtos do estoque nos resultados com seus saldos atualizados!
+  if (term && typeof STOCK_DATA !== 'undefined' && STOCK_DATA && Array.isArray(STOCK_DATA.rows) && STOCK_DATA.rows.length) {
+    const stCodeCol = STOCK_DATA.codeCol || 'Produto';
+    const stDescCol = STOCK_DATA.descCol || 'Descricao';
+    const stQtyCol = STOCK_DATA.qtyCol || 'Saldo Atual';
+
+    const existingFilteredCodes = new Set(filtered.map(r => norm(r[codeCol])));
+    const existingFilteredDescs = new Set(filtered.map(r => norm(r[descExtCol])));
+    const matchedStockItems = new Map();
+
+    STOCK_DATA.rows.forEach(stRow => {
+      const sCode = String(stRow[stCodeCol] || '').trim();
+      const sDesc = String(stRow[stDescCol] || '').trim();
+      const sCleanCode = norm(sCode);
+      const sCleanDesc = norm(sDesc);
+
+      if (!existingFilteredCodes.has(sCleanCode) && !existingFilteredDescs.has(sCleanDesc)) {
+        if (sCleanCode.includes(term) || sCleanDesc.includes(term) || cmp(sCleanDesc).includes(cmp(term))) {
+          const saldo = (typeof parseStockNumber === 'function') ? parseStockNumber(stRow[stQtyCol]) : parseFloat(stRow[stQtyCol]) || 0;
+          const valSaldo = isNaN(saldo) ? 0 : saldo;
+          const key = sCleanCode || sCleanDesc;
+
+          if (!matchedStockItems.has(key)) {
+            matchedStockItems.set(key, {
+              code: sCode,
+              desc: sDesc,
+              saldo: valSaldo
+            });
+          } else {
+            matchedStockItems.get(key).saldo += valSaldo;
+          }
+        }
+      }
+    });
+
+    matchedStockItems.forEach(item => {
+      const rounded = Math.round(item.saldo * 100) / 100;
+      const saldoStr = rounded > 0
+        ? rounded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '0,00';
+
+      filtered.push({
+        [codeCol]: item.code,
+        [descExtCol]: item.desc,
+        [descIntCol]: 'NA',
+        [sysCol]: saldoStr,
+        _fromStockLive: true
+      });
+    });
+  }
 
   const filteredCount = filtered.length;
   let countWithSystem = 0;
@@ -7676,7 +7940,9 @@ function renderMpView(focusedCol, cursorPosition) {
                     <div style="display:flex;align-items:center;justify-content:center;gap:4px">
                       <span class="code" title="Clique para copiar" style="cursor:pointer" onclick="copyText('${esc(val)}')">${esc(val)}</span>
                       <button class="btn outline" style="padding:2px 5px;font-size:10px" onclick="copyText('${esc(val)}')">📋</button>
-                      <button class="btn outline" style="padding:2px 5px;font-size:10px" onclick="openMpEditModal('${esc(val)}')" title="Editar esta matéria-prima">✏️</button>
+                      ${row._fromStockLive
+                        ? `<button class="btn outline" style="padding:2px 5px;font-size:10px;color:#15803d;border-color:#86efac;background:#f0fdf4" onclick="addStockItemToMp('${esc(val)}', '${esc(rowDescExt)}', '${esc(rowSaldo)}')" title="Cadastrar formalmente na Lista de MP">➕</button>`
+                        : `<button class="btn outline" style="padding:2px 5px;font-size:10px" onclick="openMpEditModal('${esc(val)}')" title="Editar esta matéria-prima">✏️</button>`}
                     </div>
                   </td>`;
                 }
@@ -7692,8 +7958,13 @@ function renderMpView(focusedCol, cursorPosition) {
                   </td>`;
                 }
 
-                // 3. Coluna Descr. Interna
+                                // 3. Coluna Descr. Interna
                 if (isDescInt) {
+                  if (row._fromStockLive) {
+                    return `<td class="col-desc-int">
+                      <span class="mp-desc-int-tag" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a" title="Item do Saldo de Estoque (não registrado na lista de MP)">📦 Do Estoque</span>
+                    </td>`;
+                  }
                   if (!val || val === 'NA') {
                     return `<td class="col-desc-int" style="color:var(--mu);font-style:italic">-</td>`;
                   }
@@ -9393,6 +9664,9 @@ function switchTab(tab) {
 // Init
 mapRender();
 renderStockView();
+if (typeof syncMpSistemaWithStock === 'function') {
+  try { syncMpSistemaWithStock(false); } catch(e){}
+}
 renderMpView();
 renderIbcView();
 renderBalancoView();
